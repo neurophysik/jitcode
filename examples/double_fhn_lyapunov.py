@@ -28,7 +28,7 @@ f = [
 initial_state = np.array([1.,2.,3.,4.])
 
 n = len(f)
-ODE = jitcode_lyap(f, nlyap=n)
+ODE = jitcode_lyap(f, n_lyap=n)
 ODE.set_integrator("vode")
 ODE.set_initial_value(initial_state,0.0)
 
