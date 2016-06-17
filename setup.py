@@ -17,7 +17,7 @@ setup(
 	url = 'http://github.com/neurophysik/jitcode',
 	packages = ['jitcode'],
 	package_data = {'jitcode': ['jitced_template.c']},
-	include_package_date = True,
+	include_package_data = True,
 	install_requires = requirements,
 	setup_requires = ['setuptools_scm'],
 	use_scm_version = {'write_to': 'jitcode/version.py'},
