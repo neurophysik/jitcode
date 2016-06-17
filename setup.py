@@ -5,6 +5,7 @@ requirements = [
 	'simpy',
 	'numpy',
 	'setuptools',
+	'jinja2'
 ]
 
 setup(
@@ -12,10 +13,12 @@ setup(
 	description = 'Just-in-Time Compilation for Ordinary Differential Equations',
 	long_description = open('docs/index.rst').read(),
 	author = 'Gerrit Ansmann',
+	author_email = 'gansmann@uni-bonn.de',
 	url = 'http://github.com/neurophysik/jitcode',
 	packages = ['jitcode'],
 	package_data = {'jitcode': ['jitced_template.c']},
 	include_package_date = True,
+	install_requires = requirements,
 	setup_requires = ['setuptools_scm'],
 	use_scm_version = {'write_to': 'jitcode/version.py'},
 	classifiers = [
