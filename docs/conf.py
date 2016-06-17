@@ -33,7 +33,7 @@ add_module_names = False
 html_theme = 'pyramid'
 pygments_style = 'colorful'
 #html_theme_options = {}
-htmlhelp_basename = 'JICODEdoc'
+htmlhelp_basename = 'JiTCODEdoc'
 
 numpydoc_show_class_members = False
 autodoc_member_order = 'bysource'
