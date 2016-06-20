@@ -85,7 +85,7 @@ def ode_from_module_file(location):
 
 	Returns
 	-------
-	instance of `scipy.integrators.ode`
+	instance of `scipy.integrate.ode`
 		This is initiated with the functions found in the module file. Note that this is **not** an instance of `jitcode`.
 	"""
 
