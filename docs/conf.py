@@ -5,7 +5,7 @@ from unittest.mock import MagicMock
 class Mock(MagicMock):
 	@classmethod
 	def __getattr__(cls, name):
-		return Mock()
+		return MagicMock()
 
 MOCK_MODULES = ['numpy', 'scipy', 'scipy.integrate._ode', 'scipy.stats', 'scipy.integrate']
 sys.modules.update((mod_name, Mock()) for mod_name in MOCK_MODULES)
