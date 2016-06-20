@@ -46,6 +46,7 @@ A quick example
 
 .. literalinclude:: ../examples/double_fhn_example.py
 	:linenos:
+	:dedent: 1
 	:start-after: example-start
 
 .. _tweak:
@@ -85,7 +86,8 @@ The tangent vectors are intialised with random vectors, and you have to take car
 
 .. literalinclude:: ../examples/double_fhn_lyapunov.py
 	:emphasize-lines: 22-23,29-32
-	:start-after: from __future__
+	:start-after: example-start
+	:dedent: 1
 	:linenos:
 
 What doesn’t work (yet)

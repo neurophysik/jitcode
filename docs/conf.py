@@ -1,5 +1,10 @@
 import sys
 import os
+from mock import Mock
+ 
+for module in ['numpy', 'scipy', 'scipy.integrate._ode', 'scipy.stats']:
+	sys.modules[module] = Mock()
+sys.modules['scipy.integrate'] = Mock(ode=object)
 
 sys.path.insert(0,os.path.abspath("../examples"))
 sys.path.insert(0,os.path.abspath("../jitcode"))

@@ -18,32 +18,33 @@ with :math:`a = -0.025794`, :math:`b_1 = 0.0065`, :math:`b_2 = 0.0135`, :math:`c
 Then the following code integrates the above for 100000 time units, with :math:`y(t=0) = (1,2,3,4)`, and writes the results to :code:`timeseries.dat`:
 """
 
-# example-start
-
-from jitcode import jitcode, provide_basic_symbols
-import numpy as np
-
-a  = -0.025794
-b1 =  0.0065
-b2 =  0.0135
-c  =  0.02
-k  =  0.128
-
-t, y = provide_basic_symbols()
-
-f = [
-	y(0) * ( a-y(0) ) * ( y(0)-1.0 ) - y(1) + k * (y(2) - y(0)),
-	b1*y(0) - c*y(1),
-	y(2) * ( a-y(2) ) * ( y(2)-1.0 ) - y(3) + k * (y(0) - y(2)),
-	b2*y(2) - c*y(3)
-	]
-
-initial_state = np.array([1.,2.,3.,4.])
-
-ODE = jitcode(f)
-ODE.set_integrator("dopri5")
-ODE.set_initial_value(initial_state,0.0)
-
-data = np.vstack(ODE.integrate(t) for t in range(10,1000000,10))
-
-np.savetxt("timeseries.dat", data)
+if __name__ == "__main__":
+	# example-start
+	
+	from jitcode import jitcode, provide_basic_symbols
+	import numpy as np
+	
+	a  = -0.025794
+	b1 =  0.0065
+	b2 =  0.0135
+	c  =  0.02
+	k  =  0.128
+	
+	t, y = provide_basic_symbols()
+	
+	f = [
+		y(0) * ( a-y(0) ) * ( y(0)-1.0 ) - y(1) + k * (y(2) - y(0)),
+		b1*y(0) - c*y(1),
+		y(2) * ( a-y(2) ) * ( y(2)-1.0 ) - y(3) + k * (y(0) - y(2)),
+		b2*y(2) - c*y(3)
+		]
+	
+	initial_state = np.array([1.,2.,3.,4.])
+	
+	ODE = jitcode(f)
+	ODE.set_integrator("dopri5")
+	ODE.set_initial_value(initial_state,0.0)
+	
+	data = np.vstack(ODE.integrate(t) for t in range(10,1000000,10))
+	
+	np.savetxt("timeseries.dat", data)
