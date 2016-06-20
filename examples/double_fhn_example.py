@@ -20,7 +20,6 @@ Then the following code integrates the above for 100000 time units, with :math:`
 
 if __name__ == "__main__":
 	# example-start
-	
 	from jitcode import jitcode, provide_basic_symbols
 	import numpy as np
 	

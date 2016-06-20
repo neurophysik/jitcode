@@ -10,7 +10,6 @@ from __future__ import print_function
 
 if __name__ == "__main__":
 	# example-start
-	
 	from jitcode import jitcode_lyap, provide_basic_symbols
 	from scipy.stats import sem
 	import numpy as np
