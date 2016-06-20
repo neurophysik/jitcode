@@ -2,8 +2,16 @@ import sys
 import os
 from mock import Mock
  
-for module in ['numpy', 'scipy', 'scipy.integrate._ode', 'scipy.stats']:
-	sys.modules[module] = Mock()
+from unittest.mock import MagicMock
+
+class Mock(MagicMock):
+    @classmethod
+    def __getattr__(cls, name):
+            return Mock()
+
+MOCK_MODULES = ['numpy', 'scipy', 'scipy.integrate._ode', 'scipy.stats']
+sys.modules.update((mod_name, Mock()) for mod_name in MOCK_MODULES)
+
 sys.modules['scipy.integrate'] = Mock(ode=object)
 
 sys.path.insert(0,os.path.abspath("../examples"))
