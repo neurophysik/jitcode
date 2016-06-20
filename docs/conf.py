@@ -7,7 +7,11 @@ class Mock(MagicMock):
 	def __getattr__(cls, name):
 		return MagicMock()
 
-MOCK_MODULES = ['numpy', 'scipy', 'scipy.integrate._ode', 'scipy.stats', 'scipy.integrate']
+MOCK_MODULES = [
+	'numpy',
+	'scipy', 'scipy.integrate', 'scipy.integrate._ode', 'scipy.stats',
+	'sympy',
+	'jitcode', 'jitcode._helpers']
 sys.modules.update((mod_name, Mock()) for mod_name in MOCK_MODULES)
 
 sys.modules['scipy.integrate'] = Mock(ode=object)
