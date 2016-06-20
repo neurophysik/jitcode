@@ -1,8 +1,8 @@
 from setuptools import setup
 
 requirements = [
+	'sympy',
 	'scipy',
-	'simpy',
 	'numpy',
 	'setuptools',
 	'jinja2'
