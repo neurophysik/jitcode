@@ -1,7 +1,5 @@
 import sys
 import os
-from mock import Mock
- 
 from unittest.mock import MagicMock
 
 class Mock(MagicMock):
