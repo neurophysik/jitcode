@@ -240,12 +240,14 @@ class jitcode(ode):
 			Whether the derivative should be `simplified <http://docs.sympy.org/dev/modules/simplify/simplify.html>`_ (with `ratio=1.0`) before translating to C code. The main reason why you could want to disable this is if your derivative is already  optimised and so large that simplifying takes a considerable amount of time.
 		
 		do_cse : boolean
-			Whether SymPy’s `common-subexpression detection <http://docs.sympy.org/dev/modules/rewriting.html#module-sympy.simplify.cse_main>`_ should be applied before translating to C code. For simple differential equations this should not make any difference to the compiler’s optimisations. For large ones, it may make a difference but also take long.
+			Whether SymPy’s `common-subexpression detection <http://docs.sympy.org/dev/modules/rewriting.html#module-sympy.simplify.cse_main>`_ should be applied before translating to C code. For simple differential equations this should not make any difference to the compiler’s optimisations. For large ones, it may make a difference but also take long. As this requires all entries of `f` at once, it may void any advantage gained from using generator functions as an input.
 		
 		chunk_size : integer
 			If the number of instructions in the final C code exceeds this number, it will be split into chunks of this size. This prevents an excessive time and memory consumption of the compilation process. However, redundancies and similar that happen across different chunks are less likely to be optimised by the compiler.
 			
 			If there is an obvious grouping of your :math:`f`, the group size suggests itself for `chunk_size`. For example, if you want to simulate the dynamics of three-dimensional oscillators coupled onto a 40×40 lattice and if the differential equations are grouped first by oscillator and then by lattice row, a chunk size of 120 suggests itself.
+			
+			If smaller than 1, no chunking will happen.
 		"""
 		
 		f_sym_wc = self.f_sym()
@@ -293,13 +295,15 @@ class jitcode(ode):
 		----------
 		
 		do_cse : boolean
-			Whether SymPy’s `common-subexpression detection <http://docs.sympy.org/dev/modules/rewriting.html#module-sympy.simplify.cse_main>`_ should be applied before translating to C code. For simple differential equations this should not make any difference to the compiler’s optimisations. For larger ones, it may make a difference but also take long.
+			Whether SymPy’s `common-subexpression detection <http://docs.sympy.org/dev/modules/rewriting.html#module-sympy.simplify.cse_main>`_ should be applied before translating to C code. For simple differential equations this should not make any difference to the compiler’s optimisations. For larger ones, it may make a difference but also take long. As this requires the entire Jacobian at once, it may void any advantage gained from using generator functions as an input.
 			
 		chunk_size : integer
 			If the number of instructions in the final C code exceeds this number, it will be split into chunks of this size. This prevents an excessive time and memory consumption of the compilation process. However, redundancies and similar that happen across different chunks are less likely to be optimised by the compiler.
 			
 			If there is an obvious grouping of your Jacobian, the respective group size suggests itself for `chunk_size`. For example, the derivative of each dynamical variable explicitly depends on 60 others and the Jacobian is sparse, a chunk size of 60 suggests itself.
 			
+			If smaller than 1, no chunking will happen.
+		
 		sparse : boolean
 			Whether a sparse Jacobian should be assumed for optimisation.
 			Note that this does not mean that the Jacobian is stored, parsed or handled as a sparse matrix.

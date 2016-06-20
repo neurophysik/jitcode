@@ -170,8 +170,12 @@ def render_and_write_code(
 	with \
 		open( path.join(folder,name+".c"            ), "w" ) as mainfile, \
 		open( path.join(folder,name+"_definitions.c"), "w" ) as deffile:
-		write_in_chunks(helperlines, mainfile, deffile, name+"helpers", chunk_size)
-		write_in_chunks(codelines  , mainfile, deffile, name+"code"   , chunk_size)
+		if chunk_size < 1:
+			for line in chain(helperlines, codelines):
+				mainfile.write(line)
+		else:
+			write_in_chunks(helperlines, mainfile, deffile, name+"helpers", chunk_size)
+			write_in_chunks(codelines  , mainfile, deffile, name+"code"   , chunk_size)
 
 
 def render_template(filename, target, **kwargs):
