@@ -8,7 +8,7 @@ class Mock(MagicMock):
 		return MagicMock()
 
 MOCK_MODULES = [
-	'numpy',
+	'numpy', 'numpy.testing', 'numpy.random',
 	'scipy', 'scipy.integrate', 'scipy.integrate._ode', 'scipy.stats',
 	'sympy',
 	'jitcode', 'jitcode._helpers']
