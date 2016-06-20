@@ -230,7 +230,7 @@ class jitcode(ode):
 			self.generate_f_C()
 			print("generated C code for f")
 	
-	def generate_f_C(self, simplify=True, do_cse=True, chunk_size=100):
+	def generate_f_C(self, simplify=True, do_cse=False, chunk_size=100):
 		"""
 		translates the derivative to C code using SymPy’s `C-code printer <http://docs.sympy.org/dev/modules/printing.html#module-sympy.printing.ccode>`_.
 		
@@ -287,7 +287,7 @@ class jitcode(ode):
 			self.generate_jac_C()
 			print("generated C code for Jacobian")
 	
-	def generate_jac_C(self, do_cse=True, chunk_size=100, sparse=True):
+	def generate_jac_C(self, do_cse=False, chunk_size=100, sparse=True):
 		"""
 		translates the symbolic Jacobian to C code using SymPy’s `C-code printer <http://docs.sympy.org/dev/modules/printing.html#module-sympy.printing.ccode>`_. If the symbolic Jacobian has not been generated, it generates it by calling `generate_jac_sym`.
 		
