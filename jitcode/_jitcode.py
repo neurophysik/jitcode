@@ -109,6 +109,7 @@ def _is_lambda(function):
 def _sympify_helpers(helpers):
 	return [tuple(map(sympy.sympify, helper)) for helper in helpers]
 
+
 def depends_on_any(helper, other_helpers):
 	for other_helper in other_helpers:
 		if helper[1].has(other_helper[0]):
@@ -172,7 +173,7 @@ DEFAULT_COMPILE_ARGS = [
 			"-march=native",
 			"-mtune=native",
 			"-Wno-unknown-pragmas",
-			],
+			]
 
 class jitcode(ode):
 	"""
