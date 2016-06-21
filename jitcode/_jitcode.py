@@ -107,7 +107,8 @@ def _is_lambda(function):
 	return isinstance(function, FunctionType)
 
 def _sympify_helpers(helpers):
-	return [tuple(map(sympy.sympify, helper)) for helper in helpers]
+	return [(helper[0], sympy.sympify(helper[1]).doit()) for helper in helpers]
+	#return [tuple(map(sympy.sympify, helper)) for helper in helpers]
 
 
 def depends_on_any(helper, other_helpers):
