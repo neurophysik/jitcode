@@ -26,6 +26,13 @@ from jitcode._helpers import (
 import sympy
 import shutil
 
+DEFAULT_COMPILE_ARGS = [
+			"-Ofast",
+			"-g0",
+			"-march=native",
+			"-mtune=native",
+			"-Wno-unknown-pragmas",
+			],
 
 def provide_basic_symbols():
 	"""
@@ -385,13 +392,7 @@ class jitcode(ode):
 	
 	def compile_C(
 		self,
-		extra_compile_args = [
-			"-O3",
-			"-g0",
-			"-march=native",
-			"-mtune=native",
-			"-Wno-unknown-pragmas",
-			],
+		extra_compile_args = DEFAULT_COMPILE_ARGS,
 		verbose = False,
 		modulename = None
 		):
