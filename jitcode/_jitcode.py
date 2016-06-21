@@ -218,7 +218,7 @@ class jitcode(ode):
 	def _generate_jac_sym(self):
 		if self.jac_sym is None:
 			self.generate_jac_sym()
-			print("generated symbolic Jacobian")
+			#print("generated symbolic Jacobian")
 	
 	def generate_jac_sym(self, simplify=True):
 		"""
@@ -247,7 +247,7 @@ class jitcode(ode):
 			Whether the derivative should be `simplified <http://docs.sympy.org/dev/modules/simplify/simplify.html>`_ (with `ratio=1.0`) before translating to C code. The main reason why you could want to disable this is if your derivative is already  optimised and so large that simplifying takes a considerable amount of time.
 		
 		do_cse : boolean
-			Whether SymPy’s `common-subexpression detection <http://docs.sympy.org/dev/modules/rewriting.html#module-sympy.simplify.cse_main>`_ should be applied before translating to C code. For simple differential equations this should not make any difference to the compiler’s optimisations. For large ones, it may make a difference but also take long. As this requires all entries of `f` at once, it may void any advantage gained from using generator functions as an input.
+			Whether SymPy’s `common-subexpression detection <http://docs.sympy.org/dev/modules/rewriting.html#module-sympy.simplify.cse_main>`_ should be applied before translating to C code. It is almost always better to let the compiler do this (unless you want to set the compiler optimisation to `-O2` or lower): For simple differential equations this should not make any difference to the compiler’s optimisations. For large ones, it may make a difference but also take long. As this requires all entries of `f` at once, it may void advantages gained from using generator functions as an input.
 		
 		chunk_size : integer
 			If the number of instructions in the final C code exceeds this number, it will be split into chunks of this size. This prevents an excessive time and memory consumption of the compilation process. However, redundancies and similar that happen across different chunks are less likely to be optimised by the compiler.
@@ -302,7 +302,7 @@ class jitcode(ode):
 		----------
 		
 		do_cse : boolean
-			Whether SymPy’s `common-subexpression detection <http://docs.sympy.org/dev/modules/rewriting.html#module-sympy.simplify.cse_main>`_ should be applied before translating to C code. For simple differential equations this should not make any difference to the compiler’s optimisations. For larger ones, it may make a difference but also take long. As this requires the entire Jacobian at once, it may void any advantage gained from using generator functions as an input.
+			Whether SymPy’s `common-subexpression detection <http://docs.sympy.org/dev/modules/rewriting.html#module-sympy.simplify.cse_main>`_ should be applied before translating to C code. It is almost always better to let the compiler do this (unless you want to set the compiler optimisation to `-O2` or lower): For simple differential equations this should not make any difference to the compiler’s optimisations. For large ones, it may make a difference but also take long. As this requires the entire Jacobian at once, it may void advantages gained from using generator functions as an input.
 			
 		chunk_size : integer
 			If the number of instructions in the final C code exceeds this number, it will be split into chunks of this size. This prevents an excessive time and memory consumption of the compilation process. However, redundancies and similar that happen across different chunks are less likely to be optimised by the compiler.
@@ -312,8 +312,7 @@ class jitcode(ode):
 			If smaller than 1, no chunking will happen.
 		
 		sparse : boolean
-			Whether a sparse Jacobian should be assumed for optimisation.
-			Note that this does not mean that the Jacobian is stored, parsed or handled as a sparse matrix.
+			Whether a sparse Jacobian should be assumed for optimisation. Note that this does not mean that the Jacobian is stored, parsed or handled as a sparse matrix. This kind of optimisation would require SciPy’s ODE to be able to handle sparse matrices.
 		"""
 		
 		self._generate_jac_sym()
