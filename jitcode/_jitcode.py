@@ -26,14 +26,6 @@ from jitcode._helpers import (
 import sympy
 import shutil
 
-DEFAULT_COMPILE_ARGS = [
-			"-Ofast",
-			"-g0",
-			"-march=native",
-			"-mtune=native",
-			"-Wno-unknown-pragmas",
-			],
-
 def provide_basic_symbols():
 	"""
 	provides the basic symbols that must be used to define the differential equation. You may just as well define the respective symbols and functions directly with SymPy, but using this function is the best way to get the most of future versions of JiTCODE, in particular avoiding incompatibilities.
@@ -172,6 +164,15 @@ def _handle_input(f_sym,n):
 		if (n is not None) and(len_f != n):
 			raise ValueError("len(f_sym) and n do not match.")
 		return (lambda: (entry.doit() for entry in f_sym), len_f)
+
+#: A list with the default extra compile arguments. Use and modify these to get the most of future versions of JiTCODE. Note that without `-Ofast`, `-ffast-math`, or `-funsafe-math-optimizations` (if supported by your compiler), you may experience a considerable speed loss since SymPy uses the `pow` function for small integer powers (`SymPy Issue 8997`_).
+DEFAULT_COMPILE_ARGS = [
+			"-Ofast",
+			"-g0",
+			"-march=native",
+			"-mtune=native",
+			"-Wno-unknown-pragmas",
+			],
 
 class jitcode(ode):
 	"""
@@ -401,11 +402,15 @@ class jitcode(ode):
 		Parameters
 		----------
 		extra_compile_args : list of strings
-			Extra arguments to be handed to the C compiler. Note that this and only this includes certain optimisation flags (such as `-O3`) in the default setup. Thus, if you want to retain these and specify `extra_compile_args`, you have to include them. Beware that if you do not use `-O3` or similar, you may run into performance issues due to SymPy using the `pow` function for small integer powers.
+			Arguments to be handed to the C compiler on top of what Setuptools chooses. In most situations, it’s best not to write your own list, but modify `DEFAULT_COMPILE_ARGS`, e.g., like this: `compile_C(extra_compile_args = DEFAULT_COMPILE_ARGS + ["--my-flag"])`.
 		verbose : boolean
 			Whether the compiler commands shall be shown. This is the same as Setuptools’ `verbose` setting.
 		modulename : string or `None`
 			The name used for the compiled module. If `None` or empty, the filename will be chosen by JiTCODE based on previously used filenames or default to `jitced_1.so`. The only reason why you may want to change this is if you want to save the module file for later use (using `save_compiled`). Never re-use a modulename for a given instance of `jitcode`.
+		
+		Notes
+		-----
+		If you want to change the compiler, the default way is your operating system’s `CC` flag, e.g., by calling `export CC=clang` in the terminal or `os.environ["CC"] = "clang"` in Python.
 		"""
 		
 		self._generate_f_C()

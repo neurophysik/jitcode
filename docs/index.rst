@@ -115,3 +115,5 @@ References
 .. [BGGS80]  G. Benettin, L. Galgani, A. Giorgilli, and J.-M. Strelcyn: Lyapunov Characteristic Exponents for smooth dynamical systems and for Hamiltonian systems; A method for computing all of them. Meccanica 15, pp. 9–30 (1980), `10.1007/BF02128236 <http://dx.doi.org/10.1007/BF02128236>`_.
 
 .. _SciPy’s ODE: http://docs.scipy.org/doc/scipy/reference/generated/scipy.integrate.ode.html
+
+.. _SymPy Issue 8997: https://github.com/sympy/sympy/issues/8997
