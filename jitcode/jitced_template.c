@@ -27,22 +27,12 @@ PyArrayObject * dfdY;
 # include "declare_jac_helpers.c"
 {% endif %}
 
+#define y(i) (* (double*) PyArray_GETPTR1(Y, i))
 
-static inline double y (unsigned int const i)
-{
-	return * (double*) PyArray_GETPTR1(Y, i);
-}
-
-static inline void set_dy (unsigned int const i, double const value)
-{
-	* (double *) PyArray_GETPTR1(dY, i) = value;
-}
+#define set_dy(i, value) (* (double *) PyArray_GETPTR1(dY, i) = value)
 
 {% if has_Jacobian: %}
-static inline void set_dfdy (unsigned int const i, unsigned int const j, double const value)
-{
-	* (double *) PyArray_GETPTR2(dfdY, i, j) = value;
-}
+#define set_dfdy(i, j, value) (* (double *) PyArray_GETPTR2(dfdY, i, j) = value)
 {% endif %}
 
 {% if has_helpers: %}
