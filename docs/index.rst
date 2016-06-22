@@ -88,7 +88,7 @@ The tangent vectors are intialised with random vectors, and you have to take car
 	:emphasize-lines: 22-23,29-32
 	:start-after: example-start
 	:dedent: 1
-	:linenos:
+	:linenos:3
 
 What doesn’t work (yet)
 -----------------------
@@ -107,12 +107,6 @@ A more complicated example
 
 .. automodule:: SW_of_Roesslers
 
-.. literalinclude:: ../examples/SW_of_Roesslers.py
-	:linenos:
-	:dedent: 1
-	:start-after: example-start
-
-.. _tweak:
 
 Command reference
 -----------------

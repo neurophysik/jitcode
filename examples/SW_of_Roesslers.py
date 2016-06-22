@@ -2,22 +2,42 @@
 # -*- coding: utf-8 -*-
 
 """
-This more complicated example showcases several advanced features of JiTCODE that are relevant for an efficient integration of more complex systems.
+This example showcases several advanced features of JiTCODE that are relevant for an efficient integration of more complex systems.
 
-Suppose we want to integrate a system of $N=600$ Rössler oscillators, with the $i$th oscillator being described by the following differential equations (note that we used $v$ instead of $y$ for the third dynamical variable to avoid an overloading of symbols):
+Suppose we want to integrate a system of :math:`N=500` Rössler oscillators, with the :math:`i`-th oscillator being described by the following differential equations (note that we used :math:`v` instead of :math:`y` for the third dynamical variable to avoid an overloading of symbols):
 
 .. math::
 	\\begin{alignedat}{1}
-	\\dot{x}_i = -ω_i v_i &- z_i + k \\sum_{j=0}^N A_{ij} (x_j-x_i) \\
-	\\dot{v}_i = ω_i x_i &+ a v_i
-	\\end{alignedat}\\
-	\\dot{z}_i = b + z_i (x_i -c) + k \\sum_{j=0}^N (x_j-x_i)
+	\\dot{x}_i &= -ω_i v_i - z_i + k \\sum_{j=0}^N A_{ij} (x_j-x_i) \\\\
+	\\dot{v}_i &= ω_i x_i + a v_i \\\\
+	\\dot{z}_i &= b + z_i (x_i -c) + k \\sum_{j=0}^N (x_j-x_i)
+	\\end{alignedat}
 
-The control parameters shall be $a = 0.165$, $b = 0.2$, $c = 10.0$, and $k = 0.01$. The (frequency) parameter $ω$ shall be picked randomly from the uniform distribution on $[0.8,1.0]$. $A∈ℝ^{N×N}$ shall be the adjacency matrix of a one-dimensional small-world network (which shall be provided by a function `small_world_network` in the example code).
-ü"""
+The control parameters shall be :math:`a = 0.165`, :math:`b = 0.2`, :math:`c = 10.0`, and :math:`k = 0.01`. The (frequency) parameter :math:`ω_i` shall be picked randomly from the uniform distribution on :math:`[0.8,1.0]` for each :math:`i`. :math:`A∈ℝ^{N×N}` shall be the adjacency matrix of a one-dimensional small-world network (which shall be provided by a function `small_world_network` in the example code). So, the :math:`x` compenents are coupled diffusively with a small-world coupling topology, while the :math:`z` components are coupled diffusively to their mean field.
+
+Without further ado, here is the example code; higlighted lines will be commented below:
+
+.. literalinclude:: ../examples/SW_of_Roesslers.py
+	:linenos:
+	:dedent: 1
+	:lines: 60-
+	:emphasize-lines: 9, 27-29
+
+Explanation of selected features and choices:
+
+* The values of :math:`ω` are initialised globally (line 9). We cannot just define a function here, because the parameter is used twice for each oscillator. Moreover, if we were trying to calculate Lyapunov exponents or the Jacobian, the generator function would be called multiple times, and thus the value of the parameter would not be consistent (which would be desastrous).
+
+* Since we need :math:`\\sum_{j=0}^N x_j` to calculate the derivative of :math:`z` for every oscillator, it is prudent to only calculate this once. Therefore we define a helper symbol for this in lines 27–29. (See the arguments of `jitcode` for details.)
+
+* Instead of a list of symbols, we use a generator function to define :math:`f`.
+
+"""
 
 if __name__ == "__main__":
-	def small_world_network(n, m, p):
+	def small_world_network(number_of_nodes, nearest_neighbours, rewiring_probability):
+		n = number_of_nodes
+		m = nearest_neighbours//2
+		
 		A = np.zeros( (n,n), dtype=bool )
 		for i in range(n):
 			for j in range(-m,m+1):
@@ -26,7 +46,7 @@ if __name__ == "__main__":
 		# rewiring
 		for i in range(n):
 			for j in range(j):
-				if A[i,j] and (np.random.random() < p):
+				if A[i,j] and (np.random.random() < rewiring_probability):
 					A[j,i] = A[i,j] = False
 					while True:
 						i_new,j_new = np.random.randint(0,n,2)
@@ -43,32 +63,31 @@ if __name__ == "__main__":
 	import numpy as np
 	import sympy
 	
-	# generate adjacency matrix of one-dimensional small-world
-	# --------------------------------------------------------
+	# parameters
+	# ----------
 	
-	# network parameters
-	N = 600	# number of nodes
-	m = 10	# number of nearest neighbours on each side
-	p = 0.1	# rewiring probability
-	
-	# adjacency matrix of a small-world network
-	A = small_world_network(N, m, p)
-	
-	# generate differential equations
-	# -------------------------------
-	
-	t, y = provide_basic_symbols()
-	
-	# control parameters
+	N = 500
 	ω = np.random.uniform(0.8,1.0,N)
 	a = 0.165
 	b = 0.2
 	c = 10.0
 	k = 0.01
 	
-	mean_z = sympy.Symbol("mean_z")
+	# get adjacency matrix of a small-world network
+	A = small_world_network(
+		number_of_nodes = N,
+		nearest_neighbours = 20,
+		rewiring_probability = 0.1
+		)
+	
+	# generate differential equations
+	# -------------------------------
+	
+	t, y = provide_basic_symbols()
+	
+	sum_z = sympy.Symbol("sum_z")
 	j = sympy.Symbol("j")
-	helpers = [( mean_z, sympy.Sum( y(3*j+2), (j,0,N-1) ) / N )]
+	helpers = [( mean_z, sympy.Sum( y(3*j+2), (j,0,N-1) ) )]
 	
 	def f():
 		for i in range(N):
@@ -79,7 +98,7 @@ if __name__ == "__main__":
 			)
 			yield -ω[i] * y(3*i+1) - y(3*i+2) + coupling_term
 			yield  ω[i] * y(3*i) + a*y(3*i+1)
-			yield b + y(3*i+2) * (y(3*i) - c) + k * (y(3*i+2)-mean_z)
+			yield b + y(3*i+2) * (y(3*i) - c) + k * (N*y(3*i+2)-sum_z)
 	
 	# integrate
 	# ---------
@@ -87,7 +106,7 @@ if __name__ == "__main__":
 	initial_state = np.random.random(3*N)
 	
 	ODE = jitcode(f, helpers=helpers, n=3*N)
-	ODE.generate_f_C(simplify=False, do_cse=False, chunk_size=120)
+	ODE.generate_f_C(simplify=False, do_cse=False, chunk_size=150)
 	ODE.set_integrator('dopri5')
 	ODE.set_initial_value(initial_state,0.0)
 	
