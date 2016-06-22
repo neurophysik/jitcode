@@ -20,16 +20,18 @@ Without further ado, here is the example code; higlighted lines will be commente
 .. literalinclude:: ../examples/SW_of_Roesslers.py
 	:linenos:
 	:dedent: 1
-	:lines: 60-
-	:emphasize-lines: 9, 27-29
+	:lines: 64-
+	:emphasize-lines: 9, 27-29, 42, 31, 48, 49, 33
 
 Explanation of selected features and choices:
 
 * The values of :math:`ω` are initialised globally (line 9). We cannot just define a function here, because the parameter is used twice for each oscillator. Moreover, if we were trying to calculate Lyapunov exponents or the Jacobian, the generator function would be called multiple times, and thus the value of the parameter would not be consistent (which would be desastrous).
 
-* Since we need :math:`\\sum_{j=0}^N x_j` to calculate the derivative of :math:`z` for every oscillator, it is prudent to only calculate this once. Therefore we define a helper symbol for this in lines 27–29. (See the arguments of `jitcode` for details.)
+* Since we need :math:`\\sum_{j=0}^N x_j` to calculate the derivative of :math:`z` for every oscillator, it is prudent to only calculate this once. Therefore we define a helper symbol for this in lines 27–29, which we employ in line 42. (See the arguments of `jitcode` for details.)
 
-* Instead of a list of symbols, we use a generator function to define :math:`f`.
+* As this is a large system, we use a generator function instead of a list to define :math:`f` (lines 33-43) and have the code automatically be split into chunks of 150 lines (corresponding to the equation of fifty nodes, line 51). (See `large_systems` for more.)
+
+* In lines 35-39, we use `sympy.Mul(·,·,evaluate=False)` instead of plain multiplication to avoid sympy automaticall expanding this term (see (`SymPy Issue 4596`_).
 
 """
 
@@ -98,7 +100,8 @@ if __name__ == "__main__":
 			)
 			yield -ω[i] * y(3*i+1) - y(3*i+2) + coupling_term
 			yield  ω[i] * y(3*i) + a*y(3*i+1)
-			yield b + y(3*i+2) * (y(3*i) - c) + k * (N*y(3*i+2)-sum_z)
+			coupling_term_2 = k * (N*y(3*i+2)-sum_z)
+			yield b + y(3*i+2) * (y(3*i) - c) + coupling_term_2
 	
 	# integrate
 	# ---------
