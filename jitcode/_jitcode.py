@@ -253,7 +253,7 @@ class jitcode(ode):
 			Whether SymPy’s `common-subexpression detection <http://docs.sympy.org/dev/modules/rewriting.html#module-sympy.simplify.cse_main>`_ should be applied before translating to C code. It is almost always better to let the compiler do this (unless you want to set the compiler optimisation to `-O2` or lower): For simple differential equations this should not make any difference to the compiler’s optimisations. For large ones, it may make a difference but also take long. As this requires all entries of `f` at once, it may void advantages gained from using generator functions as an input.
 		
 		chunk_size : integer
-			If the number of instructions in the final C code exceeds this number, it will be split into chunks of this size. This prevents an excessive time and memory consumption of the compilation process. However, redundancies and similar that happen across different chunks are less likely to be optimised by the compiler.
+			If the number of instructions in the final C code exceeds this number, it will be split into chunks of this size. This prevents an excessive time and memory consumption of the compilation process. However, redundancies and similar that happen across different chunks are less likely to be optimised by the compiler. Moreover, after the generation of each chunk, SymPy’s cache is cleared.
 			
 			If there is an obvious grouping of your :math:`f`, the group size suggests itself for `chunk_size`. For example, if you want to simulate the dynamics of three-dimensional oscillators coupled onto a 40×40 lattice and if the differential equations are grouped first by oscillator and then by lattice row, a chunk size of 120 suggests itself.
 			
@@ -308,7 +308,7 @@ class jitcode(ode):
 			Whether SymPy’s `common-subexpression detection <http://docs.sympy.org/dev/modules/rewriting.html#module-sympy.simplify.cse_main>`_ should be applied before translating to C code. It is almost always better to let the compiler do this (unless you want to set the compiler optimisation to `-O2` or lower): For simple differential equations this should not make any difference to the compiler’s optimisations. For large ones, it may make a difference but also take long. As this requires the entire Jacobian at once, it may void advantages gained from using generator functions as an input.
 			
 		chunk_size : integer
-			If the number of instructions in the final C code exceeds this number, it will be split into chunks of this size. This prevents an excessive time and memory consumption of the compilation process. However, redundancies and similar that happen across different chunks are less likely to be optimised by the compiler.
+			If the number of instructions in the final C code exceeds this number, it will be split into chunks of this size. This prevents an excessive time and memory consumption of the compilation process. However, redundancies and similar that happen across different chunks are less likely to be optimised by the compiler. Moreover, after the generation of each chunk, SymPy’s cache is cleared.
 			
 			If there is an obvious grouping of your Jacobian, the respective group size suggests itself for `chunk_size`. For example, the derivative of each dynamical variable explicitly depends on 60 others and the Jacobian is sparse, a chunk size of 60 suggests itself.
 			
@@ -368,7 +368,7 @@ class jitcode(ode):
 		Parameters
 		----------
 		chunk_size : integer
-			If the number of instructions in the final C code exceeds this number, it will be split into chunks of this size. This prevents an excessive time and memory consumption of the compilation process. However, redundancies and similar that happen across different chunks are less likely to be optimised by the compiler.
+			If the number of instructions in the final C code exceeds this number, it will be split into chunks of this size. This prevents an excessive time and memory consumption of the compilation process. However, redundancies and similar that happen across different chunks are less likely to be optimised by the compiler. Moreover, after the generation of each chunk, SymPy’s cache is cleared.
 			
 			If there is an obvious grouping of your helpers, the group size suggests itself for `chunk_size`.
 		"""
