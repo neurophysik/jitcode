@@ -102,6 +102,18 @@ The following features of SciPy’s ODE class cannot be used through JiTCODE:
 
 .. _reference:
 
+A more complicated example
+--------------------------
+
+.. automodule:: SW_of_Roesslers
+
+.. literalinclude:: ../examples/SW_of_Roesslers.py
+	:linenos:
+	:dedent: 1
+	:start-after: example-start
+
+.. _tweak:
+
 Command reference
 -----------------
 
