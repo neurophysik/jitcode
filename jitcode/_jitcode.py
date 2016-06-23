@@ -38,7 +38,7 @@ def provide_basic_symbols():
 		represents the ODE’s state, with the integer argument denoting the component
 	"""
 	
-	return sympy.Symbol("t", real=True), sympy.Function("y", real=True)
+	return sympy.Symbol("t", real=True), sympy.Function("y")
 
 def convert_to_required_symbols(dynvars, f_sym, helpers=[], n=None):
 	"""
@@ -496,7 +496,7 @@ class jitcode(ode):
 			f_sym_wc = sympy.simplify(f_sym_wc, ratio=1.0)
 		F = sympy.lambdify([t]+[Yentry for Yentry in Y], f_sym_wc)
 		
-		self.f = lambda t,y: array(F(t,*y)).flatten()
+		self.f = lambda t,ypsilon: array(F(t,*ypsilon)).flatten()
 	
 	def _generate_jac_lambda(self):
 		if not _is_lambda(self.jac):
@@ -522,7 +522,7 @@ class jitcode(ode):
 		jac_subsed = jac_matrix.subs(substitutions)
 		JAC = sympy.lambdify([t]+[Yentry for Yentry in Y], jac_subsed)
 		
-		self.jac = lambda t,y: array(JAC(t,*y))
+		self.jac = lambda t,ypsilon: array(JAC(t,*ypsilon))
 
 	def generate_lambdas(self):
 		"""
