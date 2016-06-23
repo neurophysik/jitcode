@@ -1,4 +1,5 @@
 from setuptools import setup
+from io import open
 
 requirements = [
 	'sympy',
@@ -11,7 +12,7 @@ requirements = [
 setup(
 	name = 'jitcode',
 	description = 'Just-in-Time Compilation for Ordinary Differential Equations',
-	long_description = open('docs/index.rst', encoding='utf8').read(),
+	long_description = open('README.rst', encoding='utf8').read(),
 	author = 'Gerrit Ansmann',
 	author_email = 'gansmann@uni-bonn.de',
 	url = 'http://github.com/neurophysik/jitcode',
