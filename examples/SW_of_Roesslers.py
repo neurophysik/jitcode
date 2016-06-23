@@ -113,5 +113,5 @@ if __name__ == "__main__":
 	ODE.set_integrator('dopri5')
 	ODE.set_initial_value(initial_state,0.0)
 	
-	# data structure: x[0], …, x[N], v[0], …, v[N], z[0], …, z[N]
+	# data structure: x[0], v[0], z[0], x[1], …, x[N], v[N], z[N]
 	data = np.vstack(ODE.integrate(t) for t in range(10,100000,10))
