@@ -5,7 +5,7 @@ Overview
 --------
 
 JiTCODE (just-in-time compilation for ordinary differential equations) is an extension of `SciPy’s ODE`_ (`scipy.integrate.ode`).
-Where SciPy’s ODE takes a Python function as an argument, JiTCODE takes a list of `SymPy <http://www.sympy.org/>`_ terms, which are then translated to C code, compiled on the fly, and used as the function to feed into SciPy’s ODE.
+Where SciPy’s ODE takes a Python function as an argument, JiTCODE takes an iterable (or generator function) of `SymPy <http://www.sympy.org/>`_ terms, which it translates to C code, compiles on the fly, and uses as the function to feed into SciPy’s ODE.
 This has the following advantages:
 
 *	**Speed boost through compilation**
@@ -84,15 +84,15 @@ Handling very large differential equations
 
 For very large differential equations, there are two sources of memory or speed problems:
 
-* **The compiler**, who has to compile Megabytes of unstructured code and tries to handle it all at once, which may use too much time and memory. For some compilers, disabling all optimisation can avert this problem, but then, compiler optimisations usually are a good thing.
+* **The compiler**, who has to compile megabytes of unstructured code and tries to handle it all at once, which may use too much time and memory. For some compilers, disabling all optimisation can avert this problem, but then, compiler optimisations usually are a good thing.
 
-	As a compromise, JiTCODE structures large source code into chunks, which the compiler then handles separately. This way optimisation can happen within the chunks, but not accross chunks. The precise size of those chunks can be controlled by the option `chunk_size` which is available for all code-generation subroutines.
+  As a compromise, JiTCODE structures large source code into chunks, which the compiler then handles separately. This way optimisation can happen within the chunks, but not accross chunks. The precise size of those chunks can be controlled by the option `chunk_size` which is available for all code-generation subroutines.
   
-	We also obtained better performances in these regards with Clang than with GCC.
+  We obtained better performances in these regards with Clang than with GCC.
 
-* **SymPy’s cache**, which may use too much memory. While it can be completely deactivated with by setting the environment variable `SYMPY_USE_CACHE=no`, it exists for a reason and may speed things up.
+* **SymPy’s cache**, which may use too much memory. While it can be completely deactivated by setting the environment variable `SYMPY_USE_CACHE=no`, it exists for a reason and may speed things up.
 
-	To address this, JiTCODE clears the cache after each chunk is written and accepts generator functions as an input for :math:`f`, which makes SymPy’s handling of an entry happen right before the corresponding code is generated. See `example_2` for an example how to use a generator function.
+  To address this, JiTCODE clears the cache after each chunk is written and accepts generator functions as an input for :math:`f`, which makes SymPy’s handling of an entry happen right before the corresponding code is generated. See `example_2` for an example how to use a generator function.
 
 
 

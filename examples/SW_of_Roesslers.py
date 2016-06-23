@@ -15,7 +15,7 @@ Suppose we want to integrate a system of :math:`N=500` Rössler oscillators, wit
 
 The control parameters shall be :math:`a = 0.165`, :math:`b = 0.2`, :math:`c = 10.0`, and :math:`k = 0.01`. The (frequency) parameter :math:`ω_i` shall be picked randomly from the uniform distribution on :math:`[0.8,1.0]` for each :math:`i`. :math:`A∈ℝ^{N×N}` shall be the adjacency matrix of a one-dimensional small-world network (which shall be provided by a function `small_world_network` in the example code). So, the :math:`x` compenents are coupled diffusively with a small-world coupling topology, while the :math:`z` components are coupled diffusively to their mean field.
 
-Without further ado, here is the example code; higlighted lines will be commented below:
+Without further ado, here is the example code; highlighted lines will be commented below:
 
 .. literalinclude:: ../examples/SW_of_Roesslers.py
 	:linenos:
@@ -29,9 +29,9 @@ Explanation of selected features and choices:
 
 * Since we need :math:`\\sum_{j=0}^N x_j` to calculate the derivative of :math:`z` for every oscillator, it is prudent to only calculate this once. Therefore we define a helper symbol for this in lines 27–29, which we employ in line 42. (See the arguments of `jitcode` for details.)
 
-* As this is a large system, we use a generator function instead of a list to define :math:`f` (lines 33-43) and have the code automatically be split into chunks of 150 lines (corresponding to the equation of fifty nodes, line 51). (See `large_systems` for more.)
+* As this is a large system, we use a generator function instead of a list to define :math:`f` (lines 33-43) and have the code automatically be split into chunks of 150 lines, corresponding to the equations of fifty oscillators, line 51. (For this system, any reasonably sized multiple of 3 is a good choice for `chunk_size`; for other systems, the precise choice of the value may be crucial.) See `large_systems` for the rationale.
 
-* In lines 35-39, we use `sympy.Mul(·,·,evaluate=False)` instead of plain multiplication to avoid sympy automaticall expanding this term (see (`SymPy Issue 4596`_).
+* In lines 35-39, we use `sympy.Mul(·,·,evaluate=False)` instead of plain multiplication to avoid SymPy automatically expanding this term (see `SymPy Issue 4596`_).
 
 """
 

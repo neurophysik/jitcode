@@ -28,7 +28,7 @@ import shutil
 
 def provide_basic_symbols():
 	"""
-	provides the basic symbols that must be used to define the differential equation. You may just as well define the respective symbols and functions directly with SymPy, but using this function is the best way to get the most of future versions of JiTCODE, in particular avoiding incompatibilities.
+	provides the basic symbols that must be used to define the differential equation. You may just as well define the respective symbols and functions directly with SymPy, but using this function is the best way to get the most of future versions of JiTCODE, in particular avoiding incompatibilities. If you wish to use other symbols for the dynamical variables, you can use `convert_to_required_symbols` for conversion.
 	
 	Returns
 	-------
@@ -42,14 +42,14 @@ def provide_basic_symbols():
 
 def convert_to_required_symbols(dynvars, f_sym, helpers=[], n=None):
 	"""
-	This is a service function to convert a differential equation defined with different symbols for the dynamical variables to the format required by JiTCODE.
+	This is a service function to convert a differential equation defined using other symbols for the dynamical variables to the format required by JiTCODE.
 	
 	Parameters
 	----------
 	
-	dynvars: iterable of SymPy expressions.
-		The dynamical variables used to define the differential equation in `f`. These must be in the same order as `f` gives their derivatives.
-	f : iterable of SymPy expressions or generator function yielding Sympy expressions
+	dynvars : iterable of SymPy expressions.
+		The dynamical variables used to define the differential equation in `f_sym`. These must be in the same order as `f_sym` gives their derivatives.
+	f_sym : iterable of SymPy expressions or generator function yielding SymPy expressions
 		same as the respective input for `jitcode` apart from using `dynvars` as dynamical variables
 	helpers : list of length-two iterables, each containing a SymPy symbol and a SymPy expression
 		same as the respective input for `jitcode`
@@ -180,11 +180,11 @@ class jitcode(ode):
 	"""
 	Parameters
 	----------
-	f_sym : iterable of SymPy expressions or generator function yielding Sympy expressions
+	f_sym : iterable of SymPy expressions or generator function yielding SymPy expressions
 		The `i`-th element is the `i`-th component of the value of the ODE’s derivative :math:`f(t,y)`.
 	
 	helpers : list of length-two iterables, each containing a SymPy symbol and a SymPy expression
-		Each helper is a variable that will be calculated before evaluating the derivative and can be used in the latter’s computation. The first component of the tuple is the helper’s symbol as referenced in the derivative, the second component describes how to compute it from `t`, `y` and other helpers. This is for example useful to realise a mean-field coupling, where the helper could look like `(mean, sympy.Sum(y(i),(i,0,99))/100)`.
+		Each helper is a variable that will be calculated before evaluating the derivative and can be used in the latter’s computation. The first component of the tuple is the helper’s symbol as referenced in the derivative or other helpers, the second component describes how to compute it from `t`, `y` and other helpers. This is for example useful to realise a mean-field coupling, where the helper could look like `(mean, sympy.Sum(y(i),(i,0,99))/100)`. (See `example_2` for an example.)
 	
 	wants_jacobian : boolean
 		Tell JiTCODE to calculate and compile the Jacobian. For vanilla use, you do not need to bother about this as this is automatically set to `True` if the selected method of integration desires the Jacobian. However, it is sometimes useful if you want to manually apply some code-generation steps (e.g., to apply some tweaks).
@@ -410,11 +410,11 @@ class jitcode(ode):
 		verbose : boolean
 			Whether the compiler commands shall be shown. This is the same as Setuptools’ `verbose` setting.
 		modulename : string or `None`
-			The name used for the compiled module. If `None` or empty, the filename will be chosen by JiTCODE based on previously used filenames or default to `jitced_1.so`. The only reason why you may want to change this is if you want to save the module file for later use (using `save_compiled`). Never re-use a modulename for a given instance of `jitcode`.
+			The name used for the compiled module. If `None` or empty, the filename will be chosen by JiTCODE based on previously used filenames or default to `jitced.so`. The only reason why you may want to change this is if you want to save the module file for later use (with`save_compiled`). It is not possible to re-use a modulename for a given instance of `jitcode` (due to the limitations of Python’s import machinery).
 		
 		Notes
 		-----
-		If you want to change the compiler, the default way is your operating system’s `CC` flag, e.g., by calling `export CC=clang` in the terminal or `os.environ["CC"] = "clang"` in Python.
+		If you want to change the compiler, the intended way is your operating system’s `CC` flag, e.g., by calling `export CC=clang` in the terminal or `os.environ["CC"] = "clang"` in Python.
 		"""
 		
 		self._generate_f_C()
