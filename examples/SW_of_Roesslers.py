@@ -89,7 +89,7 @@ if __name__ == "__main__":
 	
 	sum_z = sympy.Symbol("sum_z")
 	j = sympy.Symbol("j")
-	helpers = [( mean_z, sympy.Sum( y(3*j+2), (j,0,N-1) ) )]
+	helpers = [( sum_z, sympy.Sum( y(3*j+2), (j,0,N-1) ) )]
 	
 	def f():
 		for i in range(N):
@@ -100,7 +100,7 @@ if __name__ == "__main__":
 			)
 			yield -ω[i] * y(3*i+1) - y(3*i+2) + coupling_term
 			yield  ω[i] * y(3*i) + a*y(3*i+1)
-			coupling_term_2 = k * (N*y(3*i+2)-sum_z)
+			coupling_term_2 = k * (sum_z-N*y(3*i+2))
 			yield b + y(3*i+2) * (y(3*i) - c) + coupling_term_2
 	
 	# integrate
