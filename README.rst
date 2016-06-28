@@ -5,4 +5,4 @@ Where SciPy’s ODE takes a Python function as an argument, JiTCODE takes an ite
 
 * `Issue Tracker <http://github.com/neurophysik/jitcode/issues>`_
 
-* Download from `PyPI <http://pypi.python.org/pypi/jitcode>`_ or just `pip install jitcode`.
+* Download from `PyPI <http://pypi.python.org/pypi/jitcode>`_ or just ``pip install jitcode``.
