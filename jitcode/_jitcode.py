@@ -491,10 +491,10 @@ class jitcode(ode):
 		Y = sympy.symarray("Y", self.n)
 		
 		substitutions = self.helpers[::-1] + [(y(i),Y[i]) for i in range(self.n)]
-		f_sym_wc = sympy.Matrix(list(self.f_sym())).subs(substitutions)
+		f_sym_wc = (entry.subs(substitutions) for entry in f_sym)
 		if simplify:
-			f_sym_wc = sympy.simplify(f_sym_wc, ratio=1.0)
-		F = sympy.lambdify([t]+[Yentry for Yentry in Y], f_sym_wc)
+			f_sym_wc = (entry.simplify(ratio=1.0) for entry in f_sym)
+		F = sympy.lambdify([t]+[Yentry for Yentry in Y], list(f_sym_wc))
 		
 		self.f = lambda t,ypsilon: array(F(t,*ypsilon)).flatten()
 	
@@ -700,3 +700,4 @@ class jitcode_lyap(jitcode):
 	def save_compiled(self, *args, **kwargs):
 		warn("Your module will be saved, but note that there is no method to generate a jitcode_lyap instance from a saved module file yet.")
 		super(jitcode_lyap, self).save_compiled(*args, **kwargs)
+
