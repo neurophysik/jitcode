@@ -1,6 +1,7 @@
 import sys
 import os
 from unittest.mock import MagicMock
+from setuptools_scm import get_version
 
 class Mock(MagicMock):
 	@classmethod
@@ -36,8 +37,7 @@ master_doc = 'index'
 project = u'JiTCODE'
 copyright = u'2016, Gerrit Ansmann'
 
-version = '0.1'
-release = '0.1'
+release = version = get_version(root='..', relative_to=__file__)
 
 default_role = "any"
 
