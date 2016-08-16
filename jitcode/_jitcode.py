@@ -191,12 +191,15 @@ class jitcode(ode):
 		
 	n : integer
 		Length of `f_sym`. While JiTCODE can easily determine this itself (and will, if necessary), this may take some time if `f_sym` is a generator function and `n` is large. Take care that this value is correct – if it isn’t, you will not get a helpful error message.
+	
+	silent : boolean
+		Whether JiTCODE shall give progress reports on the processing steps.
 	"""
 	
 	# Naming convention:
 	# If an underscore-prefixed and regular variant of a function exist, the ormer calls the latter if needed and tells the user what it did.
 	
-	def __init__(self, f_sym, helpers=None, wants_jacobian=False, n=None):
+	def __init__(self, f_sym, helpers=None, wants_jacobian=False, n=None, verbose=True):
 		self.f_sym, self.n = _handle_input(f_sym,n)
 		self.f = None
 		self._f_C_source = False
@@ -208,6 +211,7 @@ class jitcode(ode):
 		self._y = []
 		self._tmpdir = None
 		self._modulename = "jitced"
+		self.verbose = verbose
 	
 	def _tmpfile(self, filename=None):
 		if self._tmpdir is None:
@@ -218,10 +222,14 @@ class jitcode(ode):
 		else:
 			return path.join(self._tmpdir, filename)
 	
+	def report(self, message):
+		if self.verbose:
+			print(message)
+	
 	def _generate_jac_sym(self):
 		if self.jac_sym is None:
 			self.generate_jac_sym()
-			#print("generated symbolic Jacobian")
+			#self.report("generated symbolic Jacobian")
 	
 	def generate_jac_sym(self, simplify=True):
 		"""
@@ -238,7 +246,7 @@ class jitcode(ode):
 	def _generate_f_C(self):
 		if not self._f_C_source:
 			self.generate_f_C()
-			print("generated C code for f")
+			self.report("generated C code for f")
 	
 	def generate_f_C(self, simplify=True, do_cse=False, chunk_size=100):
 		"""
@@ -295,7 +303,7 @@ class jitcode(ode):
 	def _generate_jac_C(self):
 		if self._wants_jacobian and not self._jac_C_source:
 			self.generate_jac_C()
-			print("generated C code for Jacobian")
+			self.report("generated C code for Jacobian")
 	
 	def generate_jac_C(self, do_cse=False, chunk_size=100, sparse=True):
 		"""
@@ -359,7 +367,7 @@ class jitcode(ode):
 	def _generate_helpers_C(self):
 		if self.helpers:
 			self.generate_helpers_C()
-			print("generated C code for helpers")
+			self.report("generated C code for helpers")
 	
 	def generate_helpers_C(self, chunk_size=100):
 		"""
@@ -392,7 +400,7 @@ class jitcode(ode):
 	def _compile_C(self):
 		if (not _is_C(self.f)) or (self._wants_jacobian and not _is_C(self.jac)):
 			self.compile_C()
-			print("compiled C code")
+			self.report("compiled C code")
 	
 	def compile_C(
 		self,
@@ -472,7 +480,7 @@ class jitcode(ode):
 	def _generate_f_lambda(self):
 		if not _is_lambda(self.f):
 			self.generate_f_lambda()
-			print("generated lambdified f")
+			self.report("generated lambdified f")
 	
 	def generate_f_lambda(self, simplify=True):
 		"""
@@ -491,9 +499,9 @@ class jitcode(ode):
 		Y = sympy.symarray("Y", self.n)
 		
 		substitutions = self.helpers[::-1] + [(y(i),Y[i]) for i in range(self.n)]
-		f_sym_wc = (entry.subs(substitutions) for entry in f_sym)
+		f_sym_wc = (entry.subs(substitutions) for entry in self.f_sym)
 		if simplify:
-			f_sym_wc = (entry.simplify(ratio=1.0) for entry in f_sym)
+			f_sym_wc = (entry.simplify(ratio=1.0) for entry in f_sym_wc)
 		F = sympy.lambdify([t]+[Yentry for Yentry in Y], list(f_sym_wc))
 		
 		self.f = lambda t,ypsilon: array(F(t,*ypsilon)).flatten()
@@ -501,7 +509,7 @@ class jitcode(ode):
 	def _generate_jac_lambda(self):
 		if not _is_lambda(self.jac):
 			self.generate_jac_lambda()
-			print("generated lambdified Jacobian")
+			self.report("generated lambdified Jacobian")
 	
 	def generate_jac_lambda(self):
 		"""
@@ -612,13 +620,13 @@ class jitcode(ode):
 			modulename = modulename_from_path(filename)
 			if modulename != self._modulename:
 				self.compile_C(modulename=modulename)
-				print("compiled C code")
+				self.report("compiled C code")
 			sourcefile = get_module_path(self._modulename, self._tmpfile())
 		else:
 			self._compile_C()
 			sourcefile = get_module_path(self._modulename, self._tmpfile())
 			destination = path.join(folder, ensure_suffix(self._modulename, ".so"))
-			print("saving file to " + destination)
+			self.report("saving file to " + destination)
 		
 		if path.isfile(destination) and not overwrite:
 			raise OSError("Target File already exists and \"overwrite\" is set to False")
