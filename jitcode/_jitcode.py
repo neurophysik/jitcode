@@ -499,7 +499,7 @@ class jitcode(ode):
 		Y = sympy.symarray("Y", self.n)
 		
 		substitutions = self.helpers[::-1] + [(y(i),Y[i]) for i in range(self.n)]
-		f_sym_wc = (entry.subs(substitutions) for entry in self.f_sym)
+		f_sym_wc = (entry.subs(substitutions) for entry in self.f_sym())
 		if simplify:
 			f_sym_wc = (entry.simplify(ratio=1.0) for entry in f_sym_wc)
 		F = sympy.lambdify([t]+[Yentry for Yentry in Y], list(f_sym_wc))
