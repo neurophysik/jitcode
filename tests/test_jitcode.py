@@ -58,7 +58,7 @@ f = [
 
 modulename = "x"
 
-class orders_test(unittest.TestCase):
+class basic_test(unittest.TestCase):
 	def tmpfile(self, filename):
 		return os.path.join(self.directory, filename)
 	
@@ -81,6 +81,21 @@ class orders_test(unittest.TestCase):
 	
 	def test_standard_order_with_jac(self):
 		self.ODE = jitcode(**self.argdict)
+		self.ODE.set_integrator('vode')
+		self.ODE.set_initial_value(y0,0.0)
+		self.assertTrue(_is_C(self.ODE.f))
+		self.assertTrue(_is_C(self.ODE.jac))
+	
+	def test_heavily_chunked_f(self):
+		self.ODE = jitcode(wants_jacobian=True, **self.argdict)
+		self.ODE.generate_f_C(chunk_size=1)
+		self.ODE.set_integrator('dopri5')
+		self.ODE.set_initial_value(y0,0.0)
+		self.assertTrue(_is_C(self.ODE.f))
+	
+	def test_heavily_chunked_jac(self):
+		self.ODE = jitcode(**self.argdict)
+		self.ODE.generate_jac_C(chunk_size=1)
 		self.ODE.set_integrator('vode')
 		self.ODE.set_initial_value(y0,0.0)
 		self.assertTrue(_is_C(self.ODE.f))
@@ -222,7 +237,7 @@ def get_f_alt_helpers():
 	shuffle(f_alt_helpers)
 	return f_alt_helpers
 
-class orders_test_with_helpers(orders_test):
+class basic_test_with_helpers(basic_test):
 	@classmethod
 	def setUpClass(self):
 		self.argdict = {"f_sym": f_alt, "helpers": get_f_alt_helpers()}
@@ -291,7 +306,7 @@ f_dv = [
 	b2*x_2 - c*y_2,
 	]
 
-class orders_test_with_conversion(orders_test):
+class basic_test_with_conversion(basic_test):
 	@classmethod
 	def setUpClass(self):
 		self.argdict = convert_to_required_symbols(dynvars, f_dv, f_dv_helpers)
@@ -300,7 +315,7 @@ def f_generator():
 	for entry in f:
 		yield entry
 
-class orders_test_with_generator_function(orders_test):
+class basic_test_with_generator_function(basic_test):
 	@classmethod
 	def setUpClass(self):
 		self.argdict = {"f_sym": f_generator, "n": 4}
