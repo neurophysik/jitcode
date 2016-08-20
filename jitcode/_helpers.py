@@ -122,7 +122,7 @@ def render_declarations(expressions, filename):
 		for expression in expressions:
 			output.write("double " + ccode(expression) + ";\n")
 
-def write_in_chunks(lines, mainfile, deffile, name, chunk_size):
+def write_in_chunks(lines, mainfile, deffile, name, chunk_size, arguments):
 	funcname = "definitions_" + name
 	
 	first_chunk = []
@@ -136,8 +136,15 @@ def write_in_chunks(lines, mainfile, deffile, name, chunk_size):
 		lines = chain(first_chunk, lines)
 		
 		while True:
-			mainfile.write(funcname + "();\n")
-			deffile.write("void " + funcname + "(void){\n")
+			mainfile.write(funcname + "(")
+			deffile.write("void " + funcname + "(")
+			if arguments:
+				mainfile.write(", ".join(argument[0] for argument in arguments))
+				deffile.write(", ".join(argument[1]+" "+argument[0] for argument in arguments))
+			else:
+				deffile.write("void")
+			mainfile.write(");\n")
+			deffile.write("){\n")
 			
 			try:
 				for i in range(chunk_size):
@@ -156,7 +163,9 @@ def render_and_write_code(
 	folder,
 	name,
 	user_functions = {},
-	chunk_size = 100):
+	chunk_size = 100,
+	arguments = []
+	):
 	
 	helperlines = (
 		check_code( ccode( helper[1], helper[0], user_functions=user_functions ) ) + "\n"
@@ -174,8 +183,8 @@ def render_and_write_code(
 			for line in chain(helperlines, codelines):
 				mainfile.write(line)
 		else:
-			write_in_chunks(helperlines, mainfile, deffile, name+"helpers", chunk_size)
-			write_in_chunks(codelines  , mainfile, deffile, name+"code"   , chunk_size)
+			write_in_chunks(helperlines, mainfile, deffile, name+"helpers", chunk_size, arguments[1:])
+			write_in_chunks(codelines  , mainfile, deffile, name+"code"   , chunk_size, arguments)
 
 
 def render_template(filename, target, **kwargs):

@@ -295,7 +295,8 @@ class jitcode(ode):
 			self._tmpfile(),
 			"f",
 			{"set_dy":"set_dy", "y":"y"},
-			chunk_size = chunk_size
+			chunk_size = chunk_size,
+			arguments = [("dY", "PyArrayObject*"), ("Y", "PyArrayObject*")]
 			)
 		
 		self._f_C_source = True
@@ -359,7 +360,8 @@ class jitcode(ode):
 			self._tmpfile(),
 			"jac",
 			{"set_dfdy":"set_dfdy", "y":"y"},
-			chunk_size = chunk_size
+			chunk_size = chunk_size,
+			arguments = [("dfdY", "PyArrayObject*"), ("Y", "PyArrayObject*")]
 			)
 		
 		self._jac_C_source = True

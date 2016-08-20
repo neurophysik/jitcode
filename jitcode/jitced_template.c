@@ -14,16 +14,13 @@
 
 unsigned int const dimension={{n}};
 
-PyArrayObject * Y;
 {% if has_helpers: %}
 # include "declare_general_helpers.c"
 {% endif %}
 
-PyArrayObject * dY;
 # include "declare_f_helpers.c"
 
 {% if has_Jacobian: %}
-PyArrayObject * dfdY;
 # include "declare_jac_helpers.c"
 {% endif %}
 
@@ -37,7 +34,7 @@ PyArrayObject * dfdY;
 
 {% if has_helpers: %}
 # include "helpers_definitions.c"
-static void helpers(void)
+static void helpers(PyArrayObject * Y)
 {
 	# include "helpers.c"
 }
@@ -48,6 +45,7 @@ static void helpers(void)
 static PyObject * py_f(PyObject *self, PyObject *args)
 {
 	double t;
+	PyArrayObject * Y;
 	
 	if (!PyArg_ParseTuple(args, "dO!", &t, &PyArray_Type, &Y))
 	{
@@ -68,7 +66,7 @@ static PyObject * py_f(PyObject *self, PyObject *args)
 	
 	npy_intp dims[1] = {dimension};
 	
-	dY = (PyArrayObject *) PyArray_EMPTY(1, dims, TYPE_INDEX, 0);
+	PyArrayObject* dY = (PyArrayObject *) PyArray_EMPTY(1, dims, TYPE_INDEX, 0);
 	
 	if (dY == NULL)
 	{
@@ -77,7 +75,7 @@ static PyObject * py_f(PyObject *self, PyObject *args)
 	}
 	
 	{% if has_helpers: %}
-	helpers();
+	helpers(Y);
 	{% endif %}
 	
 	# include "f.c"
@@ -91,6 +89,7 @@ static PyObject * py_f(PyObject *self, PyObject *args)
 static PyObject * py_jac(PyObject *self, PyObject *args)
 {
 	double t;
+	PyArrayObject * Y;
 	
 	if (!PyArg_ParseTuple(args, "dO!", &t, &PyArray_Type, &Y))
 	{
@@ -112,9 +111,9 @@ static PyObject * py_jac(PyObject *self, PyObject *args)
 	npy_intp dims[2] = {dimension, dimension};
 	
 	{% if sparse_jac: %}
-	dfdY = (PyArrayObject *) PyArray_ZEROS(2, dims, TYPE_INDEX, 0);
+	PyArrayObject * dfdY = (PyArrayObject *) PyArray_ZEROS(2, dims, TYPE_INDEX, 0);
 	{% else: %}
-	dfdY = (PyArrayObject *) PyArray_EMPTY(2, dims, TYPE_INDEX, 0);
+	PyArrayObject * dfdY = (PyArrayObject *) PyArray_EMPTY(2, dims, TYPE_INDEX, 0);
 	{% endif %}
 	
 	if (dfdY == NULL)
@@ -124,7 +123,7 @@ static PyObject * py_jac(PyObject *self, PyObject *args)
 	}
 	
 	{% if has_helpers: %}
-	helpers();
+	helpers(Y);
 	{% endif %}
 	
 	# include "jac.c"
@@ -159,7 +158,7 @@ static struct PyModuleDef moduledef =
         NULL
 };
 
-PyObject * PyInit_{{module_name}}(void)
+PyMODINIT_FUNC PyInit_{{module_name}}(void)
 {
     PyObject * module = PyModule_Create(&moduledef);
 	import_array();
