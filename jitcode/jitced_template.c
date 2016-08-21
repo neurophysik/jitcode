@@ -15,7 +15,7 @@
 unsigned int const dimension={{n}};
 
 {% if has_helpers: %}
-# include "declare_general_helpers.c"
+# include "declare_helpers_helpers.c"
 {% endif %}
 
 # include "declare_f_helpers.c"

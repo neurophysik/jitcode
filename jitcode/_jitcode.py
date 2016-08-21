@@ -283,16 +283,11 @@ class jitcode(ode):
 		else:
 			more_helpers = []
 		
-		render_declarations(
-			(helper[0] for helper in more_helpers),
-			self._tmpfile("declare_f_helpers.c")
-			)
-		
 		set_dy = sympy.Function("set_dy")
 		render_and_write_code(
 			(set_dy(i,entry) for i,entry in enumerate(f_sym_wc)),
 			more_helpers,
-			self._tmpfile(),
+			self._tmpfile,
 			"f",
 			{"set_dy":"set_dy", "y":"y"},
 			chunk_size = chunk_size,
@@ -343,11 +338,6 @@ class jitcode(ode):
 		else:
 			more_helpers = []
 		
-		render_declarations(
-			(helper[0] for helper in more_helpers),
-			self._tmpfile("declare_jac_helpers.c")
-			)
-		
 		set_dfdy = sympy.Function("set_dfdy")
 		render_and_write_code(
 			(
@@ -357,7 +347,7 @@ class jitcode(ode):
 				if ( (entry != 0) or not self.sparse_jac )
 			),
 			more_helpers,
-			self._tmpfile(),
+			self._tmpfile,
 			"jac",
 			{"set_dfdy":"set_dfdy", "y":"y"},
 			chunk_size = chunk_size,
@@ -385,15 +375,10 @@ class jitcode(ode):
 			If smaller than 1, no chunking will happen.
 		"""
 		
-		render_declarations(
-			(helper[0] for helper in self.helpers),
-			self._tmpfile("declare_general_helpers.c")
-			)
-		
 		render_and_write_code(
 			[],
 			self.helpers,
-			self._tmpfile(),
+			self._tmpfile,
 			"helpers",
 			{"y":"y"},
 			chunk_size = chunk_size

@@ -160,12 +160,17 @@ def write_in_chunks(lines, mainfile, deffile, name, chunk_size, arguments):
 def render_and_write_code(
 	expressions,
 	helpers,
-	folder,
+	tmpfile,
 	name,
 	user_functions = {},
 	chunk_size = 100,
 	arguments = []
 	):
+	
+	render_declarations(
+		(helper[0] for helper in helpers),
+		tmpfile("declare_"+name+"_helpers.c")
+	)
 	
 	helperlines = (
 		check_code( ccode( helper[1], helper[0], user_functions=user_functions ) ) + "\n"
@@ -177,8 +182,8 @@ def render_and_write_code(
 		)
 	
 	with \
-		open( path.join(folder,name+".c"            ), "w" ) as mainfile, \
-		open( path.join(folder,name+"_definitions.c"), "w" ) as deffile:
+		open( tmpfile(name+".c"            ), "w" ) as mainfile, \
+		open( tmpfile(name+"_definitions.c"), "w" ) as deffile:
 		if chunk_size < 1:
 			for line in chain(helperlines, codelines):
 				mainfile.write(line)
