@@ -88,14 +88,14 @@ class basic_test(unittest.TestCase):
 	
 	def test_heavily_chunked_f(self):
 		self.ODE = jitcode(wants_jacobian=True, **self.argdict)
-		self.ODE.generate_f_C(chunk_size=1)
+		self.ODE.generate_f_C(chunk_size=1,do_cse=True)
 		self.ODE.set_integrator('dopri5')
 		self.ODE.set_initial_value(y0,0.0)
 		self.assertTrue(_is_C(self.ODE.f))
 	
 	def test_heavily_chunked_jac(self):
 		self.ODE = jitcode(**self.argdict)
-		self.ODE.generate_jac_C(chunk_size=1)
+		self.ODE.generate_jac_C(chunk_size=1,do_cse=True)
 		self.ODE.set_integrator('vode')
 		self.ODE.set_initial_value(y0,0.0)
 		self.assertTrue(_is_C(self.ODE.f))

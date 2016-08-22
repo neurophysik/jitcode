@@ -19,7 +19,7 @@ from itertools import chain
 from jitcode._helpers import (
 	ensure_suffix, count_up,
 	get_module_path, modulename_from_path, find_and_load_module, module_from_path,
-	render_and_write_code, render_declarations,
+	render_and_write_code, render_and_write_code_old,
 	render_template,
 	non_zero_ratio, random_direction, orthonormalise
 	)
@@ -375,11 +375,11 @@ class jitcode(ode):
 			If smaller than 1, no chunking will happen.
 		"""
 		
-		render_and_write_code(
+		render_and_write_code_old(
 			[],
 			self.helpers,
 			self._tmpfile,
-			"helpers",
+			"general",
 			{"y":"y"},
 			chunk_size = chunk_size
 			)
