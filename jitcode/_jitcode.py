@@ -169,6 +169,7 @@ def _handle_input(f_sym,n):
 
 #: A list with the default extra compile arguments. Use and modify these to get the most of future versions of JiTCODE. Note that without `-Ofast`, `-ffast-math`, or `-funsafe-math-optimizations` (if supported by your compiler), you may experience a considerable speed loss since SymPy uses the `pow` function for small integer powers (`SymPy Issue 8997`_).
 DEFAULT_COMPILE_ARGS = [
+			"-std=c11",
 			"-Ofast",
 			"-g0",
 			"-march=native",
@@ -283,9 +284,9 @@ class jitcode(ode):
 		if self.helpers:
 			f_sym_wc = (entry.subs(self.helper_subs) for entry in f_sym_wc)
 		
-		arguments = [("Y", "PyArrayObject*")]
+		arguments = [("Y", "PyArrayObject *restrict const")]
 		if self._number_of_general_helpers:
-			arguments.append(("general_helper","double*"))
+			arguments.append(("general_helper","double const *restrict const"))
 		
 		if do_cse:
 			get_helper = sympy.Function("get_f_helper")
@@ -299,7 +300,7 @@ class jitcode(ode):
 			f_sym_wc = _cse[1][0]
 			
 			if more_helpers:
-				arguments.append(("f_helper","double*"))
+				arguments.append(("f_helper","double *restrict const"))
 				render_and_write_code(
 					(set_helper(i, helper[1]) for i,helper in enumerate(more_helpers)),
 					self._tmpfile,
@@ -317,7 +318,7 @@ class jitcode(ode):
 			"f",
 			["set_dy", "y", "get_f_helper", "get_general_helper"],
 			chunk_size = chunk_size,
-			arguments = arguments+[("dY", "PyArrayObject*")]
+			arguments = arguments+[("dY", "PyArrayObject *restrict const")]
 			)
 		
 		self._f_C_source = True
@@ -354,9 +355,9 @@ class jitcode(ode):
 		jac_sym_wc = sympy.Matrix([ [entry.subs(self.helper_subs) for entry in line] for line in self.jac_sym ])
 		self.sparse_jac = sparse
 		
-		arguments = [("Y", "PyArrayObject*")]
+		arguments = [("Y", "PyArrayObject *restrict const")]
 		if self._number_of_general_helpers:
-			arguments.append(("general_helper","double*"))
+			arguments.append(("general_helper","double const *restrict const"))
 		
 		if do_cse:
 			get_helper = sympy.Function("get_jac_helper")
@@ -370,7 +371,7 @@ class jitcode(ode):
 			jac_sym_wc = _cse[1][0]
 			
 			if more_helpers:
-				arguments.append(("jac_helper","double*"))
+				arguments.append(("jac_helper","double *restrict const"))
 				render_and_write_code(
 					(set_helper(i, helper[1]) for i,helper in enumerate(more_helpers)),
 					self._tmpfile,
@@ -396,7 +397,7 @@ class jitcode(ode):
 			"jac",
 			["set_dfdy", "y", "get_jac_helper", "get_general_helper"],
 			chunk_size = chunk_size,
-			arguments = arguments+[("dfdY", "PyArrayObject*")]
+			arguments = arguments+[("dfdY", "PyArrayObject *restrict const")]
 		)
 		
 		self._jac_C_source = True
@@ -431,7 +432,7 @@ class jitcode(ode):
 				"general_helpers",
 				["y", "get_general_helper", "set_general_helper"],
 				chunk_size = chunk_size,
-				arguments = [("Y", "PyArrayObject*"), ("general_helper","double*")]
+				arguments = [("Y", "PyArrayObject *restrict const"), ("general_helper","double *restrict const")]
 				)
 		
 		self._helper_C_source = True

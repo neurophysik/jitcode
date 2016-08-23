@@ -25,7 +25,7 @@ unsigned int const dimension={{n}};
 # define set_jac_helper(i,value) (jac_helper[i] = value)
 {% endif %}
 
-# define y(i) (* (double*) PyArray_GETPTR1(Y, i))
+# define y(i) (* (double *) PyArray_GETPTR1(Y, i))
 
 # define set_dy(i, value) (* (double *) PyArray_GETPTR1(dY, i) = value)
 
@@ -35,7 +35,7 @@ unsigned int const dimension={{n}};
 
 {% if number_of_general_helpers>0: %}
 # include "general_helpers_definitions.c"
-static void general(PyArrayObject * Y, double * general_helper)
+static void general(PyArrayObject *restrict const Y, double *restrict const general_helper)
 {
 	# include "general_helpers.c"
 }
@@ -69,7 +69,7 @@ static PyObject * py_f(PyObject *self, PyObject *args)
 	}
 	
 	npy_intp dims[1] = {dimension};
-	PyArrayObject* dY = (PyArrayObject *) PyArray_EMPTY(1, dims, TYPE_INDEX, 0);
+	PyArrayObject * dY = (PyArrayObject *) PyArray_EMPTY(1, dims, TYPE_INDEX, 0);
 	
 	if (dY == NULL)
 	{
