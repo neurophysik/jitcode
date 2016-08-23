@@ -101,6 +101,14 @@ class basic_test(unittest.TestCase):
 		self.assertTrue(_is_C(self.ODE.f))
 		self.assertTrue(_is_C(self.ODE.jac))
 	
+	def test_heavily_chunked_helpers(self):
+		self.ODE = jitcode(**self.argdict)
+		self.ODE.generate_helpers_C(chunk_size=1)
+		self.ODE.set_integrator('vode')
+		self.ODE.set_initial_value(y0,0.0)
+		self.assertTrue(_is_C(self.ODE.f))
+		self.assertTrue(_is_C(self.ODE.jac))
+	
 	def test_initial_value_first(self):
 		self.ODE = jitcode(**self.argdict)
 		self.ODE.set_initial_value(y0,0.0)
