@@ -14,9 +14,8 @@
 
 unsigned int const dimension={{n}};
 
-{% if has_helpers: %}
-# include "declare_general_helpers.c"
-{% endif %}
+# define get_general_helper(i) ((general_helper[i]))
+# define set_general_helper(i,value) (general_helper[i] = value)
 
 # define get_f_helper(i) ((f_helper[i]))
 # define set_f_helper(i,value) (f_helper[i] = value)
@@ -34,11 +33,11 @@ unsigned int const dimension={{n}};
 #define set_dfdy(i, j, value) (* (double *) PyArray_GETPTR2(dfdY, i, j) = value)
 {% endif %}
 
-{% if has_helpers: %}
-# include "general_definitions.c"
-static void general(PyArrayObject * Y)
+{% if number_of_general_helpers>0: %}
+# include "general_helpers_definitions.c"
+static void general(PyArrayObject * Y, double * general_helper)
 {
-	# include "general.c"
+	# include "general_helpers.c"
 }
 {% endif %}
 
@@ -78,8 +77,9 @@ static PyObject * py_f(PyObject *self, PyObject *args)
 		exit(1);
 	}
 	
-	{% if has_helpers: %}
-	general(Y);
+	{% if number_of_general_helpers>0: %}
+	double general_helper[{{number_of_general_helpers}}];
+	general(Y, general_helper);
 	{% endif %}
 	
 	{% if number_of_f_helpers>0: %}
@@ -134,8 +134,9 @@ static PyObject * py_jac(PyObject *self, PyObject *args)
 		exit(1);
 	}
 	
-	{% if has_helpers: %}
-	general(Y);
+	{% if number_of_general_helpers>0: %}
+	double general_helper[{{number_of_general_helpers}}];
+	general(Y, general_helper);
 	{% endif %}
 	
 	{% if number_of_jac_helpers>0: %}

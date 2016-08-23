@@ -19,7 +19,7 @@ from itertools import chain, count
 from jitcode._helpers import (
 	ensure_suffix, count_up,
 	get_module_path, modulename_from_path, find_and_load_module, module_from_path,
-	render_and_write_code, render_and_write_code_old,
+	render_and_write_code,
 	render_template,
 	non_zero_ratio, random_direction, orthonormalise
 	)
@@ -208,12 +208,15 @@ class jitcode(ode):
 		self.jac_sym = None
 		self.jac = None
 		self._jac_C_source = False
+		self._helper_C_source = False
 		self._y = []
 		self._tmpdir = None
 		self._modulename = "jitced"
 		self.verbose = verbose
 		self._number_of_jac_helpers = None
 		self._number_of_f_helpers = None
+		self._number_of_general_helpers = len(self.helpers)
+		self.helper_subs = []
 	
 	def _tmpfile(self, filename=None):
 		if self._tmpdir is None:
@@ -270,44 +273,51 @@ class jitcode(ode):
 			If smaller than 1, no chunking will happen.
 		"""
 		
+		self._generate_helpers_C()
+		
 		f_sym_wc = self.f_sym()
 		
 		if simplify:
 			f_sym_wc = (sympy.simplify(entry,ratio=1) for entry in f_sym_wc)
 		
-		arguments = [("dY", "PyArrayObject*"),("Y", "PyArrayObject*")]
+		if self.helpers:
+			f_sym_wc = (entry.subs(self.helper_subs) for entry in f_sym_wc)
+		
+		arguments = [("Y", "PyArrayObject*")]
+		if self._number_of_general_helpers:
+			arguments.append(("general_helper","double*"))
 		
 		if do_cse:
 			get_helper = sympy.Function("get_f_helper")
 			set_helper = sympy.Function("set_f_helper")
 			
 			_cse = sympy.cse(
-					sympy.Matrix(list(self.f_sym())),
+					sympy.Matrix(list(f_sym_wc)),
 					symbols = (get_helper(i) for i in count())
 				)
 			more_helpers = _cse[0]
 			f_sym_wc = _cse[1][0]
 			
 			if more_helpers:
+				arguments.append(("f_helper","double*"))
 				render_and_write_code(
 					(set_helper(i, helper[1]) for i,helper in enumerate(more_helpers)),
 					self._tmpfile,
 					"f_helpers",
-					["y", "get_f_helper", "set_f_helper"],
+					["y", "get_f_helper", "set_f_helper", "get_general_helper"],
 					chunk_size = chunk_size,
-					arguments = [("Y", "PyArrayObject*"), ("f_helper","double*")]
+					arguments = arguments
 					)
 				self._number_of_f_helpers = len(more_helpers)
-				arguments.append(("f_helper","double*"))
 		
 		set_dy = sympy.Function("set_dy")
 		render_and_write_code(
 			(set_dy(i,entry) for i,entry in enumerate(f_sym_wc)),
 			self._tmpfile,
 			"f",
-			["set_dy", "y", "get_f_helper"],
+			["set_dy", "y", "get_f_helper", "get_general_helper"],
 			chunk_size = chunk_size,
-			arguments = arguments
+			arguments = arguments+[("dY", "PyArrayObject*")]
 			)
 		
 		self._f_C_source = True
@@ -338,36 +348,40 @@ class jitcode(ode):
 			Whether a sparse Jacobian should be assumed for optimisation. Note that this does not mean that the Jacobian is stored, parsed or handled as a sparse matrix. This kind of optimisation would require SciPy’s ODE to be able to handle sparse matrices.
 		"""
 		
+		self._generate_helpers_C()
 		self._generate_jac_sym()
-		jac_sym_wc = self.jac_sym
+		
+		jac_sym_wc = sympy.Matrix([ [entry.subs(self.helper_subs) for entry in line] for line in self.jac_sym ])
 		self.sparse_jac = sparse
 		
-		arguments = [("dfdY", "PyArrayObject*"), ("Y", "PyArrayObject*")]
+		arguments = [("Y", "PyArrayObject*")]
+		if self._number_of_general_helpers:
+			arguments.append(("general_helper","double*"))
 		
 		if do_cse:
-			jac_matrix = sympy.Matrix([ [entry for entry in line] for line in jac_sym_wc ])
-			
 			get_helper = sympy.Function("get_jac_helper")
 			set_helper = sympy.Function("set_jac_helper")
 			
 			_cse = sympy.cse(
-					jac_matrix,
+					jac_sym_wc,
 					symbols = (get_helper(i) for i in count())
 				)
 			more_helpers = _cse[0]
-			jac_sym_wc = _cse[1][0].tolist()
+			jac_sym_wc = _cse[1][0]
 			
 			if more_helpers:
+				arguments.append(("jac_helper","double*"))
 				render_and_write_code(
 					(set_helper(i, helper[1]) for i,helper in enumerate(more_helpers)),
 					self._tmpfile,
 					"jac_helpers",
-					["y", "get_jac_helper", "set_jac_helper"],
+					["y", "get_jac_helper", "set_jac_helper", "get_general_helper"],
 					chunk_size = chunk_size,
-					arguments = [("Y", "PyArrayObject*"), ("jac_helper","double*")]
+					arguments = arguments
 					)
 				self._number_of_jac_helpers = len(more_helpers)
-				arguments.append(("jac_helper","double*"))
+		
+		jac_sym_wc = jac_sym_wc.tolist()
 		
 		set_dfdy = sympy.Function("set_dfdy")
 		
@@ -380,15 +394,15 @@ class jitcode(ode):
 			),
 			self._tmpfile,
 			"jac",
-			["set_dfdy", "y", "get_jac_helper"],
+			["set_dfdy", "y", "get_jac_helper", "get_general_helper"],
 			chunk_size = chunk_size,
-			arguments = arguments
+			arguments = arguments+[("dfdY", "PyArrayObject*")]
 		)
 		
 		self._jac_C_source = True
 	
 	def _generate_helpers_C(self):
-		if self.helpers:
+		if self.helpers and not self._helper_C_source:
 			self.generate_helpers_C()
 			self.report("generated C code for helpers")
 	
@@ -406,14 +420,21 @@ class jitcode(ode):
 			If smaller than 1, no chunking will happen.
 		"""
 		
-		render_and_write_code_old(
-			[],
-			self.helpers,
-			self._tmpfile,
-			"general",
-			{"y":"y"},
-			chunk_size = chunk_size
-			)
+		if self.helpers:
+			get_helper = sympy.Function("get_general_helper")
+			set_helper = sympy.Function("set_general_helper")
+			
+			self.helper_subs = [(helper[0],get_helper(i)) for i,helper in enumerate(self.helpers)]
+			render_and_write_code(
+				(set_helper(i, helper[1].subs(self.helper_subs)) for i,helper in enumerate(self.helpers)),
+				self._tmpfile,
+				"general_helpers",
+				["y", "get_general_helper", "set_general_helper"],
+				chunk_size = chunk_size,
+				arguments = [("Y", "PyArrayObject*"), ("general_helper","double*")]
+				)
+		
+		self._helper_C_source = True
 	
 	def _compile_C(self):
 		if (not _is_C(self.f)) or (self._wants_jacobian and not _is_C(self.jac)):
@@ -443,9 +464,9 @@ class jitcode(ode):
 		If you want to change the compiler, the intended way is your operating system’s `CC` flag, e.g., by calling `export CC=clang` in the terminal or `os.environ["CC"] = "clang"` in Python.
 		"""
 		
+		self._generate_helpers_C()
 		self._generate_f_C()
 		self._generate_jac_C()
-		self._generate_helpers_C()
 		
 		if modulename:
 			if modulename in modules.keys():
@@ -468,9 +489,9 @@ class jitcode(ode):
 			has_Jacobian = self._jac_C_source,
 			module_name = self._modulename,
 			Python_version = version_info[0],
-			has_helpers = bool(self.helpers),
 			number_of_f_helpers = self._number_of_f_helpers or 0,
 			number_of_jac_helpers = self._number_of_jac_helpers or 0,
+			number_of_general_helpers = len(self.helpers),
 			sparse_jac = self.sparse_jac if self._jac_C_source else None
 			)
 		

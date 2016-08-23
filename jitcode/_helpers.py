@@ -118,11 +118,6 @@ def check_code(code):
 		raise Exception("The above expression could not be converted to C Code.")
 	return code
 
-def render_declarations(expressions, filename):
-	with open(filename, "w") as output:
-		for expression in expressions:
-			output.write("double " + ccode(expression) + ";\n")
-
 def write_in_chunks(lines, mainfile, deffile, name, chunk_size, arguments):
 	funcname = "definitions_" + name
 	
@@ -157,40 +152,6 @@ def write_in_chunks(lines, mainfile, deffile, name, chunk_size, arguments):
 			
 			funcname = count_up(funcname)
 			clear_cache()
-
-def render_and_write_code_old(
-	expressions,
-	helpers,
-	tmpfile,
-	name,
-	user_functions = {},
-	chunk_size = 100,
-	arguments = []
-	):
-	
-	render_declarations(
-		(helper[0] for helper in helpers),
-		tmpfile("declare_"+name+"_helpers.c")
-	)
-	
-	helperlines = (
-		check_code( ccode( helper[1], helper[0], user_functions=user_functions ) ) + "\n"
-		for helper in helpers
-		)
-	codelines = (
-		check_code( ccode ( expression, user_functions=user_functions ) ) + ";\n"
-		for expression in expressions
-		)
-	
-	with \
-		open( tmpfile(name+".c"            ), "w" ) as mainfile, \
-		open( tmpfile(name+"_definitions.c"), "w" ) as deffile:
-		if chunk_size < 1:
-			for line in chain(helperlines, codelines):
-				mainfile.write(line)
-		else:
-			write_in_chunks(helperlines, mainfile, deffile, name+"helpers", chunk_size, arguments[1:])
-			write_in_chunks(codelines  , mainfile, deffile, name+"code"   , chunk_size, arguments)
 
 def render_and_write_code(
 	expressions,
