@@ -15,7 +15,7 @@ from tempfile import mkdtemp
 from inspect import getargspec, isgeneratorfunction
 from scipy.integrate._ode import find_integrator
 from copy import copy as copy_object
-from itertools import chain
+from itertools import chain, count
 from jitcode._helpers import (
 	ensure_suffix, count_up,
 	get_module_path, modulename_from_path, find_and_load_module, module_from_path,
@@ -212,6 +212,8 @@ class jitcode(ode):
 		self._tmpdir = None
 		self._modulename = "jitced"
 		self.verbose = verbose
+		self._number_of_jac_helpers = None
+		self._number_of_f_helpers = None
 	
 	def _tmpfile(self, filename=None):
 		if self._tmpdir is None:
@@ -273,25 +275,39 @@ class jitcode(ode):
 		if simplify:
 			f_sym_wc = (sympy.simplify(entry,ratio=1) for entry in f_sym_wc)
 		
+		arguments = [("dY", "PyArrayObject*"),("Y", "PyArrayObject*")]
+		
 		if do_cse:
+			get_helper = sympy.Function("get_f_helper")
+			set_helper = sympy.Function("set_f_helper")
+			
 			_cse = sympy.cse(
 					sympy.Matrix(list(self.f_sym())),
-					symbols = sympy.numbered_symbols("dummy_f_")
+					symbols = (get_helper(i) for i in count())
 				)
 			more_helpers = _cse[0]
 			f_sym_wc = _cse[1][0]
-		else:
-			more_helpers = []
+			
+			if more_helpers:
+				render_and_write_code(
+					(set_helper(i, helper[1]) for i,helper in enumerate(more_helpers)),
+					self._tmpfile,
+					"f_helpers",
+					{"y":"y", "get_f_helper":"get_f_helper", "set_f_helper":"set_f_helper"},
+					chunk_size = chunk_size,
+					arguments = [("Y", "PyArrayObject*"), ("f_helper","double*")]
+					)
+				self._number_of_f_helpers = len(more_helpers)
+				arguments.append(("f_helper","double*"))
 		
 		set_dy = sympy.Function("set_dy")
 		render_and_write_code(
 			(set_dy(i,entry) for i,entry in enumerate(f_sym_wc)),
-			more_helpers,
 			self._tmpfile,
 			"f",
-			{"set_dy":"set_dy", "y":"y"},
+			{"set_dy":"set_dy", "y":"y", "get_f_helper":"get_f_helper"},
 			chunk_size = chunk_size,
-			arguments = [("dY", "PyArrayObject*"), ("Y", "PyArrayObject*")]
+			arguments = arguments
 			)
 		
 		self._f_C_source = True
@@ -326,19 +342,35 @@ class jitcode(ode):
 		jac_sym_wc = self.jac_sym
 		self.sparse_jac = sparse
 		
+		arguments = [("dfdY", "PyArrayObject*"), ("Y", "PyArrayObject*")]
+		
 		if do_cse:
 			jac_matrix = sympy.Matrix([ [entry for entry in line] for line in jac_sym_wc ])
 			
+			get_helper = sympy.Function("get_jac_helper")
+			set_helper = sympy.Function("set_jac_helper")
+			
 			_cse = sympy.cse(
 					jac_matrix,
-					symbols = sympy.numbered_symbols("dummy_jac_")
+					symbols = (get_helper(i) for i in count())
 				)
 			more_helpers = _cse[0]
 			jac_sym_wc = _cse[1][0].tolist()
-		else:
-			more_helpers = []
+			
+			if more_helpers:
+				render_and_write_code(
+					(set_helper(i, helper[1]) for i,helper in enumerate(more_helpers)),
+					self._tmpfile,
+					"jac_helpers",
+					{"y":"y", "get_jac_helper":"get_jac_helper", "set_jac_helper":"set_jac_helper"},
+					chunk_size = chunk_size,
+					arguments = [("Y", "PyArrayObject*"), ("jac_helper","double*")]
+					)
+				self._number_of_jac_helpers = len(more_helpers)
+				arguments.append(("jac_helper","double*"))
 		
 		set_dfdy = sympy.Function("set_dfdy")
+		
 		render_and_write_code(
 			(
 				set_dfdy(i,j,entry)
@@ -346,13 +378,13 @@ class jitcode(ode):
 				for j,entry in enumerate(line)
 				if ( (entry != 0) or not self.sparse_jac )
 			),
-			more_helpers,
 			self._tmpfile,
 			"jac",
-			{"set_dfdy":"set_dfdy", "y":"y"},
+			{"set_dfdy":"set_dfdy", "y":"y", "get_jac_helper":"get_jac_helper"},
 			chunk_size = chunk_size,
-			arguments = [("dfdY", "PyArrayObject*"), ("Y", "PyArrayObject*")]
-			)
+			arguments = arguments
+		)
+
 		
 		self._jac_C_source = True
 	
@@ -438,6 +470,8 @@ class jitcode(ode):
 			module_name = self._modulename,
 			Python_version = version_info[0],
 			has_helpers = bool(self.helpers),
+			number_of_f_helpers = self._number_of_f_helpers or 0,
+			number_of_jac_helpers = self._number_of_jac_helpers or 0,
 			sparse_jac = self.sparse_jac if self._jac_C_source else None
 			)
 		

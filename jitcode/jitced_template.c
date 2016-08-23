@@ -18,10 +18,12 @@ unsigned int const dimension={{n}};
 # include "declare_general_helpers.c"
 {% endif %}
 
-# include "declare_f_helpers.c"
+# define get_f_helper(i) ((f_helper[i]))
+# define set_f_helper(i,value) (f_helper[i] = value)
 
 {% if has_Jacobian: %}
-# include "declare_jac_helpers.c"
+# define get_jac_helper(i) ((jac_helper[i]))
+# define set_jac_helper(i,value) (jac_helper[i] = value)
 {% endif %}
 
 # define y(i) (* (double*) PyArray_GETPTR1(Y, i))
@@ -40,6 +42,9 @@ static void general(PyArrayObject * Y)
 }
 {% endif %}
 
+{% if number_of_f_helpers>0: %}
+# include "f_helpers_definitions.c"
+{% endif %}
 # include "f_definitions.c"
 
 static PyObject * py_f(PyObject *self, PyObject *args)
@@ -65,7 +70,6 @@ static PyObject * py_f(PyObject *self, PyObject *args)
 	}
 	
 	npy_intp dims[1] = {dimension};
-	
 	PyArrayObject* dY = (PyArrayObject *) PyArray_EMPTY(1, dims, TYPE_INDEX, 0);
 	
 	if (dY == NULL)
@@ -78,12 +82,20 @@ static PyObject * py_f(PyObject *self, PyObject *args)
 	general(Y);
 	{% endif %}
 	
+	{% if number_of_f_helpers>0: %}
+	double f_helper[{{number_of_f_helpers}}];
+	# include "f_helpers.c"
+	{% endif %}
+	
 	# include "f.c"
 	
 	return PyArray_Return(dY);
 }
 
 {% if has_Jacobian: %}
+{% if number_of_jac_helpers>0: %}
+# include "jac_helpers_definitions.c"
+{% endif %}
 # include "jac_definitions.c"
 
 static PyObject * py_jac(PyObject *self, PyObject *args)
@@ -124,6 +136,11 @@ static PyObject * py_jac(PyObject *self, PyObject *args)
 	
 	{% if has_helpers: %}
 	general(Y);
+	{% endif %}
+	
+	{% if number_of_jac_helpers>0: %}
+	double jac_helper[{{number_of_jac_helpers}}];
+	# include "jac_helpers.c"
 	{% endif %}
 	
 	# include "jac.c"

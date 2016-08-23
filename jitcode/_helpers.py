@@ -194,7 +194,6 @@ def render_and_write_code_old(
 
 def render_and_write_code(
 	expressions,
-	helpers,
 	tmpfile,
 	name,
 	user_functions = {},
@@ -202,26 +201,8 @@ def render_and_write_code(
 	arguments = []
 	):
 	
-	set_helper = Function("set_"+name+"_helper")
-	get_helper = Function("get_"+name+"_helper")
-	substitutions = [(helper[0], get_helper(i)) for i,helper in enumerate(helpers)]
-	
-	user_functions["set_"+name+"_helper"] = "set_"+name+"_helper"
-	user_functions["get_"+name+"_helper"] = "get_"+name+"_helper"
-	
-	with open(tmpfile("declare_"+name+"_helpers.c"), "w") as output:
-		output.write("# define get_%s_helper(i) ((%s_helper[i]))\n"%(name,name))
-		output.write("# define set_%s_helper(i,value) (%s_helper[i] = value)\n"%(name,name))
-	
-	def helperlines():
-		for i,helper in enumerate(helpers):
-			expression = set_helper(i, helper[1].subs(substitutions))
-			codeline = ccode(expression, user_functions=user_functions)
-			yield check_code(codeline) + ";\n"
-	
 	def codelines():
 		for expression in expressions:
-			expression = expression.subs(substitutions)
 			codeline = ccode(expression, user_functions=user_functions)
 			yield check_code(codeline) + ";\n"
 	
@@ -229,16 +210,11 @@ def render_and_write_code(
 		open( tmpfile(name+".c"            ), "w" ) as mainfile, \
 		open( tmpfile(name+"_definitions.c"), "w" ) as deffile:
 		
-		if helpers:
-			mainfile.write("double %s_helper[%i];\n" % (name, len(helpers)))
-			arguments += [(name+"_helper","double*")]
-		
 		if chunk_size < 1:
-			for line in chain(helperlines(), codelines()):
+			for line in codelines():
 				mainfile.write(line)
 		else:
-			write_in_chunks(helperlines(), mainfile, deffile, name+"_helper", chunk_size, arguments[1:])
-			write_in_chunks(codelines()  , mainfile, deffile, name+"code"  , chunk_size, arguments)
+			write_in_chunks(codelines(), mainfile, deffile, name, chunk_size, arguments)
 
 
 def render_template(filename, target, **kwargs):
