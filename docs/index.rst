@@ -70,8 +70,9 @@ The following diagram details which command calls which other command when neede
 	{rank = same; "save_compiled"; "set_integrator"}
 	"set_initial_value" -> "set_integrator";
 	"save_compiled" -> "compile_C";
-	"set_integrator" -> "generate_functions" -> "compile_C" -> "generate_f_C";
+	"set_integrator" -> "generate_functions" -> "compile_C" -> "generate_f_C" -> "generate_helpers_C";
 	"compile_C" -> "generate_jac_C" -> "generate_jac_sym";
+	"generate_jac_C"  -> "generate_helpers_C";
 	"generate_functions" -> "generate_lambdas" -> "generate_f_lambda";
 	"generate_lambdas" -> "generate_jac_lambda"-> "generate_jac_sym";
 
