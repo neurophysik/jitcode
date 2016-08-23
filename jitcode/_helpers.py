@@ -1,12 +1,11 @@
 from __future__ import print_function, division, with_statement
 from jinja2 import Environment, FileSystemLoader
 from sympy.printing.ccode import ccode
-from sympy import Function
 from sys import version_info, stderr
 import numpy as np
 from os import path
 from warnings import warn
-from itertools import chain, count
+from itertools import chain
 from sympy.core.cache import clear_cache
 
 
