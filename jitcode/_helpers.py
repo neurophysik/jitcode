@@ -196,10 +196,12 @@ def render_and_write_code(
 	expressions,
 	tmpfile,
 	name,
-	user_functions = {},
+	functions = [],
 	chunk_size = 100,
 	arguments = []
 	):
+	
+	user_functions = {function:function for function in functions}
 	
 	def codelines():
 		for expression in expressions:
@@ -215,7 +217,6 @@ def render_and_write_code(
 				mainfile.write(line)
 		else:
 			write_in_chunks(codelines(), mainfile, deffile, name, chunk_size, arguments)
-
 
 def render_template(filename, target, **kwargs):
 	folder = path.dirname(__file__)

@@ -293,7 +293,7 @@ class jitcode(ode):
 					(set_helper(i, helper[1]) for i,helper in enumerate(more_helpers)),
 					self._tmpfile,
 					"f_helpers",
-					{"y":"y", "get_f_helper":"get_f_helper", "set_f_helper":"set_f_helper"},
+					["y", "get_f_helper", "set_f_helper"],
 					chunk_size = chunk_size,
 					arguments = [("Y", "PyArrayObject*"), ("f_helper","double*")]
 					)
@@ -305,7 +305,7 @@ class jitcode(ode):
 			(set_dy(i,entry) for i,entry in enumerate(f_sym_wc)),
 			self._tmpfile,
 			"f",
-			{"set_dy":"set_dy", "y":"y", "get_f_helper":"get_f_helper"},
+			["set_dy", "y", "get_f_helper"],
 			chunk_size = chunk_size,
 			arguments = arguments
 			)
@@ -362,7 +362,7 @@ class jitcode(ode):
 					(set_helper(i, helper[1]) for i,helper in enumerate(more_helpers)),
 					self._tmpfile,
 					"jac_helpers",
-					{"y":"y", "get_jac_helper":"get_jac_helper", "set_jac_helper":"set_jac_helper"},
+					["y", "get_jac_helper", "set_jac_helper"],
 					chunk_size = chunk_size,
 					arguments = [("Y", "PyArrayObject*"), ("jac_helper","double*")]
 					)
@@ -380,11 +380,10 @@ class jitcode(ode):
 			),
 			self._tmpfile,
 			"jac",
-			{"set_dfdy":"set_dfdy", "y":"y", "get_jac_helper":"get_jac_helper"},
+			["set_dfdy", "y", "get_jac_helper"],
 			chunk_size = chunk_size,
 			arguments = arguments
 		)
-
 		
 		self._jac_C_source = True
 	
