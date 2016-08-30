@@ -458,7 +458,7 @@ class jitcode(ode):
 		verbose : boolean
 			Whether the compiler commands shall be shown. This is the same as Setuptools’ `verbose` setting.
 		modulename : string or `None`
-			The name used for the compiled module. If `None` or empty, the filename will be chosen by JiTCODE based on previously used filenames or default to `jitced.so`. The only reason why you may want to change this is if you want to save the module file for later use (with`save_compiled`). It is not possible to re-use a modulename for a given instance of `jitcode` (due to the limitations of Python’s import machinery).
+			The name used for the compiled module. If `None` or empty, the filename will be chosen by JiTCODE based on previously used filenames or default to `jitced.so`. The only reason why you may want to change this is if you want to save the module file for later use (with`save_compiled`). It is not possible to re-use a modulename for a given instance of Python (due to the limitations of Python’s import machinery).
 		
 		Notes
 		-----
