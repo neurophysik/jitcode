@@ -165,7 +165,7 @@ def _handle_input(f_sym,n):
 		len_f = len(f_sym)
 		if (n is not None) and(len_f != n):
 			raise ValueError("len(f_sym) and n do not match.")
-		return (lambda: (entry.doit() for entry in f_sym), len_f)
+		return (lambda: (sympy.sympify(entry.doit()) for entry in f_sym), len_f)
 
 #: A list with the default extra compile arguments. Use and modify these to get the most of future versions of JiTCODE. Note that without `-Ofast`, `-ffast-math`, or `-funsafe-math-optimizations` (if supported by your compiler), you may experience a considerable speed loss since SymPy uses the `pow` function for small integer powers (`SymPy Issue 8997`_).
 DEFAULT_COMPILE_ARGS = [
