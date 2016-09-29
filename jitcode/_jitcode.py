@@ -6,7 +6,7 @@ from __future__ import print_function, absolute_import
 from scipy.integrate import ode
 from os import path as path
 from sys import version_info, modules
-from numpy import array, hstack, log
+from numpy import array, hstack, log, get_include
 from warnings import warn
 from traceback import format_exc
 from types import FunctionType, BuiltinFunctionType
@@ -501,7 +501,7 @@ class jitcode(ode):
 			ext_modules = [Extension(
 				self._modulename,
 				sources = [sourcefile],
-				extra_compile_args = extra_compile_args
+				extra_compile_args = ["-I" + get_include()] + extra_compile_args
 				)],
 			script_args = [
 				"build_ext",
