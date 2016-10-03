@@ -136,12 +136,9 @@ def _jac_from_f_with_helpers(f, helpers, simplify, n):
 	dependent_helpers = [[] for i in range(n)]
 	for i in range(n):
 		for helper in helpers:
-			derivative = 0
-			if helper[1].has(y(i)):
-				derivative = sympy.diff(helper[1], y(i))
+			derivative = sympy.diff(helper[1], y(i))
 			for other_helper in dependent_helpers[i]:
-				if helper[1].has(other_helper[0]):
-					derivative += sympy.diff(helper[1],other_helper[0]) * other_helper[1]
+				derivative += sympy.diff(helper[1],other_helper[0]) * other_helper[1]
 			if derivative:
 				dependent_helpers[i].append( (helper[0], derivative) )
 	
