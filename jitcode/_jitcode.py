@@ -715,8 +715,8 @@ class jitcode_lyap(jitcode):
 	
 	def set_initial_value(self, y, t=0.0):
 		new_y = [y]
-		for i in range(self._n_lyap):
-			new_y += [random_direction(self.n_basic)]
+		for _ in range(self._n_lyap):
+			new_y.append(random_direction(self.n_basic))
 		
 		super(jitcode_lyap, self).set_initial_value(hstack(new_y), t)
 	
