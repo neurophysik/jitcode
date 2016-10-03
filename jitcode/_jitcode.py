@@ -710,7 +710,7 @@ class jitcode_lyap(jitcode):
 			f_lyap,
 			helpers = helpers,
 			wants_jacobian = wants_jacobian,
-			n = self._n_lyap*(n+1)
+			n = self.n_basic*(self._n_lyap+1)
 			)
 	
 	def set_initial_value(self, y, t=0.0):
