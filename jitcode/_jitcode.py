@@ -7,6 +7,7 @@ from scipy.integrate import ode
 from os import path as path
 from sys import version_info, modules
 from numpy import array, hstack, log, get_include
+import numpy as np
 from warnings import warn
 from traceback import format_exc
 from types import FunctionType, BuiltinFunctionType
@@ -738,6 +739,9 @@ class jitcode_lyap(jitcode):
 		n = self.n_basic
 		tangent_vectors = [ self._y[(i+1)*n:(i+2)*n] for i in range(self._n_lyap) ]
 		norms = orthonormalise(tangent_vectors)
+		if not np.all(np.isfinite(norms)):
+			warn("Norms of perturbation vectors for Lyapunov exponents out of numerical bounds. You probably waited too long before renormalising and should call integrate with smaller intervals between steps (as renormalisations happen once with every call of integrate).")
+		
 		lyaps = log(norms) / delta_t
 		
 		super(jitcode_lyap, self).set_initial_value(self._y, self.t)
