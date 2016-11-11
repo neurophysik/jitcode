@@ -36,7 +36,7 @@ if __name__ == "__main__":
 	ODE.set_integrator("vode")
 	ODE.set_initial_value(initial_state,0.0)
 	
-	data = np.vstack(ODE.integrate(t) for t in range(10,100000,10))
+	data = np.vstack(ODE.integrate(T) for T in range(10,100000,10))
 	
 	for i in range(n):
 		lyap = np.average(data[1000:,n+i])
