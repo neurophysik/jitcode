@@ -4,7 +4,7 @@
 """
 This example showcases several advanced features of JiTCODE that are relevant for an efficient integration of more complex systems.
 
-Suppose we want to integrate a system of :math:`N=500` Rössler oscillators, with the :math:`i`-th oscillator being described by the following differential equations (note that we used :math:`v` instead of :math:`y` for the third dynamical variable to avoid an overloading of symbols):
+Suppose we want to integrate a system of :math:`N=500` Rössler oscillators, with the :math:`i`-th oscillator being described by the following differential equations (note that we used :math:`v` instead of :math:`y` for the second dynamical variable to avoid an overloading of symbols):
 
 .. math::
 	\\begin{alignedat}{1}
