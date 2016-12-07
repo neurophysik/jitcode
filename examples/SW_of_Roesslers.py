@@ -13,9 +13,9 @@ Suppose we want to integrate a system of :math:`N=500` Rössler oscillators, wit
 	\\dot{z}_i &= b + z_i (x_i -c) + k \\sum_{j=0}^N (x_j-x_i)
 	\\end{alignedat}
 
-The control parameters shall be :math:`a = 0.165`, :math:`b = 0.2`, :math:`c = 10.0`, and :math:`k = 0.01`. The (frequency) parameter :math:`ω_i` shall be picked randomly from the uniform distribution on :math:`[0.8,1.0]` for each :math:`i`. :math:`A∈ℝ^{N×N}` shall be the adjacency matrix of a one-dimensional small-world network (which shall be provided by a function `small_world_network` in the example code). So, the :math:`x` compenents are coupled diffusively with a small-world coupling topology, while the :math:`z` components are coupled diffusively to their mean field.
+The control parameters shall be :math:`a = 0.165`, :math:`b = 0.2`, :math:`c = 10.0`, and :math:`k = 0.01`. The (frequency) parameter :math:`ω_i` shall be picked randomly from the uniform distribution on :math:`[0.8,1.0]` for each :math:`i`. :math:`A∈ℝ^{N×N}` shall be the adjacency matrix of a one-dimensional small-world network (which shall be provided by a function `small_world_network` in the following example code). So, the :math:`x` compenents are coupled diffusively with a small-world coupling topology, while the :math:`z` components are coupled diffusively to their mean field.
 
-Without further ado, here is the example code; highlighted lines will be commented below:
+Without further ado, here is the example code (`complete running example <https://raw.githubusercontent.com/neurophysik/jitcode/master/examples/SW_of_Roesslers.py>`_); highlighted lines will be commented below:
 
 .. literalinclude:: ../examples/SW_of_Roesslers.py
 	:linenos:
