@@ -117,10 +117,12 @@ After every call of `integrate`, the tangent vectors are orthonormalised, and th
 These can then be further processed to obtain the Lyapunov exponents.
 The tangent vectors are intialised with random vectors, and you have to take care of the preiterations that the tangent vectors require to align themselves.
 
+Estimates for the Lyapunov vectors are returned as well.
+
 .. automodule:: double_fhn_lyapunov
 
 .. literalinclude:: ../examples/double_fhn_lyapunov.py
-	:emphasize-lines: 22-23,29-32
+	:emphasize-lines: 22-23,28-38
 	:start-after: example-start
 	:dedent: 1
 	:linenos:

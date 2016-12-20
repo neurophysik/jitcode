@@ -36,9 +36,15 @@ if __name__ == "__main__":
 	ODE.set_integrator("vode")
 	ODE.set_initial_value(initial_state,0.0)
 	
-	data = np.vstack(ODE.integrate(T) for T in range(10,100000,10))
+	times = range(10,100000,10)
+	lyaps = []
+	for time in times:
+		lyaps.append(ODE.integrate(time)[1])
+	
+	# converting to Numpy array for easier handling
+	lyaps = np.vstack(lyaps)
 	
 	for i in range(n):
-		lyap = np.average(data[1000:,n+i])
-		stderr = sem(data[1000:,n+i])
+		lyap = np.average(lyaps[1000:,i])
+		stderr = sem(lyaps[1000:,i]) # Note that this only an estimate
 		print("%i. Lyapunov exponent: % .4f ± %.4f" % (i+1,lyap,stderr))

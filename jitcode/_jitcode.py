@@ -690,6 +690,8 @@ class jitcode_lyap(jitcode):
 	"""
 	
 	def __init__(self, f_sym, helpers=None, wants_jacobian=False, n=None, n_lyap=-1):
+		warn("The output of integrate for jitcode_lyap was changed recently; it is now separated to several members of a tuple. If your old code doesn’t work anymore, this is why. Sorry about that, but rather sanitise early than never.")
+		
 		f_basic, n = _handle_input(f_sym,n)
 		self.n_basic = n
 		self._n_lyap = n if (n_lyap<0 or n_lyap>n) else n_lyap
@@ -728,8 +730,13 @@ class jitcode_lyap(jitcode):
 		Returns
 		-------
 		y : one-dimensional NumPy array
-			The first `len(f_sym)` entries are the state of the system.
-			The remaining entries are the “local” Lyapunov exponents as estimated from the growth or shrinking of the tangent vectors during the integration time of this very `integrate` command, i.e., :math:`\\frac{\\ln (α_i^{(p)})}{s_i}` in the notation of [BGGS80]_
+			The state of the system. Same as the output of `jitcode`’s `integrate` and `ode`’s `integrate`.
+		
+		lyaps : one-dimensional NumPy array
+			The “local” Lyapunov exponents as estimated from the growth or shrinking of the tangent vectors during the integration time of this very `integrate` command, i.e., :math:`\\frac{\\ln (α_i^{(p)})}{s_i}` in the notation of [BGGS80]_
+		
+		lyap_vectors : list of one-dimensional NumPy arrays
+			The Lyapunov vectors (normalised) after integration.
 		"""
 		
 		old_t = self.t
@@ -746,7 +753,7 @@ class jitcode_lyap(jitcode):
 		
 		super(jitcode_lyap, self).set_initial_value(self._y, self.t)
 		
-		return hstack((self._y[:n], lyaps))
+		return self._y[:n], lyaps, tangent_vectors
 	
 	def save_compiled(self, *args, **kwargs):
 		warn("Your module will be saved, but note that there is no method to generate a jitcode_lyap instance from a saved module file yet.")
