@@ -191,7 +191,7 @@ class jitcode(ode):
 	n : integer
 		Length of `f_sym`. While JiTCODE can easily determine this itself (and will, if necessary), this may take some time if `f_sym` is a generator function and `n` is large. Take care that this value is correct – if it isn’t, you will not get a helpful error message.
 	
-	silent : boolean
+	verbose : boolean
 		Whether JiTCODE shall give progress reports on the processing steps.
 	"""
 	
