@@ -7,6 +7,7 @@ from os import path
 from warnings import warn
 from itertools import chain
 from sympy.core.cache import clear_cache
+from sympy import __version__ as sympy_version
 
 
 # String manipulation
@@ -128,6 +129,12 @@ def write_in_chunks(lines, mainfile, deffile, name, chunk_size, arguments):
 	else:
 		lines = chain(first_chunk, lines)
 		
+		if sympy_version >= "1":
+			clear_sympy_cache = clear_cache
+		else:
+			def clear_sympy_cache(): pass
+			warn("Not clearing SymPy cache between chunks because this is buggy in this SymPy version. If excessive memory is used, this is why and you have to upgrade SymPy.")
+		
 		while True:
 			mainfile.write(funcname + "(")
 			deffile.write("void " + funcname + "(")
@@ -148,7 +155,7 @@ def write_in_chunks(lines, mainfile, deffile, name, chunk_size, arguments):
 				deffile.write("}\n")
 			
 			funcname = count_up(funcname)
-			clear_cache()
+			clear_sympy_cache()
 
 def render_and_write_code(
 	expressions,

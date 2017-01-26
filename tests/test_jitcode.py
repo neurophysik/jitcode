@@ -296,9 +296,9 @@ class lyapunov_test(unittest.TestCase):
 	
 	def tearDown(self):
 		self.ODE.set_initial_value(y0,0.0)
-		data = np.vstack(self.ODE.integrate(t) for t in range(10,100000,10))
-		result = np.average(data[1000:,self.n:], axis=0)
-		margin = standard_error(data[1000:,self.n:], axis=0)
+		data = np.vstack(self.ODE.integrate(t)[1] for t in range(10,100000,10))
+		result = np.average(data[1000:], axis=0)
+		margin = standard_error(data[1000:], axis=0)
 		self.assertLess( np.max(margin), 0.003 )
 		for i in range(self.n):
 			self.assertLess( result[i]-lyaps[i], 3*margin[i] )
