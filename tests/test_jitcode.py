@@ -342,5 +342,5 @@ class errors_test(unittest.TestCase):
 			ODE = jitcode(f)
 			ODE.set_initial_value(np.array([1.,2.,3.]),0.0)
 
-
-unittest.main(buffer=True)
+if __name__ == "__main__":
+	unittest.main(buffer=True)

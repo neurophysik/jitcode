@@ -72,4 +72,5 @@ class OrdersTest(unittest.TestCase):
 		assert_allclose( norms, np.array([np.sqrt(2),np.sqrt(0.5)]) )
 
 
-unittest.main(buffer=True)
+if __name__ == "__main__":
+	unittest.main(buffer=True)
