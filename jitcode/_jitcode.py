@@ -689,9 +689,12 @@ class jitcode_lyap(jitcode):
 	----------
 	n_lyap : integer
 		Number of Lyapunov exponents to calculate. If negative or larger than the dimension of the system, all Lyapunov exponents are calculated.
+	
+	simplify : boolean
+		Whether the differential equations for the tangent vector shall be subjected to SymPy’s `simplify`. Doing so may speed up the time evolution but may slow down the generation of the code (considerably for large differential equations).
 	"""
 	
-	def __init__(self, f_sym, helpers=None, wants_jacobian=False, n=None, n_lyap=-1):
+	def __init__(self, f_sym, helpers=None, wants_jacobian=False, n=None, n_lyap=-1, simplify=True):
 		warn("The output of integrate for jitcode_lyap was changed recently; it is now separated to several members of a tuple. If your old code doesn’t work anymore, this is why. Sorry about that, but rather sanitise early than never.")
 		
 		f_basic, n = _handle_input(f_sym,n)
@@ -709,7 +712,10 @@ class jitcode_lyap(jitcode):
 			
 			for i in range(self._n_lyap):
 				for line in _jac_from_f_with_helpers(f_basic, helpers, False, n):
-					yield sympy.simplify( sum( entry * y(k+(i+1)*n) for k,entry in enumerate(line) ), ratio=1.0 )
+					expression = sum( entry * y(k+(i+1)*n) for k,entry in enumerate(line) if entry )
+					if simplify:
+						expression = sympy.simplify( expression, ratio=1.0 )
+					yield expression
 		
 		super(jitcode_lyap, self).__init__(
 			f_lyap,
