@@ -20,7 +20,7 @@ This has the following advantages:
 	This is for example interesting if you want to simulate dynamics on a sparse network, as non-existing links are not taken into account when calculating the derivative when integrating.
 
 *	**Automatically calculated Jacobian and Lyapunov exponents**
-	As the derivative is provided symbolically, SymPy’s automatic derivation routines can be employed to calculate the Jacobian desired by some integrators as well as the ODE for the tangent vector required for calculating the Lyapunov expontents (see `lyapunov`).
+	As the derivative is provided symbolically, SymPy’s automatic derivation routines can be employed to calculate the Jacobian desired by some integrators as well as the ODE for the tangent vector required for calculating the Lyapunov exponents (see `lyapunov`).
 
 *	**SymPy interface**
 	If you are working with SymPy anyway – e.g., to calculate fixed points –, you do not need to bother much with translating your equations.
@@ -85,7 +85,7 @@ For very large differential equations, there are two sources of memory or speed 
 
 * **The compiler**, who has to compile megabytes of unstructured code and tries to handle it all at once, which may use too much time and memory. For some compilers, disabling all optimisation can avert this problem, but then, compiler optimisations usually are a good thing.
 
-  As a compromise, JiTCODE structures large source code into chunks, which the compiler then handles separately. This way optimisation can happen within the chunks, but not accross chunks. The precise size of those chunks can be controlled by the option `chunk_size` which is available for all code-generation subroutines.
+  As a compromise, JiTCODE structures large source code into chunks, which the compiler then handles separately. This way optimisation can happen within the chunks, but not across chunks. The precise size of those chunks can be controlled by the option `chunk_size` which is available for all code-generation subroutines.
   
   We obtained better performances in these regards with Clang than with GCC.
 
@@ -113,7 +113,7 @@ Calculating Lyapunov exponents with `jitcode_lyap`
 It works just like `jitcode`, except that it generates and integrates additional differential equations for the tangent vectors.
 After every call of `integrate`, the tangent vectors are orthonormalised, and the “local” Lyapunov exponents for this integration step are returned alongside with the system’s state.
 These can then be further processed to obtain the Lyapunov exponents.
-The tangent vectors are intialised with random vectors, and you have to take care of the preiterations that the tangent vectors require to align themselves.
+The tangent vectors are initialised with random vectors, and you have to take care of the preiterations that the tangent vectors require to align themselves.
 
 Estimates for the Lyapunov vectors are returned as well. There also a class (`jitcode_restricted_lyap`) that allows to calculate Lyapunov exponents for the dynamics transversal to some manifold (such as a synchronisation manifold).
 

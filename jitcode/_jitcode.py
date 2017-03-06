@@ -196,8 +196,8 @@ class jitcode(ode):
 	"""
 	
 	# Naming convention:
-	# If an underscore-prefixed and regular variant of a function exist, the ormer calls the latter if needed and tells the user what it did.
-	
+	# If an underscore-prefixed and regular variant of a function exist, the former calls the latter if needed and tells the user what it did.
+
 	def __init__(self, f_sym, helpers=None, wants_jacobian=False, n=None, verbose=True):
 		self.f_sym, self.n = _handle_input(f_sym,n)
 		self.f = None
@@ -559,7 +559,7 @@ class jitcode(ode):
 		"""
 		
 		if self.helpers:
-			warn("Lambdification handles helpers by pluggin them in. This may be very ineficient")
+			warn("Lambdification handles helpers by plugging them in. This may be very inefficient")
 		
 		self._generate_jac_sym()
 		
