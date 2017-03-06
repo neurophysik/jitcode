@@ -770,15 +770,12 @@ class jitcode_lyap(jitcode):
 
 
 class jitcode_restricted_lyap(jitcode_lyap):
-	"""Calculates the largest Lyapunov exponent in orthogonal direction to a predefined plane, i.e. the projection of tangent vector onto that plane vanishes. The handling is the same as that for `jitcode` except for:
+	"""Calculates the largest Lyapunov exponent in orthogonal direction to a predefined plane, i.e. the projection of tangent vector onto that plane vanishes. The handling is the same as that for `jitcode_lyap` except for:
 	
 	Parameters
 	----------
 	vectors : iterable of pairs of NumPy arrays
 		A basis of the plane, whose projection shall be removed.
-	
-	simplify : boolean
-		Whether the differential equations for the tangent vector shall be subjected to SymPy’s `simplify`. Doing so may speed up the time evolution but may slow down the generation of the code (considerably for large differential equations).
 	"""
 	
 	def __init__(self, f_sym, helpers=None, vectors=[], wants_jacobian=False, n=None, simplify=True):
