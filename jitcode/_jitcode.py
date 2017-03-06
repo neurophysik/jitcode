@@ -731,6 +731,14 @@ class jitcode_lyap(jitcode):
 		
 		super(jitcode_lyap, self).set_initial_value(hstack(new_y), t)
 	
+	def norms(self):
+		n = self.n_basic
+		tangent_vectors = [ self._y[(i+1)*n:(i+2)*n] for i in range(self._n_lyap) ]
+		norms = orthonormalise(tangent_vectors)
+		if not np.all(np.isfinite(norms)):
+			warn("Norms of perturbation vectors for Lyapunov exponents out of numerical bounds. You probably waited too long before renormalising and should call integrate with smaller intervals between steps (as renormalisations happen once with every call of integrate).")
+		return norms, tangent_vectors
+	
 	def integrate(self, *args, **kwargs):
 		"""
 		Like SciPy’s ODE’s `integrate`, except for orthonormalising the tangent vectors and:
@@ -750,20 +758,48 @@ class jitcode_lyap(jitcode):
 		old_t = self.t
 		super(jitcode_lyap, self).integrate(*args, **kwargs)
 		delta_t = self.t-old_t
-		
-		n = self.n_basic
-		tangent_vectors = [ self._y[(i+1)*n:(i+2)*n] for i in range(self._n_lyap) ]
-		norms = orthonormalise(tangent_vectors)
-		if not np.all(np.isfinite(norms)):
-			warn("Norms of perturbation vectors for Lyapunov exponents out of numerical bounds. You probably waited too long before renormalising and should call integrate with smaller intervals between steps (as renormalisations happen once with every call of integrate).")
-		
+		norms, tangent_vectors = self.norms()
 		lyaps = log(norms) / delta_t
-		
 		super(jitcode_lyap, self).set_initial_value(self._y, self.t)
 		
-		return self._y[:n], lyaps, tangent_vectors
+		return self._y[:self.n_basic], lyaps, tangent_vectors
 	
 	def save_compiled(self, *args, **kwargs):
 		warn("Your module will be saved, but note that there is no method to generate a jitcode_lyap instance from a saved module file yet.")
 		super(jitcode_lyap, self).save_compiled(*args, **kwargs)
 
+
+class jitcode_restricted_lyap(jitcode_lyap):
+	"""Calculates the largest Lyapunov exponent in orthogonal direction to a predefined plane, i.e. the projection of tangent vector onto that plane vanishes. The handling is the same as that for `jitcode` except for:
+	
+	Parameters
+	----------
+	vectors : iterable of pairs of NumPy arrays
+		A basis of the plane, whose projection shall be removed.
+	
+	simplify : boolean
+		Whether the differential equations for the tangent vector shall be subjected to SymPy’s `simplify`. Doing so may speed up the time evolution but may slow down the generation of the code (considerably for large differential equations).
+	"""
+	
+	def __init__(self, f_sym, helpers=None, vectors=[], wants_jacobian=False, n=None, simplify=True):
+		super(jitcode_restricted_lyap, self).__init__(
+			f_sym = f_sym,
+			helpers = helpers,
+			wants_jacobian = wants_jacobian,
+			n = n,
+			simplify = simplify,
+			n_lyap = 1
+			)
+		
+		self.vectors = [ vector/np.linalg.norm(vector) for vector in vectors]
+	
+	def norms(self):
+		n = self.n_basic
+		tangent_vector = self._y[n:2*n]
+		for vector in self.vectors:
+			tangent_vector -= np.dot(vector, tangent_vector)*vector
+		norm = np.linalg.norm(tangent_vector)
+		tangent_vector /= norm
+		if not np.isfinite(norm):
+			warn("Norm of perturbation vector for Lyapunov exponent out of numerical bounds. You probably waited too long before renormalising and should call integrate with smaller intervals between steps (as renormalisations happen once with every call of integrate).")
+		return norm, tangent_vector
