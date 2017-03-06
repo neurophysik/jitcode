@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 """
-Suppose our differential equation is :math:`\dot{y} = f(y)` with :math:`y∈ℝ^4` and:
+Suppose our differential equation is :math:`\dot{y} = f(y)` with :math:`y∈ℝ^4`,
 
 .. math::
 
@@ -14,7 +14,7 @@ Suppose our differential equation is :math:`\dot{y} = f(y)` with :math:`y∈ℝ^
 	b_2 y_2 - c y_3
 	\\end{matrix} \\right),
 
-with :math:`a = -0.025794`, :math:`b_1 = 0.0065`, :math:`b_2 = 0.0135`, :math:`c = 0.02`, and :math:`k = 0.128`.
+and :math:`a = -0.025794`, :math:`b_1 = 0.0065`, :math:`b_2 = 0.0135`, :math:`c = 0.02`, and :math:`k = 0.128`.
 Then the following code integrates the above for 100000 time units, with :math:`y(t=0) = (1,2,3,4)`, and writes the results to :code:`timeseries.dat`:
 """
 

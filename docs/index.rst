@@ -115,7 +115,7 @@ After every call of `integrate`, the tangent vectors are orthonormalised, and th
 These can then be further processed to obtain the Lyapunov exponents.
 The tangent vectors are intialised with random vectors, and you have to take care of the preiterations that the tangent vectors require to align themselves.
 
-Estimates for the Lyapunov vectors are returned as well. There also a class (`jitcode_restricted_lyap`) that allows to calculate Lyapunov exponents for the dynamics transversal to some manifold.
+Estimates for the Lyapunov vectors are returned as well. There also a class (`jitcode_restricted_lyap`) that allows to calculate Lyapunov exponents for the dynamics transversal to some manifold (such as a synchronisation manifold).
 
 .. automodule:: double_fhn_lyapunov
 
