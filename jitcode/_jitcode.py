@@ -695,8 +695,6 @@ class jitcode_lyap(jitcode):
 	"""
 	
 	def __init__(self, f_sym, helpers=None, wants_jacobian=False, n=None, n_lyap=-1, simplify=True):
-		warn("The output of integrate for jitcode_lyap was changed recently; it is now separated to several members of a tuple. If your old code doesn’t work anymore, this is why. Sorry about that, but rather sanitise early than never.")
-		
 		f_basic, n = _handle_input(f_sym,n)
 		self.n_basic = n
 		self._n_lyap = n if (n_lyap<0 or n_lyap>n) else n_lyap
