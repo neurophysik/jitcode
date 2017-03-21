@@ -1,9 +1,6 @@
-# pragma GCC diagnostic push
-# pragma GCC diagnostic ignored "-pedantic"
 # define NPY_NO_DEPRECATED_API NPY_1_8_API_VERSION
 # include <Python.h>
 # include <numpy/arrayobject.h>
-# pragma GCC diagnostic pop
 
 # include <math.h>
 
