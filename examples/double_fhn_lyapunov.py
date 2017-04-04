@@ -10,7 +10,7 @@ from __future__ import print_function
 
 if __name__ == "__main__":
 	# example-start
-	from jitcode import jitcode_lyap, provide_basic_symbols
+	from jitcode import jitcode_lyap, y
 	from scipy.stats import sem
 	import numpy as np
 	
@@ -19,8 +19,6 @@ if __name__ == "__main__":
 	b2 =  0.0135
 	c  =  0.02
 	k  =  0.128
-	
-	t, y = provide_basic_symbols()
 	
 	f = [
 		y(0) * ( a-y(0) ) * ( y(0)-1.0 ) - y(1) + k * (y(2) - y(0)),

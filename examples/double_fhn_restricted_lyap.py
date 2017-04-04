@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
 
-from jitcode import jitcode_restricted_lyap, provide_basic_symbols
+from jitcode import jitcode_restricted_lyap, y
 import numpy as np
 from scipy.stats import sem
 
@@ -10,8 +10,6 @@ b1 =  0.01
 b2 =  0.01
 c  =  0.02
 k  =  0.128
-
-t, y = provide_basic_symbols()
 
 f = [
 	y(0) * ( a-y(0) ) * ( y(0)-1.0 ) - y(1) + k * (y(2) - y(0)),

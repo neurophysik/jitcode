@@ -120,7 +120,7 @@ Estimates for the Lyapunov vectors are returned as well. There also a class (`ji
 .. automodule:: double_fhn_lyapunov
 
 .. literalinclude:: ../examples/double_fhn_lyapunov.py
-	:emphasize-lines: 22-23,28-38
+	:emphasize-lines: 20-21,26-36
 	:start-after: example-start
 	:dedent: 1
 	:linenos:
