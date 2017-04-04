@@ -250,6 +250,12 @@ class jitcode(ode):
 		
 		self.jac_sym = _jac_from_f_with_helpers(self.f_sym, self.helpers, simplify, self.n)
 	
+	def _default_arguments(self):
+		return [
+			("t", "double const"),
+			("Y", "PyArrayObject *restrict const")
+			]
+	
 	def _generate_f_C(self):
 		if not self._f_C_source:
 			self.generate_f_C()
@@ -285,7 +291,8 @@ class jitcode(ode):
 		if self.helpers:
 			f_sym_wc = (entry.subs(self.helper_subs) for entry in f_sym_wc)
 		
-		arguments = [("Y", "PyArrayObject *restrict const")]
+		arguments = self._default_arguments()
+		
 		if self._number_of_general_helpers:
 			arguments.append(("general_helper","double const *restrict const"))
 		
@@ -356,7 +363,7 @@ class jitcode(ode):
 		jac_sym_wc = sympy.Matrix([ [entry.subs(self.helper_subs) for entry in line] for line in self.jac_sym ])
 		self.sparse_jac = sparse
 		
-		arguments = [("Y", "PyArrayObject *restrict const")]
+		arguments = self._default_arguments()
 		if self._number_of_general_helpers:
 			arguments.append(("general_helper","double const *restrict const"))
 		
