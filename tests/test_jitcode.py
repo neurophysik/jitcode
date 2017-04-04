@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import os
-from jitcode import jitcode, jitcode_lyap, provide_basic_symbols, ode_from_module_file, convert_to_required_symbols
+from jitcode import jitcode, t, y, jitcode_lyap, ode_from_module_file, convert_to_required_symbols
 from jitcode._jitcode import _is_C, _is_lambda, _sort_helpers
 import numpy as np
 from numpy.testing import assert_allclose
@@ -46,8 +46,6 @@ b1 =  0.0065
 b2 =  0.0135
 c  =  0.02
 k  =  0.128
-
-t, y = provide_basic_symbols()
 
 f = [
 	y(0) * ( a-y(0) ) * ( y(0)-1.0 ) - y(1) + k * (y(2) - y(0)),

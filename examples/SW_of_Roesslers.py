@@ -21,7 +21,7 @@ Without further ado, here is the example code (`complete running example <https:
 	:linenos:
 	:dedent: 1
 	:lines: 64-
-	:emphasize-lines: 9, 27-29, 42, 31, 48, 49, 33
+	:emphasize-lines: 9, 25-27, 40, 29, 46, 47, 31
 
 Explanation of selected features and choices:
 
@@ -61,7 +61,7 @@ if __name__ == "__main__":
 		return A
 	
 	# example-start
-	from jitcode import jitcode, provide_basic_symbols
+	from jitcode import jitcode, y
 	import numpy as np
 	import sympy
 	
@@ -84,8 +84,6 @@ if __name__ == "__main__":
 	
 	# generate differential equations
 	# -------------------------------
-	
-	t, y = provide_basic_symbols()
 	
 	sum_z = sympy.Symbol("sum_z")
 	j = sympy.Symbol("j")

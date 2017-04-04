@@ -27,19 +27,25 @@ from jitcode._helpers import (
 import sympy
 import shutil
 
+#: the symbol for the state that must be used to define the differential equation. It is function and the integer argument denotes the component. You may just as well define the an analogous function directly with SymPy, but using this function is the best way to get the most of future versions of JiTCODE, in particular avoiding incompatibilities. If you wish to use other symbols for the dynamical variables, you can use `convert_to_required_symbols` for conversion.
+y = sympy.Function("y")
+
+#: the symbol for time that must be used to define the differential equation. If your differential equation has no explicit time dependency (“autonomous system”), you do not need this. You may just as well define the an analogous symbol directly with SymPy, but using this function is the best way to get the most of future versions of JiTCODE, in particular avoiding incompatibilities.
+t = sympy.Symbol("t", real=True)
+
 def provide_basic_symbols():
 	"""
-	provides the basic symbols that must be used to define the differential equation. You may just as well define the respective symbols and functions directly with SymPy, but using this function is the best way to get the most of future versions of JiTCODE, in particular avoiding incompatibilities. If you wish to use other symbols for the dynamical variables, you can use `convert_to_required_symbols` for conversion.
+	This function is provided for backwards compatibility only. Use `from jitcode import y,t` or similar instead.
 	
 	Returns
 	-------
 	t : SymPy symbol
-		represents time
+		same as `t`
 	y : SymPy function
-		represents the ODE’s state, with the integer argument denoting the component
+		same as `y`
 	"""
 	
-	return sympy.Symbol("t", real=True), sympy.Function("y")
+	return t, y 
 
 def convert_to_required_symbols(dynvars, f_sym, helpers=[], n=None):
 	"""
@@ -65,7 +71,6 @@ def convert_to_required_symbols(dynvars, f_sym, helpers=[], n=None):
 	
 	f_sym, n = _handle_input(f_sym, n)
 	
-	_, y = provide_basic_symbols()
 	substitutions = [(dynvar, y(i)) for i,dynvar in enumerate(dynvars)]
 	
 	def f():
@@ -132,8 +137,6 @@ def _sort_helpers(helpers):
 	return helpers
 
 def _jac_from_f_with_helpers(f, helpers, simplify, n):
-	t,y = provide_basic_symbols()
-	
 	dependent_helpers = [[] for i in range(n)]
 	for i in range(n):
 		for helper in helpers:
@@ -537,7 +540,6 @@ class jitcode(ode):
 		if self.helpers:
 			warn("Lambdification does not handle helpers in an efficient manner.")
 		
-		t,y = provide_basic_symbols()
 		Y = sympy.symarray("Y", self.n)
 		
 		substitutions = self.helpers[::-1] + [(y(i),Y[i]) for i in range(self.n)]
@@ -565,7 +567,6 @@ class jitcode(ode):
 		
 		jac_matrix = sympy.Matrix([ [entry for entry in line] for line in self.jac_sym ])
 		
-		t,y = provide_basic_symbols()
 		Y = sympy.symarray("Y", self.n)
 		
 		substitutions = self.helpers[::-1] + [(y(i),Y[i]) for i in range(self.n)]
@@ -695,13 +696,9 @@ class jitcode_lyap(jitcode):
 	"""
 	
 	def __init__(self, f_sym, helpers=None, wants_jacobian=False, n=None, n_lyap=-1, simplify=True):
-		warn("The output of integrate for jitcode_lyap was changed recently; it is now separated to several members of a tuple. If your old code doesn’t work anymore, this is why. Sorry about that, but rather sanitise early than never.")
-		
 		f_basic, n = _handle_input(f_sym,n)
 		self.n_basic = n
 		self._n_lyap = n if (n_lyap<0 or n_lyap>n) else n_lyap
-		
-		_,y = provide_basic_symbols()
 		
 		helpers = _sort_helpers(_sympify_helpers(helpers or []))
 		
