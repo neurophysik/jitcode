@@ -32,7 +32,7 @@ unsigned int const dimension={{n}};
 
 {% if number_of_general_helpers>0: %}
 # include "general_helpers_definitions.c"
-static void general(PyArrayObject *restrict const Y, double *restrict const general_helper)
+static void general(double const t, PyArrayObject *restrict const Y, double *restrict const general_helper)
 {
 	# include "general_helpers.c"
 }
@@ -76,7 +76,7 @@ static PyObject * py_f(PyObject *self, PyObject *args)
 	
 	{% if number_of_general_helpers>0: %}
 	double general_helper[{{number_of_general_helpers}}];
-	general(Y, general_helper);
+	general(t, Y, general_helper);
 	{% endif %}
 	
 	{% if number_of_f_helpers>0: %}
@@ -133,7 +133,7 @@ static PyObject * py_jac(PyObject *self, PyObject *args)
 	
 	{% if number_of_general_helpers>0: %}
 	double general_helper[{{number_of_general_helpers}}];
-	general(Y, general_helper);
+	general(t, Y, general_helper);
 	{% endif %}
 	
 	{% if number_of_jac_helpers>0: %}

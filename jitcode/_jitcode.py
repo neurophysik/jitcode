@@ -440,7 +440,7 @@ class jitcode(ode):
 				"general_helpers",
 				["y", "get_general_helper", "set_general_helper"],
 				chunk_size = chunk_size,
-				arguments = [("Y", "PyArrayObject *restrict const"), ("general_helper","double *restrict const")]
+				arguments = self._default_arguments() + [("general_helper","double *restrict const")]
 				)
 		
 		self._helper_C_source = True
