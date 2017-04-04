@@ -47,7 +47,7 @@ if __name__ == "__main__":
 		
 		# rewiring
 		for i in range(n):
-			for j in range(j):
+			for j in range(i):
 				if A[i,j] and (np.random.random() < rewiring_probability):
 					A[j,i] = A[i,j] = False
 					while True:
