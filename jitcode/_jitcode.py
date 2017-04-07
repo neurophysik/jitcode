@@ -27,10 +27,10 @@ from jitcode._helpers import (
 import sympy
 import shutil
 
-#: the symbol for the state that must be used to define the differential equation. It is function and the integer argument denotes the component. You may just as well define the an analogous function directly with SymPy, but using this function is the best way to get the most of future versions of JiTCODE, in particular avoiding incompatibilities. If you wish to use other symbols for the dynamical variables, you can use `convert_to_required_symbols` for conversion.
+#: the symbol for the state that must be used to define the differential equation. It is a function and the integer argument denotes the component. You may just as well define the an analogous function directly with SymPy, but using this function is the best way to get the most of future versions of JiTCODE, in particular avoiding incompatibilities. If you wish to use other symbols for the dynamical variables, you can use `convert_to_required_symbols` for conversion.
 y = sympy.Function("y")
 
-#: the symbol for time that must be used to define the differential equation. If your differential equation has no explicit time dependency (“autonomous system”), you do not need this. You may just as well define the an analogous symbol directly with SymPy, but using this function is the best way to get the most of future versions of JiTCODE, in particular avoiding incompatibilities.
+#: the symbol for time for defining the differential equation. If your differential equation has no explicit time dependency (“autonomous system”), you do not need this. You may just as well define the an analogous symbol directly with SymPy, but using this function is the best way to get the most of future versions of JiTCODE, in particular avoiding incompatibilities.
 t = sympy.Symbol("t", real=True)
 
 def provide_basic_symbols():
