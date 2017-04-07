@@ -12,7 +12,7 @@ MOCK_MODULES = [
 	'numpy', 'numpy.testing', 'numpy.random',
 	'scipy', 'scipy.integrate', 'scipy.integrate._ode', 'scipy.stats',
 	'sympy',
-	'jitcode', 'jitcode._helpers']
+	'jitcode', 'jitcxde_common']
 sys.modules.update((mod_name, Mock()) for mod_name in MOCK_MODULES)
 
 sys.modules['scipy.integrate'] = Mock(ode=object)

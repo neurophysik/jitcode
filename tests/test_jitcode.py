@@ -3,7 +3,7 @@
 
 import os
 from jitcode import jitcode, t, y, jitcode_lyap, ode_from_module_file, convert_to_required_symbols
-from jitcode._jitcode import _is_C, _is_lambda, _sort_helpers
+from jitcode._jitcode import _is_C, _is_lambda
 import numpy as np
 from numpy.testing import assert_allclose
 from scipy.stats import sem as standard_error
@@ -249,12 +249,6 @@ class basic_test_with_helpers(basic_test):
 		self.argdict = {"f_sym": f_alt, "helpers": get_f_alt_helpers()}
 
 class helpers_test(unittest.TestCase):
-	def test_sorting(self):
-		p, q, r = symbols("p, q, r")
-		cyclic_helpers = [ [p,q], [q,r], [r,p] ]
-		with self.assertRaises(ValueError):
-			_sort_helpers(cyclic_helpers)
-	
 	def test_identity_of_jacs(self):
 		x = np.random.random(len(f))
 		ODE1 = jitcode(f)

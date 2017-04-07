@@ -17,13 +17,15 @@ from inspect import getargspec, isgeneratorfunction
 from scipy.integrate._ode import find_integrator
 from copy import copy as copy_object
 from itertools import chain, count
-from jitcode._helpers import (
+from jitcxde_common import (
 	ensure_suffix, count_up,
 	get_module_path, modulename_from_path, find_and_load_module, module_from_path,
+	sympify_helpers, sort_helpers,
 	render_and_write_code,
 	render_template,
 	random_direction, orthonormalise
 	)
+import sympy
 import sympy
 import shutil
 
@@ -45,7 +47,7 @@ def provide_basic_symbols():
 		same as `y`
 	"""
 	
-	return t, y 
+	return t, y
 
 def convert_to_required_symbols(dynvars, f_sym, helpers=[], n=None):
 	"""
@@ -111,30 +113,6 @@ def _is_C(function):
 
 def _is_lambda(function):
 	return isinstance(function, FunctionType)
-
-def _sympify_helpers(helpers):
-	return [(helper[0], sympy.sympify(helper[1]).doit()) for helper in helpers]
-	#return [tuple(map(sympy.sympify, helper)) for helper in helpers]
-
-
-def depends_on_any(helper, other_helpers):
-	for other_helper in other_helpers:
-		if helper[1].has(other_helper[0]):
-			return True
-	return False
-
-def _sort_helpers(helpers):
-	if len(helpers)>1:
-		for j,helper in enumerate(helpers):
-			if not depends_on_any(helper, helpers):
-				helpers.insert(0,helpers.pop(j))
-				break
-		else:
-			raise ValueError("Helpers have cyclic dependencies.")
-		
-		helpers[1:] = _sort_helpers(helpers[1:])
-	
-	return helpers
 
 def _jac_from_f_with_helpers(f, helpers, simplify, n):
 	dependent_helpers = [[] for i in range(n)]
@@ -205,7 +183,7 @@ class jitcode(ode):
 		self.f_sym, self.n = _handle_input(f_sym,n)
 		self.f = None
 		self._f_C_source = False
-		self.helpers = _sort_helpers(_sympify_helpers(helpers or []))
+		self.helpers = sort_helpers(sympify_helpers(helpers or []))
 		self._wants_jacobian = wants_jacobian
 		self.jac_sym = None
 		self.jac = None
@@ -700,7 +678,7 @@ class jitcode_lyap(jitcode):
 		self.n_basic = n
 		self._n_lyap = n if (n_lyap<0 or n_lyap>n) else n_lyap
 		
-		helpers = _sort_helpers(_sympify_helpers(helpers or []))
+		helpers = sort_helpers(sympify_helpers(helpers or []))
 		
 		def f_lyap():
 			#Replace with yield from, once Python 2 is dead:

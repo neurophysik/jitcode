@@ -1,4 +1,3 @@
-from . import _helpers
 from ._jitcode import t, y, jitcode, jitcode_lyap, provide_basic_symbols, ode_from_module_file, convert_to_required_symbols, DEFAULT_COMPILE_ARGS, jitcode_restricted_lyap
 
 try:
