@@ -22,7 +22,7 @@ from jitcode._helpers import (
 	get_module_path, modulename_from_path, find_and_load_module, module_from_path,
 	render_and_write_code,
 	render_template,
-	non_zero_ratio, random_direction, orthonormalise
+	random_direction, orthonormalise
 	)
 import sympy
 import shutil
