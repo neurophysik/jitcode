@@ -4,6 +4,7 @@
 from __future__ import print_function, absolute_import
 
 from scipy.integrate import ode
+from scipy.integrate._ode import find_integrator
 from os import path as path
 from sys import version_info, modules
 from numpy import array, hstack, log, get_include
@@ -13,10 +14,10 @@ from traceback import format_exc
 from types import FunctionType, BuiltinFunctionType
 from setuptools import setup, Extension
 from tempfile import mkdtemp
+import sympy
+import shutil
 from inspect import getargspec, isgeneratorfunction
-from scipy.integrate._ode import find_integrator
-from copy import copy as copy_object
-from itertools import chain, count
+from itertools import count
 from jitcxde_common import (
 	ensure_suffix, count_up,
 	get_module_path, modulename_from_path, find_and_load_module, module_from_path,
@@ -25,9 +26,6 @@ from jitcxde_common import (
 	render_template,
 	random_direction, orthonormalise
 	)
-import sympy
-import sympy
-import shutil
 
 #: the symbol for the state that must be used to define the differential equation. It is a function and the integer argument denotes the component. You may just as well define the an analogous function directly with SymPy, but using this function is the best way to get the most of future versions of JiTCODE, in particular avoiding incompatibilities. If you wish to use other symbols for the dynamical variables, you can use `convert_to_required_symbols` for conversion.
 y = sympy.Function("y")
@@ -49,8 +47,8 @@ def provide_basic_symbols():
 	
 	return t, y
 
-def convert_to_required_symbols(dynvars, f_sym, helpers=[], n=None):
-	"""
+def convert_to_required_symbols(dynvars, f_sym, helpers=(), n=None):
+	""":
 	This is a service function to convert a differential equation defined using other symbols for the dynamical variables to the format required by JiTCODE.
 	
 	Parameters
@@ -579,18 +577,18 @@ class jitcode(ode):
 			warn("Generating compiled functions failed; resorting to lambdified functions.")
 			self.generate_lambdas()
 	
-	def set_initial_value(self, y, t=0.0):
+	def set_initial_value(self, initial_value, time=0.0):
 		"""
 		Same as the analogous function in SciPy’s ODE. Note that if no integrator has been set yet, `set_integrator` will be called with all this implies, using an arbitrary integrator.
 		"""
 		
-		if (self.n != len(y)):
+		if self.n != len(initial_value):
 			raise ValueError("The dimension of the initial value does not match the dimension of your differential equations.")
 		
 		if (not hasattr(self,"_integrator")) or (self._integrator is None):
 			warn("No integrator set. Using first one available.")
 		
-		return super(jitcode, self).set_initial_value(y, t)
+		return super(jitcode, self).set_initial_value(initial_value, time)
 	
 	def set_integrator(self, name, **integrator_params):
 		"""
@@ -752,8 +750,8 @@ class jitcode_restricted_lyap(jitcode_lyap):
 	vectors : iterable of pairs of NumPy arrays
 		A basis of the plane, whose projection shall be removed.
 	"""
-	
-	def __init__(self, f_sym, helpers=None, vectors=[], wants_jacobian=False, n=None, simplify=True):
+
+	def __init__(self, f_sym, helpers=None, vectors=(), wants_jacobian=False, n=None, simplify=True):
 		super(jitcode_restricted_lyap, self).__init__(
 			f_sym = f_sym,
 			helpers = helpers,
