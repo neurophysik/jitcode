@@ -1,12 +1,7 @@
 import sys
 import os
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock as Mock
 from setuptools_scm import get_version
-
-class Mock(MagicMock):
-	@classmethod
-	def __getattr__(cls, name):
-		return MagicMock()
 
 MOCK_MODULES = [
 	'numpy', 'numpy.testing', 'numpy.random',
@@ -54,3 +49,12 @@ numpydoc_show_class_members = False
 autodoc_member_order = 'bysource'
 
 graphviz_output_format = "svg"
+
+def on_missing_reference(app, env, node, contnode):
+	if node['reftype'] == 'any':
+		return contnode
+	else:
+		return None
+
+def setup(app):
+	app.connect('missing-reference', on_missing_reference)
