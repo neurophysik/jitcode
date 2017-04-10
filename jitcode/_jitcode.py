@@ -17,7 +17,7 @@ from tempfile import mkdtemp
 import sympy
 import shutil
 from inspect import getargspec, isgeneratorfunction
-from itertools import count
+from itertools import count, chain
 from jitcxde_common import (
 	ensure_suffix, count_up,
 	get_module_path, modulename_from_path, find_and_load_module, module_from_path,
@@ -199,7 +199,7 @@ class jitcode(ode):
 		self._number_of_f_helpers = None
 		self._number_of_general_helpers = len(self.helpers)
 		self.general_subs = [
-				(control_par, sympy.Symbol("self->parameter_"+control_par.name))
+				(control_par, sympy.Symbol("parameter_"+control_par.name))
 				for control_par in self.control_pars
 			]
 	
@@ -538,9 +538,12 @@ class jitcode(ode):
 		f_sym_wc = (entry.subs(substitutions) for entry in self.f_sym())
 		if simplify:
 			f_sym_wc = (entry.simplify(ratio=1.0) for entry in f_sym_wc)
-		F = sympy.lambdify([t]+[Yentry for Yentry in Y], list(f_sym_wc))
+		F = sympy.lambdify(
+				[t] + [Yentry for Yentry in Y] + list(self.control_pars),
+				list(f_sym_wc)
+				)
 		
-		self.f = lambda t,ypsilon: array(F(t,*ypsilon)).flatten()
+		self.f = lambda t,ypsilon,*pars: array(F(t,*chain(ypsilon,pars))).flatten()
 	
 	def _generate_jac_lambda(self):
 		if not _is_lambda(self.jac):
@@ -563,9 +566,12 @@ class jitcode(ode):
 		
 		substitutions = self.helpers[::-1] + [(y(i),Y[i]) for i in range(self.n)]
 		jac_subsed = jac_matrix.subs(substitutions)
-		JAC = sympy.lambdify([t]+[Yentry for Yentry in Y], jac_subsed)
+		JAC = sympy.lambdify(
+				[t]+[Yentry for Yentry in Y]+list(self.control_pars),
+				jac_subsed
+				)
 		
-		self.jac = lambda t,ypsilon: array(JAC(t,*ypsilon))
+		self.jac = lambda t,ypsilon,*pars: array(JAC(t,*chain(ypsilon,pars)))
 
 	def generate_lambdas(self):
 		"""
@@ -629,12 +635,6 @@ class jitcode(ode):
 			super(jitcode, self).set_initial_value(save_y, save_t)
 		
 		return self
-
-	def set_f_params(self, *args):
-		raise NotImplementedError("JiTCODE does not support passing parameters to the derivative yet.")
-	
-	def set_jac_params(self, *args):
-		raise NotImplementedError("JiTCODE does not support passing parameters to the Jacobian yet.")
 	
 	def save_compiled(self, destination="", overwrite=False):
 		"""

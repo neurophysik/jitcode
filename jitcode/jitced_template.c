@@ -107,8 +107,19 @@ static PyObject * py_jac(PyObject *self, PyObject *args)
 {
 	double t;
 	PyArrayObject * Y;
+	{% for control_par in control_pars %}
+	double parameter_{{control_par}};
+	{% endfor %}
 	
-	if (!PyArg_ParseTuple(args, "dO!", &t, &PyArray_Type, &Y))
+	if (!PyArg_ParseTuple(
+				args,
+				"dO!{{'d'*control_pars|length}}",
+				&t,
+				&PyArray_Type, &Y
+				{% for control_par in control_pars %}
+				, &parameter_{{control_par}}
+				{% endfor %}
+				))
 	{
 		PyErr_SetString(PyExc_ValueError,"Wrong input.");
 		return NULL;

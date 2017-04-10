@@ -70,17 +70,21 @@ class basic_test(unittest.TestCase):
 		modulename += "x"
 		self.filename = modulename+".so"
 	
+	def initialise_integrator(self):
+		self.ODE.set_initial_value(y0,0.0)
+		self.extra_args = ()
+	
 	def test_standard_order(self):
 		self.ODE = jitcode(**self.argdict)
 		self.ODE.set_integrator('dopri5')
-		self.ODE.set_initial_value(y0,0.0)
+		self.initialise_integrator()
 		self.assertTrue(_is_C(self.ODE.f))
 		self.assertIsNone(self.ODE.jac)
 	
 	def test_standard_order_with_jac(self):
 		self.ODE = jitcode(**self.argdict)
 		self.ODE.set_integrator('vode')
-		self.ODE.set_initial_value(y0,0.0)
+		self.initialise_integrator()
 		self.assertTrue(_is_C(self.ODE.f))
 		self.assertTrue(_is_C(self.ODE.jac))
 	
@@ -88,14 +92,14 @@ class basic_test(unittest.TestCase):
 		self.ODE = jitcode(wants_jacobian=True, **self.argdict)
 		self.ODE.generate_f_C(chunk_size=1,do_cse=True)
 		self.ODE.set_integrator('dopri5')
-		self.ODE.set_initial_value(y0,0.0)
+		self.initialise_integrator()
 		self.assertTrue(_is_C(self.ODE.f))
 	
 	def test_heavily_chunked_jac(self):
 		self.ODE = jitcode(**self.argdict)
 		self.ODE.generate_jac_C(chunk_size=1,do_cse=True)
 		self.ODE.set_integrator('vode')
-		self.ODE.set_initial_value(y0,0.0)
+		self.initialise_integrator()
 		self.assertTrue(_is_C(self.ODE.f))
 		self.assertTrue(_is_C(self.ODE.jac))
 	
@@ -103,13 +107,13 @@ class basic_test(unittest.TestCase):
 		self.ODE = jitcode(**self.argdict)
 		self.ODE.generate_helpers_C(chunk_size=1)
 		self.ODE.set_integrator('vode')
-		self.ODE.set_initial_value(y0,0.0)
+		self.initialise_integrator()
 		self.assertTrue(_is_C(self.ODE.f))
 		self.assertTrue(_is_C(self.ODE.jac))
 	
-	def test_initial_value_first(self):
+	def test_initialise_first(self):
 		self.ODE = jitcode(**self.argdict)
-		self.ODE.set_initial_value(y0,0.0)
+		self.initialise_integrator()
 		self.ODE.set_integrator('dop853')
 		self.assertTrue(_is_C(self.ODE.f))
 		self.assertIsNotNone(self.ODE.jac)
@@ -118,7 +122,7 @@ class basic_test(unittest.TestCase):
 		self.ODE = jitcode(**self.argdict)
 		self.ODE.generate_lambdas()
 		self.ODE.set_integrator('dopri5')
-		self.ODE.set_initial_value(y0,0.0)
+		self.initialise_integrator()
 		self.assertTrue(_is_lambda(self.ODE.f))
 		self.assertIsNone(self.ODE.jac)
 	
@@ -127,7 +131,7 @@ class basic_test(unittest.TestCase):
 		self.ODE.generate_lambdas()
 		self.assertIsNone(self.ODE.jac)
 		self.ODE.set_integrator('vode')
-		self.ODE.set_initial_value(y0,0.0)
+		self.initialise_integrator()
 		self.assertTrue(_is_C(self.ODE.f))
 		self.assertTrue(_is_C(self.ODE.jac))
 	
@@ -136,7 +140,7 @@ class basic_test(unittest.TestCase):
 		self.ODE.compile_C()
 		self.assertIsNone(self.ODE.jac)
 		self.ODE.set_integrator('lsoda')
-		self.ODE.set_initial_value(y0,0.0)
+		self.initialise_integrator()
 		self.assertTrue(_is_C(self.ODE.f))
 		self.assertTrue(_is_C(self.ODE.jac))
 	
@@ -144,7 +148,7 @@ class basic_test(unittest.TestCase):
 		self.ODE = jitcode(**self.argdict)
 		self.ODE.generate_jac_C()
 		self.ODE.set_integrator('dopri5')
-		self.ODE.set_initial_value(y0,0.0)
+		self.initialise_integrator()
 		self.assertTrue(_is_C(self.ODE.f))
 		self.assertTrue(_is_C(self.ODE.jac))
 	
@@ -154,7 +158,7 @@ class basic_test(unittest.TestCase):
 		shutil.move(self.filename,self.tmpfile(self.filename))
 		self.ODE = ode_from_module_file(self.tmpfile(self.filename))
 		self.ODE.set_integrator('dopri5')
-		self.ODE.set_initial_value(y0,0.0)
+		self.initialise_integrator()
 		self.assertTrue(_is_C(self.ODE.f))
 		self.assertIsNone(self.ODE.jac)
 	
@@ -165,7 +169,7 @@ class basic_test(unittest.TestCase):
 		shutil.move(self.filename,target)
 		self.ODE = ode_from_module_file(target)
 		self.ODE.set_integrator('dopri5')
-		self.ODE.set_initial_value(y0,0.0)
+		self.initialise_integrator()
 		self.assertTrue(_is_C(self.ODE.f))
 		self.assertTrue(_is_C(self.ODE.jac))
 	
@@ -175,7 +179,7 @@ class basic_test(unittest.TestCase):
 		shutil.move(self.filename,self.tmpfile(self.filename))
 		self.ODE = ode_from_module_file(self.tmpfile(self.filename))
 		self.ODE.set_integrator('lsoda')
-		self.ODE.set_initial_value(y0,0.0)
+		self.initialise_integrator()
 		self.assertTrue(_is_C(self.ODE.f))
 		self.assertTrue(_is_C(self.ODE.jac))
 
@@ -186,7 +190,7 @@ class basic_test(unittest.TestCase):
 		shutil.move(self.filename, self.tmpfile(self.filename))
 		self.ODE = ode_from_module_file(self.tmpfile(self.filename))
 		self.ODE.set_integrator('lsoda')
-		self.ODE.set_initial_value(y0,0.0)
+		self.initialise_integrator()
 		self.assertTrue(_is_C(self.ODE.f))
 		self.assertTrue(_is_C(self.ODE.jac))
 	
@@ -197,7 +201,7 @@ class basic_test(unittest.TestCase):
 		shutil.move(self.filename,self.tmpfile(self.filename))
 		self.ODE = ode_from_module_file(self.tmpfile(self.filename))
 		self.ODE.set_integrator('lsoda')
-		self.ODE.set_initial_value(y0,0.0)
+		self.initialise_integrator()
 		self.assertTrue(_is_C(self.ODE.f))
 		self.assertTrue(_is_C(self.ODE.jac))
 	
@@ -207,15 +211,15 @@ class basic_test(unittest.TestCase):
 		self.ODE.save_compiled(self.tmpfile(""), overwrite=True)
 		self.ODE = ode_from_module_file(self.tmpfile(self.filename))
 		self.ODE.set_integrator('dopri5')
-		self.ODE.set_initial_value(y0,0.0)
+		self.initialise_integrator()
 		self.assertTrue(_is_C(self.ODE.f))
 		self.assertIsNone(self.ODE.jac)
 	
 	def tearDown(self):
 		self.assertIsNotNone(self.ODE.f)
-		assert_allclose( self.ODE.f(0.0,y0), f_of_y0, rtol=1e-5 )
+		assert_allclose( self.ODE.f(0.0,y0,*self.extra_args), f_of_y0, rtol=1e-5 )
 		if not self.ODE.jac is None:
-			assert_allclose( self.ODE.jac(0.0,y0), jac_of_y0, rtol=1e-5)
+			assert_allclose( self.ODE.jac(0.0,y0,*self.extra_args), jac_of_y0, rtol=1e-5)
 		assert_allclose( self.ODE.integrate(1.0), y1, rtol=1e-5 )
 		shutil.rmtree(self.directory)
 
@@ -286,8 +290,11 @@ class lyapunov_test(unittest.TestCase):
 		self.ODE = jitcode_lyap(f_alt, get_f_alt_helpers(), n_lyap=self.n)
 		self.ODE.set_integrator("vode")
 	
-	def tearDown(self):
+	def initialise_integrator(self):
 		self.ODE.set_initial_value(y0,0.0)
+	
+	def tearDown(self):
+		self.initialise_integrator()
 		data = np.vstack(self.ODE.integrate(t)[1] for t in range(10,100000,10))
 		result = np.average(data[1000:], axis=0)
 		margin = standard_error(data[1000:], axis=0)
@@ -296,9 +303,7 @@ class lyapunov_test(unittest.TestCase):
 			self.assertLess( result[i]-lyaps[i], 3*margin[i] )
 
 dynvars = x_1,y_1,x_2,y_2 = symbols("x, y, y_1, y_2")
-f_dv_helpers = [
-	( coupling, k*(x_2-x_1) ),
-]
+f_dv_helpers = [ ( coupling, k*(x_2-x_1) ) ]
 f_dv = [ 
 	a*x_1**2 - a*x_1+ coupling - x_1**3 + x_1**2 - y_1,
 	b1*x_1 - c*y_1,
@@ -320,6 +325,35 @@ class basic_test_with_generator_function(basic_test):
 	def setUpClass(self):
 		self.argdict = {"f_sym": f_generator, "n": 4}
 
+a_par, c_par, k_par = symbols("a_par c_par k_par")
+f_params_helpers = [ ( coupling, k_par*(y(2)-y(0)) ) ]
+f_params = [
+	y(0) * ( a_par-y(0) ) * ( y(0)-1.0 ) - y(1) + coupling,
+	b1*y(0) - c_par*y(1),
+	y(2) * ( a_par-y(2) ) * ( y(2)-1.0 ) - y(3) - coupling,
+	b2*y(2) - c_par*y(3)
+	]
+params_args = (a,c,k)
+
+class basic_test_with_params(basic_test):
+	@classmethod
+	def setUpClass(self):
+		self.argdict = {
+				"f_sym": f_params,
+				"helpers": f_params_helpers,
+				"control_pars": [a_par, c_par, k_par]
+			}
+	
+	# Initialising first does not work because scipy.ode does not work in that order.
+	test_initialise_first = None
+	test_lambdas = None
+	test_lambdas_without_jac = None
+	
+	def initialise_integrator(self):
+		self.ODE.set_initial_value(y0,0.0)
+		self.ODE.set_f_params(*params_args)
+		self.ODE.set_jac_params(*params_args)
+		self.extra_args = params_args
 
 class errors_test(unittest.TestCase):
 	def test_duplicate_error(self):
@@ -336,3 +370,4 @@ class errors_test(unittest.TestCase):
 
 if __name__ == "__main__":
 	unittest.main(buffer=True)
+
