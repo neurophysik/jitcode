@@ -32,23 +32,31 @@ unsigned int const dimension={{n}};
 
 {% if number_of_general_helpers>0: %}
 # include "general_helpers_definitions.c"
-static void general(double const t, PyArrayObject *restrict const Y, double *restrict const general_helper)
-{
-	# include "general_helpers.c"
-}
 {% endif %}
 
 {% if number_of_f_helpers>0: %}
 # include "f_helpers_definitions.c"
 {% endif %}
+
 # include "f_definitions.c"
 
 static PyObject * py_f(PyObject *self, PyObject *args)
 {
 	double t;
 	PyArrayObject * Y;
+	{% for control_par in control_pars %}
+	double parameter_{{control_par}};
+	{% endfor %}
 	
-	if (!PyArg_ParseTuple(args, "dO!", &t, &PyArray_Type, &Y))
+	if (!PyArg_ParseTuple(
+				args,
+				"dO!{{'d'*control_pars|length}}",
+				&t,
+				&PyArray_Type, &Y
+				{% for control_par in control_pars %}
+				, &parameter_{{control_par}}
+				{% endfor %}
+				))
 	{
 		PyErr_SetString(PyExc_ValueError,"Wrong input.");
 		return NULL;
@@ -76,7 +84,7 @@ static PyObject * py_f(PyObject *self, PyObject *args)
 	
 	{% if number_of_general_helpers>0: %}
 	double general_helper[{{number_of_general_helpers}}];
-	general(t, Y, general_helper);
+	# include "general_helpers.c"
 	{% endif %}
 	
 	{% if number_of_f_helpers>0: %}
@@ -132,8 +140,11 @@ static PyObject * py_jac(PyObject *self, PyObject *args)
 	}
 	
 	{% if number_of_general_helpers>0: %}
+	# pragma GCC diagnostic push
+	# pragma GCC diagnostic ignored "-Wunused-but-set-variable"
 	double general_helper[{{number_of_general_helpers}}];
-	general(t, Y, general_helper);
+	# include "general_helpers.c"
+	# pragma GCC diagnostic pop
 	{% endif %}
 	
 	{% if number_of_jac_helpers>0: %}

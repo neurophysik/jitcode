@@ -170,6 +170,9 @@ class jitcode(ode):
 	n : integer
 		Length of `f_sym`. While JiTCODE can easily determine this itself (and will, if necessary), this may take some time if `f_sym` is a generator function and `n` is large. Take care that this value is correct – if it isn’t, you will not get a helpful error message.
 	
+	control_pars : list of SymPy symbols
+		Each symbol corresponds to a control parameter that can be used when defining the equations and set after compilation `scipy.ode`’s `set_f_params` or `set_jac_params` (in the same order as given here). Using this makes sense if you need to do a parameter scan with short integrations for each parameter and you are spending a considerable amount of time compiling.
+	
 	verbose : boolean
 		Whether JiTCODE shall give progress reports on the processing steps.
 	"""
@@ -177,7 +180,7 @@ class jitcode(ode):
 	# Naming convention:
 	# If an underscore-prefixed and regular variant of a function exist, the former calls the latter if needed and tells the user what it did.
 
-	def __init__(self, f_sym, helpers=None, wants_jacobian=False, n=None, verbose=True):
+	def __init__(self, f_sym, helpers=None, wants_jacobian=False, n=None, control_pars=(), verbose=True):
 		self.f_sym, self.n = _handle_input(f_sym,n)
 		self.f = None
 		self._f_C_source = False
@@ -190,11 +193,15 @@ class jitcode(ode):
 		self._y = []
 		self._tmpdir = None
 		self._modulename = "jitced"
+		self.control_pars = control_pars
 		self.verbose = verbose
 		self._number_of_jac_helpers = None
 		self._number_of_f_helpers = None
 		self._number_of_general_helpers = len(self.helpers)
-		self.helper_subs = []
+		self.general_subs = [
+				(control_par, sympy.Symbol("self->parameter_"+control_par.name))
+				for control_par in self.control_pars
+			]
 	
 	def _tmpfile(self, filename=None):
 		if self._tmpdir is None:
@@ -227,10 +234,12 @@ class jitcode(ode):
 		self.jac_sym = _jac_from_f_with_helpers(self.f_sym, self.helpers, simplify, self.n)
 	
 	def _default_arguments(self):
-		return [
+		basics = [
 			("t", "double const"),
 			("Y", "PyArrayObject *restrict const")
 			]
+		pars = [("parameter_"+par.name, "double const") for par in self.control_pars]
+		return basics + pars
 	
 	def _generate_f_C(self):
 		if not self._f_C_source:
@@ -259,13 +268,11 @@ class jitcode(ode):
 		
 		self._generate_helpers_C()
 		
-		f_sym_wc = self.f_sym()
+		f_sym_wc = (entry.subs(self.general_subs) for entry in self.f_sym())
 		
 		if simplify:
 			f_sym_wc = (sympy.simplify(entry,ratio=1) for entry in f_sym_wc)
 		
-		if self.helpers:
-			f_sym_wc = (entry.subs(self.helper_subs) for entry in f_sym_wc)
 		
 		arguments = self._default_arguments()
 		
@@ -336,7 +343,7 @@ class jitcode(ode):
 		self._generate_helpers_C()
 		self._generate_jac_sym()
 		
-		jac_sym_wc = sympy.Matrix([ [entry.subs(self.helper_subs) for entry in line] for line in self.jac_sym ])
+		jac_sym_wc = sympy.Matrix([ [entry.subs(self.general_subs) for entry in line] for line in self.jac_sym ])
 		self.sparse_jac = sparse
 		
 		arguments = self._default_arguments()
@@ -409,9 +416,10 @@ class jitcode(ode):
 			get_helper = sympy.Function("get_general_helper")
 			set_helper = sympy.Function("set_general_helper")
 			
-			self.helper_subs = [(helper[0],get_helper(i)) for i,helper in enumerate(self.helpers)]
+			for i,helper in enumerate(self.helpers):
+				self.general_subs.append( (helper[0],get_helper(i)) )
 			render_and_write_code(
-				(set_helper(i, helper[1].subs(self.helper_subs)) for i,helper in enumerate(self.helpers)),
+				(set_helper(i, helper[1].subs(self.general_subs)) for i,helper in enumerate(self.helpers)),
 				self._tmpfile,
 				"general_helpers",
 				["y", "get_general_helper", "set_general_helper"],
@@ -477,7 +485,8 @@ class jitcode(ode):
 			number_of_f_helpers = self._number_of_f_helpers or 0,
 			number_of_jac_helpers = self._number_of_jac_helpers or 0,
 			number_of_general_helpers = len(self.helpers),
-			sparse_jac = self.sparse_jac if self._jac_C_source else None
+			sparse_jac = self.sparse_jac if self._jac_C_source else None,
+			control_pars = [par.name for par in self.control_pars]
 			)
 		
 		setup(
@@ -678,7 +687,7 @@ class jitcode_lyap(jitcode):
 		Whether the differential equations for the tangent vector shall be subjected to SymPy’s `simplify`. Doing so may speed up the time evolution but may slow down the generation of the code (considerably for large differential equations).
 	"""
 	
-	def __init__(self, f_sym, helpers=None, wants_jacobian=False, n=None, n_lyap=-1, simplify=True):
+	def __init__(self, f_sym, helpers=None, wants_jacobian=False, n=None, control_pars=(), n_lyap=-1, simplify=True):
 		f_basic, n = _handle_input(f_sym,n)
 		self.n_basic = n
 		self._n_lyap = n if (n_lyap<0 or n_lyap>n) else n_lyap
@@ -701,9 +710,10 @@ class jitcode_lyap(jitcode):
 			f_lyap,
 			helpers = helpers,
 			wants_jacobian = wants_jacobian,
-			n = self.n_basic*(self._n_lyap+1)
+			n = self.n_basic*(self._n_lyap+1),
+			control_pars = control_pars
 			)
-	
+		
 	def set_initial_value(self, y, t=0.0):
 		new_y = [y]
 		for _ in range(self._n_lyap):
@@ -758,12 +768,13 @@ class jitcode_restricted_lyap(jitcode_lyap):
 		A basis of the plane, whose projection shall be removed.
 	"""
 
-	def __init__(self, f_sym, helpers=None, vectors=(), wants_jacobian=False, n=None, simplify=True):
+	def __init__(self, f_sym, helpers=None, vectors=(), wants_jacobian=False, n=None, control_pars=(), simplify=True):
 		super(jitcode_restricted_lyap, self).__init__(
 			f_sym = f_sym,
 			helpers = helpers,
 			wants_jacobian = wants_jacobian,
 			n = n,
+			control_pars = control_pars,
 			simplify = simplify,
 			n_lyap = 1
 			)
