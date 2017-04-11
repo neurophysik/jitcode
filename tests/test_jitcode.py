@@ -344,11 +344,6 @@ class basic_test_with_params(basic_test):
 				"control_pars": [a_par, c_par, k_par]
 			}
 	
-	# Initialising first does not work because scipy.ode does not work in that order.
-	test_initialise_first = None
-	test_lambdas = None
-	test_lambdas_without_jac = None
-	
 	def initialise_integrator(self):
 		self.ODE.set_initial_value(y0,0.0)
 		self.ODE.set_f_params(*params_args)

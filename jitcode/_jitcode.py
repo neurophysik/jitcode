@@ -181,16 +181,14 @@ class jitcode(ode):
 	# If an underscore-prefixed and regular variant of a function exist, the former calls the latter if needed and tells the user what it did.
 
 	def __init__(self, f_sym, helpers=None, wants_jacobian=False, n=None, control_pars=(), verbose=True):
+		super(jitcode, self).__init__(None)
 		self.f_sym, self.n = _handle_input(f_sym,n)
-		self.f = None
 		self._f_C_source = False
 		self.helpers = sort_helpers(sympify_helpers(helpers or []))
 		self._wants_jacobian = wants_jacobian
 		self.jac_sym = None
-		self.jac = None
 		self._jac_C_source = False
 		self._helper_C_source = False
-		self._y = []
 		self._tmpdir = None
 		self._modulename = "jitced"
 		self.control_pars = control_pars
@@ -532,18 +530,18 @@ class jitcode(ode):
 		if self.helpers:
 			warn("Lambdification does not handle helpers in an efficient manner.")
 		
-		Y = sympy.symarray("Y", self.n)
+		Y = sympy.DeferredVector("Y")
 		
 		substitutions = self.helpers[::-1] + [(y(i),Y[i]) for i in range(self.n)]
 		f_sym_wc = (entry.subs(substitutions) for entry in self.f_sym())
 		if simplify:
 			f_sym_wc = (entry.simplify(ratio=1.0) for entry in f_sym_wc)
-		F = sympy.lambdify(
-				[t] + [Yentry for Yentry in Y] + list(self.control_pars),
+		self.f = sympy.lambdify(
+				[t,Y] + list(self.control_pars),
 				list(f_sym_wc)
 				)
 		
-		self.f = lambda t,ypsilon,*pars: array(F(t,*chain(ypsilon,pars))).flatten()
+#		self.f = lambda t,ypsilon,*pars: array(F(t,*chain(ypsilon,pars))).flatten()
 	
 	def _generate_jac_lambda(self):
 		if not _is_lambda(self.jac):
@@ -562,17 +560,11 @@ class jitcode(ode):
 		
 		jac_matrix = sympy.Matrix([ [entry for entry in line] for line in self.jac_sym ])
 		
-		Y = sympy.symarray("Y", self.n)
-		
+		Y = sympy.DeferredVector("Y")
 		substitutions = self.helpers[::-1] + [(y(i),Y[i]) for i in range(self.n)]
 		jac_subsed = jac_matrix.subs(substitutions)
-		JAC = sympy.lambdify(
-				[t]+[Yentry for Yentry in Y]+list(self.control_pars),
-				jac_subsed
-				)
-		
-		self.jac = lambda t,ypsilon,*pars: array(JAC(t,*chain(ypsilon,pars)))
-
+		self.jac = sympy.lambdify([t,Y]+list(self.control_pars),jac_subsed)
+	
 	def generate_lambdas(self):
 		"""
 		If they do not already exists, this generates lambdified functions by calling `self.generate_f_lambda()` and, if wanted, `generate_jac_lambda()`.
@@ -583,7 +575,10 @@ class jitcode(ode):
 			self._generate_jac_lambda()
 	
 	def _generate_functions(self):
-		if (self.f is None) or (self._wants_jacobian and (self.jac is None)):
+		if (
+				(self.f is None)
+				or (self._wants_jacobian and (self.jac is None))
+			):
 			self.generate_functions()
 	
 	def generate_functions(self):
@@ -601,16 +596,14 @@ class jitcode(ode):
 	
 	def set_initial_value(self, initial_value, time=0.0):
 		"""
-		Same as the analogous function in SciPy’s ODE. Note that if no integrator has been set yet, `set_integrator` will be called with all this implies, using an arbitrary integrator.
+		Same as the analogous function in SciPy’s ODE. Note that this calls `set_integrator`, if no integrator has been set yet.
 		"""
 		
 		if self.n != len(initial_value):
 			raise ValueError("The dimension of the initial value does not match the dimension of your differential equations.")
 		
-		if (not hasattr(self,"_integrator")) or (self._integrator is None):
-			warn("No integrator set. Using first one available.")
-		
-		return super(jitcode, self).set_initial_value(initial_value, time)
+		super(jitcode, self).set_initial_value(initial_value, time)
+		return self
 	
 	def set_integrator(self, name, **integrator_params):
 		"""
@@ -623,17 +616,7 @@ class jitcode(ode):
 		self._wants_jacobian |= _can_use_jacobian(name)
 		self._generate_functions()
 		
-		try:
-			save_y = self._y
-			save_t = self.t
-		except AttributeError:
-			super(jitcode, self).__init__(self.f, self.jac)
-			super(jitcode, self).set_integrator(name, **integrator_params)
-		else:
-			super(jitcode, self).__init__(self.f, self.jac)
-			super(jitcode, self).set_integrator(name, **integrator_params)
-			super(jitcode, self).set_initial_value(save_y, save_t)
-		
+		super(jitcode, self).set_integrator(name, **integrator_params)
 		return self
 	
 	def save_compiled(self, destination="", overwrite=False):
