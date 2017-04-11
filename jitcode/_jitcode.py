@@ -617,6 +617,22 @@ class jitcode(ode):
 		super(jitcode, self).set_integrator(name, **integrator_params)
 		return self
 	
+	def set_f_params(self, *args):
+		"""
+		Same as for SciPy’s ODE, except that it also sets the parameters of the Jacobian (because they should be the same anyway).
+		"""
+		super(jitcode, self).set_f_params  (*args)
+		super(jitcode, self).set_jac_params(*args)
+		return self
+	
+	def set_jac_params(self, *args):
+		"""
+		Same as for SciPy’s ODE, except that it also sets the parameters of `f` (because they should be the same anyway).
+		"""
+		super(jitcode, self).set_f_params  (*args)
+		super(jitcode, self).set_jac_params(*args)
+		return self
+	
 	def save_compiled(self, destination="", overwrite=False):
 		"""
 		saves the module file with the compiled functions for later use (see `ode_from_module_file`). If no compiled derivative exists, it tries to compile it first using `compile_C`. In most circumstances, you should not rename this file, as the filename is needed to determine the module name.
