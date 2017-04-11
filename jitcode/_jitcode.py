@@ -540,8 +540,6 @@ class jitcode(ode):
 				[t,Y] + list(self.control_pars),
 				list(f_sym_wc)
 				)
-		
-#		self.f = lambda t,ypsilon,*pars: array(F(t,*chain(ypsilon,pars))).flatten()
 	
 	def _generate_jac_lambda(self):
 		if not _is_lambda(self.jac):
