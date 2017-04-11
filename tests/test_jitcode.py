@@ -173,6 +173,27 @@ class basic_test(unittest.TestCase):
 		self.assertTrue(_is_C(self.ODE.f))
 		self.assertTrue(_is_C(self.ODE.jac))
 	
+	def test_save_and_load_with_argument(self):
+		self.ODE = jitcode(**self.argdict)
+		self.ODE.save_compiled(self.filename, overwrite=True)
+		shutil.move(self.filename,self.tmpfile(self.filename))
+		self.ODE = jitcode(n=len(f),module_location=self.tmpfile(self.filename))
+		self.ODE.set_integrator('dopri5')
+		self.initialise_integrator()
+		self.assertTrue(_is_C(self.ODE.f))
+		self.assertIsNone(self.ODE.jac)
+	
+	def test_save_and_load_with_jac_and_argument(self):
+		self.ODE = jitcode(wants_jacobian=True, **self.argdict)
+		self.ODE.save_compiled(self.filename, overwrite=True)
+		target = os.path.join(self.directory,self.filename)
+		shutil.move(self.filename,target)
+		self.ODE = jitcode(n=len(f),module_location=target)
+		self.ODE.set_integrator('dopri5')
+		self.initialise_integrator()
+		self.assertTrue(_is_C(self.ODE.f))
+		self.assertTrue(_is_C(self.ODE.jac))
+	
 	def test_save_and_load_from_different_directory(self):
 		self.ODE = jitcode(wants_jacobian=True, **self.argdict)
 		self.ODE.save_compiled(self.filename, overwrite=True)
@@ -288,6 +309,12 @@ class lyapunov_test(unittest.TestCase):
 	
 	def test_lyapunov_with_helpers_and_jac(self):
 		self.ODE = jitcode_lyap(f_alt, get_f_alt_helpers(), n_lyap=self.n)
+		self.ODE.set_integrator("vode")
+	
+	def test_lyapunov_save_and_load_with_jac(self):
+		self.ODE = jitcode_lyap(f, n_lyap=self.n, wants_jacobian=True)
+		self.ODE.save_compiled("compiled.so", overwrite=True)
+		self.ODE = jitcode_lyap((), n=self.n, n_lyap=self.n, module_location="compiled.so")
 		self.ODE.set_integrator("vode")
 	
 	def initialise_integrator(self):
