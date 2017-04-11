@@ -36,15 +36,7 @@ t = sympy.Symbol("t", real=True)
 def provide_basic_symbols():
 	"""
 	This function is provided for backwards compatibility only. Use `from jitcode import y,t` or similar instead.
-	
-	Returns
-	-------
-	t : SymPy symbol
-		same as `t`
-	y : SymPy function
-		same as `y`
 	"""
-	
 	return t, y
 
 def convert_to_required_symbols(dynvars, f_sym, helpers=(), n=None):
