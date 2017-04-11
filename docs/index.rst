@@ -138,14 +138,9 @@ Command reference
 What doesn’t work (yet)
 -----------------------
 
-The following features of SciPy’s ODE class cannot be used through JiTCODE:
+The following feature of SciPy’s ODE class cannot be used through JiTCODE:
 
 *	The `zvode` integrator and complex arithmetics in general, as they are not easy implementable in C.
-
-*	Passing parameters to the derivative at integration time (via `set_f_params` or `set_jac_params`).
-	I figured that there shouldn’t be much need for this, as it may render the whole purpose of just-in-time compilation moot in most cases.
-
-
 
 .. _reference:
 
