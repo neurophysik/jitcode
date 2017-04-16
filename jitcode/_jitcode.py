@@ -24,7 +24,8 @@ from jitcxde_common import (
 	sympify_helpers, sort_helpers, handle_input,
 	render_and_write_code,
 	render_template,
-	random_direction, orthonormalise
+	random_direction, orthonormalise,
+	collect_arguments
 	)
 
 #: the symbol for the state that must be used to define the differential equation. It is a function and the integer argument denotes the component. You may just as well define the an analogous function directly with SymPy, but using this function is the best way to get the most of future versions of JiTCODE, in particular avoiding incompatibilities. If you wish to use other symbols for the dynamical variables, you can use `convert_to_required_symbols` for conversion.
@@ -205,6 +206,49 @@ class jitcode(ode):
 	def report(self, message):
 		if self.verbose:
 			print(message)
+	
+	def check(self, fail_fast=True):
+		"""
+		Checks for the following mistakes:
+		
+		* negative arguments of `y`
+		* arguments of `y` that are higher than the system’s dimension `n`
+		* unused variables
+		
+		For large systems, this may take some time (which is why it is not run by default).
+		
+		Parameters
+		----------
+		fail_fast : boolean
+			whether to abort on the first failure. If false, an error is raised only after all problems are printed.
+		"""
+		
+		failed = False
+
+		def problem(message):
+			failed = True
+			if fail_fast:
+				raise ValueError(message)
+			else:
+				print(message)
+		
+		valid_symbols = [helper[0] for helper in self.helpers] + list(self.control_pars)
+		
+		assert self.f_sym(), "f_sym is empty."
+		
+		for i,entry in enumerate(self.f_sym()):
+			for argument in collect_arguments(entry,y):
+				if argument[0] < 0:
+					problem("y is called with a negative argument (%i) in equation %i." % (argument[0], i))
+				if argument[0] >= self.n:
+					problem("y is called with an argument (%i) higher than the system’s dimension (%i) in equation %i."  % (argument[0], self.n, i))
+			
+			for symbol in entry.atoms(sympy.Symbol):
+				if symbol not in valid_symbols:
+					problem("Invalid symbol (%s) in equation %i."  % (symbol.name, i))
+		
+		if failed:
+			raise ValueError("Check failed.")
 	
 	def _generate_jac_sym(self):
 		if self.jac_sym is None:

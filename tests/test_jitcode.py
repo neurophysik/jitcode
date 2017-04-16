@@ -71,6 +71,8 @@ class basic_test(unittest.TestCase):
 		self.filename = modulename+".so"
 	
 	def initialise_integrator(self):
+		if isinstance(self.ODE,jitcode) and self.ODE.f_sym():
+			self.ODE.check()
 		self.ODE.set_initial_value(y0,0.0)
 		self.extra_args = ()
 	
@@ -318,6 +320,8 @@ class lyapunov_test(unittest.TestCase):
 		self.ODE.set_integrator("vode")
 	
 	def initialise_integrator(self):
+		if isinstance(self.ODE,jitcode) and self.ODE.f_sym():
+			self.ODE.check()
 		self.ODE.set_initial_value(y0,0.0)
 	
 	def tearDown(self):
@@ -372,6 +376,8 @@ class basic_test_with_params(basic_test):
 			}
 	
 	def initialise_integrator(self):
+		if isinstance(self.ODE,jitcode) and self.ODE.f_sym():
+			self.ODE.check()
 		self.ODE.set_initial_value(y0,0.0)
 		self.ODE.set_f_params(*params_args)
 		self.ODE.set_jac_params(*params_args)
@@ -386,9 +392,26 @@ class errors_test(unittest.TestCase):
 			ODE2.compile_C(modulename="foo")
 	
 	def test_dimension_mismatch(self):
+		ODE = jitcode(f)
 		with self.assertRaises(ValueError):
-			ODE = jitcode(f)
 			ODE.set_initial_value(np.array([1.,2.,3.]),0.0)
+	
+	def test_check_index_negative(self):
+		ODE = jitcode([y(-1)])
+		with self.assertRaises(ValueError):
+			ODE.check()
+	
+	def test_check_index_too_high(self):
+		ODE = jitcode([y(1)])
+		with self.assertRaises(ValueError):
+			ODE.check()
+	
+	def test_check_undefined_variable(self):
+		x = symbols("x")
+		ODE = jitcode([x])
+		with self.assertRaises(ValueError):
+			ODE.check()
+		
 
 if __name__ == "__main__":
 	unittest.main(buffer=True)
