@@ -232,7 +232,7 @@ class jitcode(ode):
 			else:
 				print(message)
 		
-		valid_symbols = [helper[0] for helper in self.helpers] + list(self.control_pars)
+		valid_symbols = [t] + [helper[0] for helper in self.helpers] + list(self.control_pars)
 		
 		assert self.f_sym(), "f_sym is empty."
 		
