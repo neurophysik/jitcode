@@ -23,7 +23,8 @@ This has the following advantages:
 	As the derivative is provided symbolically, SymPy’s automatic derivation routines can be employed to calculate the Jacobian desired by some integrators as well as the ODE for the tangent vector required for calculating the Lyapunov exponents (see `lyapunov`).
 
 *	**SymPy interface**
-	If you are working with SymPy anyway – e.g., to calculate fixed points –, you do not need to bother much with translating your equations.
+	You can enter your differential equations almost like you would on paper.
+	Also, if you are working with SymPy anyway – e.g., to calculate fixed points –, you do not need to bother much with translating your equations.
 
 If compilation fails to work for whatever reason, pure Python functions can be employed as a fallback.
 
