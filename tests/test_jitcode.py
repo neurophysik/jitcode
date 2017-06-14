@@ -219,8 +219,7 @@ class basic_test(unittest.TestCase):
 	
 	def test_save_with_default_name_and_load(self):
 		self.ODE = jitcode(wants_jacobian=True, **self.argdict)
-		self.ODE.save_compiled("", overwrite=True)
-		self.filename = self.ODE._modulename + ".so"
+		self.filename = self.ODE.save_compiled("", overwrite=True)
 		shutil.move(self.filename,self.tmpfile(self.filename))
 		self.ODE = ode_from_module_file(self.tmpfile(self.filename))
 		self.ODE.set_integrator('lsoda')
