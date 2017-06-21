@@ -5,25 +5,19 @@ from __future__ import print_function, absolute_import
 
 from scipy.integrate import ode
 from scipy.integrate._ode import find_integrator
-from os import path as path
-from sys import version_info, modules
-from numpy import array, hstack, log, get_include
+from numpy import hstack, log
 import numpy as np
 from warnings import warn
 from traceback import format_exc
 from types import FunctionType, BuiltinFunctionType
-from setuptools import setup, Extension
 import sympy
-import shutil
-from inspect import getargspec, isgeneratorfunction
-from itertools import count, chain
+from inspect import getargspec
+from itertools import count
 from jitcxde_common import (
 	jitcxde,
-	ensure_suffix, count_up,
-	get_module_path, modulename_from_path, find_and_load_module, module_from_path,
+	module_from_path,
 	sympify_helpers, sort_helpers, handle_input,
 	render_and_write_code,
-	render_template,
 	random_direction, orthonormalise,
 	collect_arguments
 	)

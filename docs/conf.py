@@ -1,6 +1,6 @@
 import sys
 import os
-from unittest.mock import MagicMock as Mock
+# from unittest.mock import MagicMock as Mock
 from setuptools_scm import get_version
 
 # Mocking to make RTD autobuild the documentation.

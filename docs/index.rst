@@ -126,8 +126,6 @@ Estimates for the Lyapunov vectors are returned as well. There also is a class (
 	:dedent: 1
 	:linenos:
 
-
-
 Command reference
 -----------------
 
