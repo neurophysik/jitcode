@@ -13,12 +13,12 @@ from warnings import warn
 from traceback import format_exc
 from types import FunctionType, BuiltinFunctionType
 from setuptools import setup, Extension
-from tempfile import mkdtemp
 import sympy
 import shutil
 from inspect import getargspec, isgeneratorfunction
 from itertools import count, chain
 from jitcxde_common import (
+	jitcxde,
 	ensure_suffix, count_up,
 	get_module_path, modulename_from_path, find_and_load_module, module_from_path,
 	sympify_helpers, sort_helpers, handle_input,
@@ -138,7 +138,7 @@ DEFAULT_COMPILE_ARGS = [
 			"-Wno-unknown-pragmas",
 			]
 
-class jitcode(ode):
+class jitcode(ode,jitcxde):
 	"""
 	Parameters
 	----------
@@ -164,11 +164,10 @@ class jitcode(ode):
 		location of a module file from which functions are to be loaded (see `save_compiled`). If you use this, you need not give `f_sym` as an argument, but in this case you must give `n`. Depending on the arguments you provide, functionalities such as recompiling may not be available; but then the entire point of this option is to avoid these.
 	"""
 	
-	# Naming convention:
-	# If an underscore-prefixed and regular variant of a function exist, the former calls the latter if needed and tells the user what it did.
-
 	def __init__(self, f_sym=(), helpers=None, wants_jacobian=False, n=None, control_pars=(), verbose=True, module_location=None):
-		super(jitcode, self).__init__(None)
+		ode.__init__(self,None)
+		jitcxde.__init__(self,verbose,module_location)
+		
 		self.f_sym, self.n = handle_input(f_sym,n)
 		self._f_C_source = False
 		self.helpers = sort_helpers(sympify_helpers(helpers or []))
@@ -176,10 +175,7 @@ class jitcode(ode):
 		self.jac_sym = None
 		self._jac_C_source = False
 		self._helper_C_source = False
-		self._tmpdir = None
-		self._modulename = "jitced"
 		self.control_pars = control_pars
-		self.verbose = verbose
 		self._number_of_jac_helpers = None
 		self._number_of_f_helpers = None
 		self._number_of_general_helpers = len(self.helpers)
@@ -187,25 +183,6 @@ class jitcode(ode):
 				(control_par, sympy.Symbol("parameter_"+control_par.name))
 				for control_par in self.control_pars
 			]
-		
-		if module_location is not None:
-			module = module_from_path(module_location)
-			self.f = module.f
-			if hasattr(module,"jac"):
-				self.jac = module.jac
-	
-	def _tmpfile(self, filename=None):
-		if self._tmpdir is None:
-			self._tmpdir = mkdtemp()
-		
-		if filename is None:
-			return self._tmpdir
-		else:
-			return path.join(self._tmpdir, filename)
-	
-	def report(self, message):
-		if self.verbose:
-			print(message)
 	
 	def check(self, fail_fast=True):
 		"""
@@ -464,7 +441,7 @@ class jitcode(ode):
 		self._helper_C_source = True
 	
 	def _compile_C(self):
-		if (not _is_C(self.f)) or (self._wants_jacobian and not _is_C(self.jac)):
+		if (not _is_C(self.f)) or self._lacks_jacobian:
 			self.compile_C()
 			self.report("compiled C code")
 	
@@ -495,27 +472,11 @@ class jitcode(ode):
 		self._generate_f_C()
 		self._generate_jac_C()
 		
-		if modulename:
-			if modulename in modules.keys():
-				raise NameError("Module name has already been used in this instance of Python.")
-			self._modulename = modulename
-		else:
-			while self._modulename in modules.keys():
-				self._modulename = count_up(self._modulename)
+		self.process_modulename(modulename)
 		
-		sourcefile = self._tmpfile(self._modulename + ".c")
-		modulefile = self._tmpfile(self._modulename + ".so")
-		
-		if path.isfile(modulefile):
-			raise OSError("Module file already exists.")
-		
-		render_template(
-			"jitced_template.c",
-			sourcefile,
+		self.render_template(
 			n = self.n,
 			has_Jacobian = self._jac_C_source,
-			module_name = self._modulename,
-			Python_version = version_info[0],
 			number_of_f_helpers = self._number_of_f_helpers or 0,
 			number_of_jac_helpers = self._number_of_jac_helpers or 0,
 			number_of_general_helpers = len(self.helpers),
@@ -523,30 +484,7 @@ class jitcode(ode):
 			control_pars = [par.name for par in self.control_pars]
 			)
 		
-		setup(
-			name = self._modulename,
-			ext_modules = [Extension(
-				self._modulename,
-				sources = [sourcefile],
-				extra_link_args = ["-lm"],
-				include_dirs = [get_include()],
-				extra_compile_args = extra_compile_args
-				)],
-			script_args = [
-				"build_ext",
-				"--build-lib", self._tmpfile(),
-				"--build-temp", self._tmpfile(),
-				"--force",
-				#"clean" #, "--all"
-				],
-			verbose = verbose
-			)
-		
-		self._jitced = find_and_load_module(self._modulename,self._tmpfile())
-		
-		self.f = self._jitced.f
-		if self._jac_C_source:
-			self.jac = self._jitced.jac
+		self._compile_and_load(verbose,extra_compile_args)
 	
 	def _generate_f_lambda(self):
 		if not _is_lambda(self.f):
@@ -607,26 +545,43 @@ class jitcode(ode):
 		self._generate_f_lambda()
 		if self._wants_jacobian:
 			self._generate_jac_lambda()
+		self.compile_attempt = False
 	
-	def _generate_functions(self):
-		if (
-				(self.f is None)
-				or (self._wants_jacobian and (self.jac is None))
-			):
-			self.generate_functions()
+	
+	@property
+	def is_initiated(self):
+		return (self.f is not None) and not self._lacks_jacobian
+	
+	@property
+	def _lacks_jacobian(self):
+		return self._wants_jacobian and (self.jac is None)
+	
+	def _initiate(self):
+		if self.compile_attempt is None:
+			try:
+				self.compile_C()
+			except:
+				warn(format_exc())
+				warn("Generating compiled integrator failed; resorting to lambdified functions.")
+		
+		if not self.is_initiated:
+			if self.compile_attempt:
+				self.f = self.jitced.f
+				if hasattr(self.jitced,"jac"):
+					self.jac = self.jitced.jac
+			else:
+				self.generate_lambdas()
+		
+		if self._lacks_jacobian:
+			self.compile_attempt = None
+			self._initiate()
 	
 	def generate_functions(self):
 		"""
 		The central function-generating function. Tries to compile the derivative and, if wanted, the Jacobian. If this fails, it generates lambdified functions as a fallback.
 		"""
 		
-		try:
-			self._compile_C()
-		except:
-			warn(format_exc())
-			
-			warn("Generating compiled functions failed; resorting to lambdified functions.")
-			self.generate_lambdas()
+		self._initiate()
 	
 	def set_initial_value(self, initial_value, time=0.0):
 		"""
@@ -648,7 +603,7 @@ class jitcode(ode):
 			raise NotImplementedError("JiTCODE does not natively support complex numbers yet.")
 		
 		self._wants_jacobian |= _can_use_jacobian(name)
-		self._generate_functions()
+		self._initiate()
 		
 		super(jitcode, self).set_integrator(name, **integrator_params)
 		return self
@@ -668,52 +623,6 @@ class jitcode(ode):
 		super(jitcode, self).set_f_params  (*args)
 		super(jitcode, self).set_jac_params(*args)
 		return self
-	
-	def save_compiled(self, destination="", overwrite=False):
-		"""
-		saves the module file with the compiled functions for later use (see `ode_from_module_file` and the `module_location` argument of `jitcode`). If no compiled derivative exists, it tries to compile it first using `compile_C`. In most circumstances, you should not rename this file, as the filename is needed to determine the module name.
-		
-		Parameters
-		----------
-		destination : string specifying a path
-			If this specifies only a directory (don’t forget the trailing `/` or similar), the module will be saved to that directory. If empty (default), the module will be saved to the current working directory. Otherwise, the functions will be (re)compiled to match that filename. The ending `.so` will be appended, if needed.
-		overwrite : boolean
-			Whether to overwrite the specified target, if it already exists.
-		
-		Returns
-		-------
-		filename : string
-			The destination that was actually used.
-		"""
-		
-		folder, filename = path.split(destination)
-		
-		if filename:
-			destination = ensure_suffix(destination, ".so")
-			modulename = modulename_from_path(filename)
-			if modulename != self._modulename:
-				self.compile_C(modulename=modulename)
-				self.report("compiled C code")
-			sourcefile = get_module_path(self._modulename, self._tmpfile())
-		else:
-			self._compile_C()
-			sourcefile = get_module_path(self._modulename, self._tmpfile())
-			destination = path.join(folder, ensure_suffix(self._modulename, ".so"))
-			self.report("saving file to " + destination)
-		
-		if path.isfile(destination) and not overwrite:
-			raise OSError("Target File already exists and \"overwrite\" is set to False")
-		else:
-			shutil.copy(sourcefile, destination)
-		
-		return(destination)
-	
-	def __del__(self):
-		try:
-			shutil.rmtree(self._tmpdir)
-		except (OSError, AttributeError, TypeError):
-			pass
-
 
 class jitcode_lyap(jitcode):
 	"""

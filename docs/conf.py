@@ -10,7 +10,11 @@ MOCK_MODULES = [
 	'jitcode', 'jitcxde_common']
 sys.modules.update((mod_name, Mock()) for mod_name in MOCK_MODULES)
 
-sys.modules['scipy.integrate'] = Mock(ode=object)
+class     ode_mock(object): pass
+class jitcxde_mock(object): pass
+
+sys.modules['scipy.integrate'] = Mock(    ode=    ode_mock)
+sys.modules['jitcxde_common' ] = Mock(jitcxde=jitcxde_mock)
 
 class Symbol(object):
 	def __init__(*args, **kwargs):

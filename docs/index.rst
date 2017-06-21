@@ -133,7 +133,7 @@ Command reference
 
 .. automodule:: _jitcode
 	:members:
-
+	:inherited-members:
 
 
 What doesn’t work (yet)

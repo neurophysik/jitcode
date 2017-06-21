@@ -54,7 +54,11 @@ f = [
 	b2*y(2) - c*y(3)
 	]
 
-modulename = "x"
+name = ""
+def get_unique_name():
+	global name
+	name += "x"
+	return name
 
 class basic_test(unittest.TestCase):
 	def tmpfile(self, filename):
@@ -66,9 +70,6 @@ class basic_test(unittest.TestCase):
 		
 	def setUp(self):
 		self.directory = mkdtemp()
-		global modulename
-		modulename += "x"
-		self.filename = modulename+".so"
 	
 	def initialise_integrator(self):
 		if isinstance(self.ODE,jitcode) and self.ODE.f_sym():
@@ -134,8 +135,8 @@ class basic_test(unittest.TestCase):
 		self.assertIsNone(self.ODE.jac)
 		self.ODE.set_integrator('vode')
 		self.initialise_integrator()
-		self.assertTrue(_is_C(self.ODE.f))
-		self.assertTrue(_is_C(self.ODE.jac))
+		#self.assertFalse(_is_C(self.ODE.f))
+		#self.assertFalse(_is_C(self.ODE.jac))
 	
 	def test_compile_without_jac(self):
 		self.ODE = jitcode(**self.argdict)
@@ -156,9 +157,10 @@ class basic_test(unittest.TestCase):
 	
 	def test_save_and_load(self):
 		self.ODE = jitcode(**self.argdict)
-		self.ODE.save_compiled(self.filename, overwrite=True)
-		shutil.move(self.filename,self.tmpfile(self.filename))
-		self.ODE = ode_from_module_file(self.tmpfile(self.filename))
+		destination = self.ODE.save_compiled(overwrite=True)
+		folder, filename = os.path.split(destination)
+		shutil.move(filename,self.tmpfile(filename))
+		self.ODE = ode_from_module_file(self.tmpfile(filename))
 		self.ODE.set_integrator('dopri5')
 		self.initialise_integrator()
 		self.assertTrue(_is_C(self.ODE.f))
@@ -166,10 +168,10 @@ class basic_test(unittest.TestCase):
 	
 	def test_save_and_load_with_jac(self):
 		self.ODE = jitcode(wants_jacobian=True, **self.argdict)
-		self.ODE.save_compiled(self.filename, overwrite=True)
-		target = os.path.join(self.directory,self.filename)
-		shutil.move(self.filename,target)
-		self.ODE = ode_from_module_file(target)
+		destination = self.ODE.save_compiled(overwrite=True)
+		folder, filename = os.path.split(destination)
+		shutil.move(filename,self.tmpfile(filename))
+		self.ODE = ode_from_module_file(self.tmpfile(filename))
 		self.ODE.set_integrator('dopri5')
 		self.initialise_integrator()
 		self.assertTrue(_is_C(self.ODE.f))
@@ -177,9 +179,10 @@ class basic_test(unittest.TestCase):
 	
 	def test_save_and_load_with_argument(self):
 		self.ODE = jitcode(**self.argdict)
-		self.ODE.save_compiled(self.filename, overwrite=True)
-		shutil.move(self.filename,self.tmpfile(self.filename))
-		self.ODE = jitcode(n=len(f),module_location=self.tmpfile(self.filename))
+		filename = get_unique_name()+".so"
+		self.ODE.save_compiled(filename, overwrite=True)
+		shutil.move(filename,self.tmpfile(filename))
+		self.ODE = jitcode(n=len(f),module_location=self.tmpfile(filename))
 		self.ODE.set_integrator('dopri5')
 		self.initialise_integrator()
 		self.assertTrue(_is_C(self.ODE.f))
@@ -187,51 +190,39 @@ class basic_test(unittest.TestCase):
 	
 	def test_save_and_load_with_jac_and_argument(self):
 		self.ODE = jitcode(wants_jacobian=True, **self.argdict)
-		self.ODE.save_compiled(self.filename, overwrite=True)
-		target = os.path.join(self.directory,self.filename)
-		shutil.move(self.filename,target)
-		self.ODE = jitcode(n=len(f),module_location=target)
+		filename = get_unique_name()+".so"
+		self.ODE.save_compiled(filename, overwrite=True)
+		shutil.move(filename,self.tmpfile(filename))
+		self.ODE = jitcode(n=len(f),module_location=self.tmpfile(filename))
 		self.ODE.set_integrator('dopri5')
 		self.initialise_integrator()
 		self.assertTrue(_is_C(self.ODE.f))
 		self.assertTrue(_is_C(self.ODE.jac))
 	
-	def test_save_and_load_from_different_directory(self):
+	def test_compile_save_and_load(self,default=False):
 		self.ODE = jitcode(wants_jacobian=True, **self.argdict)
-		self.ODE.save_compiled(self.filename, overwrite=True)
-		shutil.move(self.filename,self.tmpfile(self.filename))
-		self.ODE = ode_from_module_file(self.tmpfile(self.filename))
-		self.ODE.set_integrator('lsoda')
-		self.initialise_integrator()
-		self.assertTrue(_is_C(self.ODE.f))
-		self.assertTrue(_is_C(self.ODE.jac))
-
-	def test_compile_save_and_load(self):
-		self.ODE = jitcode(wants_jacobian=True, **self.argdict)
-		self.ODE.compile_C(modulename = modulename)
-		self.ODE.save_compiled("", overwrite=True)
-		shutil.move(self.filename, self.tmpfile(self.filename))
-		self.ODE = ode_from_module_file(self.tmpfile(self.filename))
+		modulename = None if default else get_unique_name()
+		self.ODE.compile_C(modulename=modulename)
+		filename = self.ODE.save_compiled(overwrite=True)
+		shutil.move(filename, self.tmpfile(filename))
+		self.ODE = ode_from_module_file(self.tmpfile(filename))
 		self.ODE.set_integrator('lsoda')
 		self.initialise_integrator()
 		self.assertTrue(_is_C(self.ODE.f))
 		self.assertTrue(_is_C(self.ODE.jac))
 	
 	def test_save_with_default_name_and_load(self):
-		self.ODE = jitcode(wants_jacobian=True, **self.argdict)
-		self.filename = self.ODE.save_compiled("", overwrite=True)
-		shutil.move(self.filename,self.tmpfile(self.filename))
-		self.ODE = ode_from_module_file(self.tmpfile(self.filename))
-		self.ODE.set_integrator('lsoda')
-		self.initialise_integrator()
-		self.assertTrue(_is_C(self.ODE.f))
-		self.assertTrue(_is_C(self.ODE.jac))
+		self.test_compile_save_and_load(True)
 	
 	def test_save_to_directory_and_load(self):
 		self.ODE = jitcode(**self.argdict)
+		modulename = get_unique_name()
 		self.ODE.compile_C(modulename=modulename)
-		self.ODE.save_compiled(self.tmpfile(""), overwrite=True)
-		self.ODE = ode_from_module_file(self.tmpfile(self.filename))
+		destination = self.ODE.save_compiled(self.tmpfile(""), overwrite=True)
+		folder, filename = os.path.split(destination)
+		print(folder,self.tmpfile(""))
+		assert folder==os.path.dirname(self.tmpfile(""))
+		self.ODE = ode_from_module_file(self.tmpfile(filename))
 		self.ODE.set_integrator('dopri5')
 		self.initialise_integrator()
 		self.assertTrue(_is_C(self.ODE.f))
@@ -314,9 +305,11 @@ class lyapunov_test(unittest.TestCase):
 	
 	def test_lyapunov_save_and_load_with_jac(self):
 		self.ODE = jitcode_lyap(f, n_lyap=self.n, wants_jacobian=True)
-		self.ODE.save_compiled("compiled.so", overwrite=True)
-		self.ODE = jitcode_lyap((), n=self.n, n_lyap=self.n, module_location="compiled.so")
+		filename = self.ODE.save_compiled(overwrite=True)
+		self.ODE = jitcode_lyap((), n=self.n, n_lyap=self.n, module_location=filename)
 		self.ODE.set_integrator("vode")
+		self.assertTrue(_is_C(self.ODE.f))
+		self.assertTrue(_is_C(self.ODE.jac))
 	
 	def initialise_integrator(self):
 		if isinstance(self.ODE,jitcode) and self.ODE.f_sym():
@@ -328,6 +321,7 @@ class lyapunov_test(unittest.TestCase):
 		data = np.vstack(self.ODE.integrate(t)[1] for t in range(10,100000,10))
 		result = np.average(data[1000:], axis=0)
 		margin = standard_error(data[1000:], axis=0)
+		print(data,result,margin)
 		self.assertLess( np.max(margin), 0.003 )
 		for i in range(self.n):
 			self.assertLess( result[i]-lyaps[i], 3*margin[i] )
