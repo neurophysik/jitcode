@@ -133,8 +133,23 @@ Command reference
 
 .. automodule:: _jitcode
 	:members:
+	:exclude-members: jitcode, jitcode_lyap, jitcode_restricted_lyap
+
+The main class
+^^^^^^^^^^^^^^
+
+.. autoclass:: jitcode
+	:members:
 	:inherited-members:
 
+Lyapunov exponents
+^^^^^^^^^^^^^^^^^^
+
+.. autoclass:: jitcode_lyap
+	:members:
+
+.. autoclass:: jitcode_restricted_lyap
+	:members:
 
 What doesn’t work (yet)
 -----------------------
