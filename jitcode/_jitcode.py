@@ -552,11 +552,7 @@ class jitcode(ode,jitcxde):
 	
 	def _initiate(self):
 		if self.compile_attempt is None:
-			try:
-				self.compile_C()
-			except:
-				warn(format_exc())
-				warn("Generating compiled integrator failed; resorting to lambdified functions.")
+			self._attempt_compilation(reset=False)
 		
 		if not self.is_initiated:
 			if self.compile_attempt:
