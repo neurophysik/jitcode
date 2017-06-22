@@ -1,19 +1,22 @@
 import sys
 import os
-# from unittest.mock import MagicMock as Mock
+from unittest.mock import MagicMock as Mock
 from setuptools_scm import get_version
 
-# Mocking to make RTD autobuild the documentation.
-# autodoc_mock_imports = [
-# 	'numpy', 'numpy.testing', 'numpy.random',
-# 	'scipy', 'scipy.integrate', 'scipy.integrate._ode', 'scipy.stats',
-# 	'sympy', 'sympy.core', 'sympy.core.cache', 'sympy.printing', 'sympy.printing.ccode',
-# 	]
+MOCK_MODULES = [
+	'numpy', 'numpy.testing', 'numpy.random',
+	'scipy', 'scipy.integrate', 'scipy.integrate._ode', 'scipy.stats',
+#	'sympy', 'sympy.core', 'sympy.core.cache', 'sympy.printing', 'sympy.printing.ccode',
+	'jitcode']
+sys.modules.update((mod_name, Mock()) for mod_name in MOCK_MODULES)
+
+class ode_mock(object): pass
+sys.modules['scipy.integrate'] = Mock(ode=ode_mock)
 
 # class Symbol(object):
 # 	def __init__(*args, **kwargs):
 # 		pass
-# sys.modules['sympy'] = Mock(Function=Symbol,Symbol=Symbol)
+# sys.modules['sympy'] = Mock(Function=Symbol, Symbol=Symbol)
 
 sys.path.insert(0,os.path.abspath("../examples"))
 sys.path.insert(0,os.path.abspath("../jitcode"))
