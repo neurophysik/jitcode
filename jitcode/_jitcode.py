@@ -466,9 +466,9 @@ class jitcode(ode,jitcxde):
 		self._generate_f_C()
 		self._generate_jac_C()
 		
-		self.process_modulename(modulename)
+		self._process_modulename(modulename)
 		
-		self.render_template(
+		self._render_template(
 			n = self.n,
 			has_Jacobian = self._jac_C_source,
 			number_of_f_helpers = self._number_of_f_helpers or 0,
