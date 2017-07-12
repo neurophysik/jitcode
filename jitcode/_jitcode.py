@@ -460,7 +460,7 @@ class jitcode(ode,jitcxde):
 			control_pars = [par.name for par in self.control_pars]
 			)
 		
-		self._compile_and_load(verbose,extra_compile_args)
+		self._compile_and_load(verbose,extra_compile_args,extra_link_args)
 	
 	def _generate_f_lambda(self):
 		if not _is_lambda(self.f):
