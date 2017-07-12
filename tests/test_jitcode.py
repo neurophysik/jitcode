@@ -4,6 +4,7 @@
 import os
 from jitcode import jitcode, t, y, jitcode_lyap, ode_from_module_file, convert_to_required_symbols
 from jitcode._jitcode import _is_C, _is_lambda
+from jitcxde_common import add_suffix
 import numpy as np
 from numpy.testing import assert_allclose
 from scipy.stats import sem as standard_error
@@ -179,7 +180,7 @@ class basic_test(unittest.TestCase):
 	
 	def test_save_and_load_with_argument(self):
 		self.ODE = jitcode(**self.argdict)
-		filename = get_unique_name()+".so"
+		filename = add_suffix(get_unique_name())
 		self.ODE.save_compiled(filename, overwrite=True)
 		shutil.move(filename,self.tmpfile(filename))
 		self.ODE = jitcode(n=len(f),module_location=self.tmpfile(filename))
@@ -190,7 +191,7 @@ class basic_test(unittest.TestCase):
 	
 	def test_save_and_load_with_jac_and_argument(self):
 		self.ODE = jitcode(wants_jacobian=True, **self.argdict)
-		filename = get_unique_name()+".so"
+		filename = add_suffix(get_unique_name())
 		self.ODE.save_compiled(filename, overwrite=True)
 		shutil.move(filename,self.tmpfile(filename))
 		self.ODE = jitcode(n=len(f),module_location=self.tmpfile(filename))
