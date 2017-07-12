@@ -6,7 +6,6 @@ from ._jitcode import (
 		provide_basic_symbols,
 		ode_from_module_file,
 		convert_to_required_symbols,
-		DEFAULT_COMPILE_ARGS
 		)
 
 try:

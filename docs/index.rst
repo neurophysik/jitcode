@@ -29,7 +29,7 @@ This has the following advantages:
 If compilation fails to work for whatever reason, pure Python functions can be employed as a fallback.
 
 For most applications, the only difference to SciPy’s ODE in terms of handling is that you have to supply the derivative in the correct format – JiTCODE automatically takes care of the compilation.
-However, you can also tweak this step by step, if you desire (see `tweak`).
+However, you can also tweak this step by step, if you desire (see `tweak` and the `notes on compilation`_).
 
 This documentation assumes that you have read the documentation of `SciPy’s ODE`_ or are otherwise familiar with it.
 As with SciPy’s ODE, this documentation assumes that the differential equation you want to solve is:
@@ -75,34 +75,12 @@ The following diagram details which command calls which other command when neede
 	"generate_functions" -> "generate_lambdas" -> "generate_f_lambda";
 	"generate_lambdas" -> "generate_jac_lambda"-> "generate_jac_sym";
 
-
-
-.. _large_systems:
-
-Handling very large differential equations
-------------------------------------------
-
-For very large differential equations, there are two sources of memory or speed problems:
-
-* **The compiler**, who has to compile megabytes of unstructured code and tries to handle it all at once, which may use too much time and memory. For some compilers, disabling all optimisation can avert this problem, but then, compiler optimisations usually are a good thing.
-
-  As a compromise, JiTCODE structures large source code into chunks, which the compiler then handles separately. This way optimisation can happen within the chunks, but not across chunks. The precise size of those chunks can be controlled by the option `chunk_size` which is available for all code-generation subroutines.
-  
-  We obtained better performances in these regards with Clang than with GCC.
-
-* **SymPy’s cache**, which may use too much memory. While it can be completely deactivated by setting the environment variable `SYMPY_USE_CACHE=no`, it exists for a reason and may speed things up.
-
-  To address this, JiTCODE clears the cache after each chunk is written and accepts generator functions as an input for :math:`f`, which makes SymPy’s handling of an entry happen right before the corresponding code is generated. See `example_2` for an example how to use a generator function.
-
-
-
 .. _example_2:
 
 A more complicated example
 --------------------------
 
 .. automodule:: SW_of_Roesslers
-
 
 
 .. _lyapunov:
@@ -160,6 +138,8 @@ The following feature of SciPy’s ODE class cannot be used through JiTCODE:
 
 References
 ----------
+
+.. _notes on compilation: https://jitcde-common.readthedocs.io
 
 .. [BGGS80]  G. Benettin, L. Galgani, A. Giorgilli, and J.-M. Strelcyn: Lyapunov Characteristic Exponents for smooth dynamical systems and for Hamiltonian systems; A method for computing all of them. Meccanica 15, pp. 9–30 (1980), `10.1007/BF02128236 <http://dx.doi.org/10.1007/BF02128236>`_.
 
