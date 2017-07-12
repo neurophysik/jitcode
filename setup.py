@@ -6,8 +6,6 @@ requirements = [
 	'sympy',
 	'scipy',
 	'numpy',
-	'setuptools',
-	'jinja2',
 ]
 
 setup(
