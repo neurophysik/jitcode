@@ -7,6 +7,7 @@ from jitcode._jitcode import _is_C, _is_lambda
 from jitcxde_common import add_suffix
 import numpy as np
 from numpy.testing import assert_allclose
+import platform
 from scipy.stats import sem as standard_error
 import shutil
 import unittest
@@ -235,7 +236,9 @@ class basic_test(unittest.TestCase):
 		if not self.ODE.jac is None:
 			assert_allclose( self.ODE.jac(0.0,y0,*self.extra_args), jac_of_y0, rtol=1e-5)
 		assert_allclose( self.ODE.integrate(1.0), y1, rtol=1e-5 )
-		shutil.rmtree(self.directory)
+		if platform.system() != "Windows":
+			# Windows blocks loaded module files from removal.
+			shutil.rmtree(self.directory)
 
 f1, f2, f3, f4 = symbols("f1, f2, f3, f4")
 coupling, first_y, first_y_sq = symbols("coupling, first_y, first_y_sq")
