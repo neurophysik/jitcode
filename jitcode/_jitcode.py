@@ -688,9 +688,9 @@ class jitcode_restricted_lyap(jitcode_lyap):
 		A basis of the plane, whose projection shall be removed.
 	"""
 	
-	def __init__(self, f_sym=(), helpers=None, **kwargs):
+	def __init__(self, f_sym=(), helpers=None, vectors=[], **kwargs):
 		kwargs["n_lyap"] = 1
-		super(jitcode_restricted_lyap, self).__init__(fsym,helpers,**kwargs)
+		super(jitcode_restricted_lyap, self).__init__(f_sym,helpers,**kwargs)
 		self.vectors = [ vector/np.linalg.norm(vector) for vector in vectors ]
 	
 	def norms(self):
