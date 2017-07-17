@@ -230,7 +230,7 @@ class jitcode(ode,jitcxde):
 	def _default_arguments(self):
 		basics = [
 			("t", "double const"),
-			("Y", "PyArrayObject *restrict const")
+			("Y", "PyArrayObject *__restrict const")
 			]
 		pars = [("parameter_"+par.name, "double const") for par in self.control_pars]
 		return basics + pars
@@ -268,7 +268,7 @@ class jitcode(ode,jitcxde):
 		arguments = self._default_arguments()
 		
 		if self._number_of_general_helpers:
-			arguments.append(("general_helper","double const *restrict const"))
+			arguments.append(("general_helper","double const *__restrict const"))
 		
 		if do_cse:
 			get_helper = sympy.Function("get_f_helper")
@@ -282,7 +282,7 @@ class jitcode(ode,jitcxde):
 			f_sym_wc = _cse[1][0]
 			
 			if more_helpers:
-				arguments.append(("f_helper","double *restrict const"))
+				arguments.append(("f_helper","double *__restrict const"))
 				render_and_write_code(
 					(set_helper(i, helper[1]) for i,helper in enumerate(more_helpers)),
 					self._tmpfile,
@@ -300,7 +300,7 @@ class jitcode(ode,jitcxde):
 			"f",
 			["set_dy", "y", "get_f_helper", "get_general_helper"],
 			chunk_size = chunk_size,
-			arguments = arguments+[("dY", "PyArrayObject *restrict const")]
+			arguments = arguments+[("dY", "PyArrayObject *__restrict const")]
 			)
 		
 		self._f_C_source = True
@@ -336,7 +336,7 @@ class jitcode(ode,jitcxde):
 		
 		arguments = self._default_arguments()
 		if self._number_of_general_helpers:
-			arguments.append(("general_helper","double const *restrict const"))
+			arguments.append(("general_helper","double const *__restrict const"))
 		
 		if do_cse:
 			get_helper = sympy.Function("get_jac_helper")
@@ -350,7 +350,7 @@ class jitcode(ode,jitcxde):
 			jac_sym_wc = _cse[1][0]
 			
 			if more_helpers:
-				arguments.append(("jac_helper","double *restrict const"))
+				arguments.append(("jac_helper","double *__restrict const"))
 				render_and_write_code(
 					(set_helper(i, helper[1]) for i,helper in enumerate(more_helpers)),
 					self._tmpfile,
@@ -376,7 +376,7 @@ class jitcode(ode,jitcxde):
 			"jac",
 			["set_dfdy", "y", "get_jac_helper", "get_general_helper"],
 			chunk_size = chunk_size,
-			arguments = arguments+[("dfdY", "PyArrayObject *restrict const")]
+			arguments = arguments+[("dfdY", "PyArrayObject *__restrict const")]
 		)
 		
 		self._jac_C_source = True
@@ -412,7 +412,7 @@ class jitcode(ode,jitcxde):
 				"general_helpers",
 				["y", "get_general_helper", "set_general_helper"],
 				chunk_size = chunk_size,
-				arguments = self._default_arguments() + [("general_helper","double *restrict const")]
+				arguments = self._default_arguments() + [("general_helper","double *__restrict const")]
 				)
 		
 		self._helper_C_source = True
