@@ -424,8 +424,8 @@ class jitcode(ode,jitcxde):
 	
 	def compile_C(
 		self,
-		extra_compile_args = [],
-		extra_link_args = [],
+		extra_compile_args = None,
+		extra_link_args = None,
 		verbose = False,
 		modulename = None
 		):
