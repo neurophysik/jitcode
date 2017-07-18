@@ -30,6 +30,7 @@ If compilation fails to work for whatever reason, pure Python functions can be e
 
 For most applications, the only difference to SciPy’s ODE in terms of handling is that you have to supply the derivative in the correct format – JiTCODE automatically takes care of the compilation.
 However, you can also tweak this step by step, if you desire (see `tweak` and the `notes on compilation`_).
+If you face issues with the compiler, want to optimise the speed, or wish to integrate network dynamics, also take a look at the `common JiTC*DE documentation`_.
 
 This documentation assumes that you have read the documentation of `SciPy’s ODE`_ or are otherwise familiar with it.
 As with SciPy’s ODE, this documentation assumes that the differential equation you want to solve is:

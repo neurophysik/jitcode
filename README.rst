@@ -9,7 +9,7 @@ If you want to integrate delay or stochastic differential equations, check out
 
 * `Issue Tracker <http://github.com/neurophysik/jitcode/issues>`_
 
-* Download from `PyPI <http://pypi.python.org/pypi/jitcode>`_ or just ``pip install jitcode``.
+* `Installation instructions <http://jitcde-common.readthedocs.io/#installation>`_ (or just ``pip install jitcode``).
 
 This work was supported by the Volkswagen Foundation (Grant No. 88463).
 
