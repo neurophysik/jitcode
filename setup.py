@@ -2,7 +2,7 @@ from setuptools import setup
 from io import open
 
 requirements = [
-	'jitcxde_common>=0.3',
+	'jitcxde_common>=0.4',
 	'sympy',
 	'scipy',
 	'numpy'
