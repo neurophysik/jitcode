@@ -103,19 +103,19 @@ def _jac_from_f_with_helpers(f, helpers, simplify, n):
 	dependent_helpers = [[] for i in range(n)]
 	for i in range(n):
 		for helper in helpers:
-			derivative = sympy.diff(helper[1], y(i))
+			derivative = helper[1].diff(y(i))
 			for other_helper in dependent_helpers[i]:
-				derivative += sympy.diff(helper[1],other_helper[0]) * other_helper[1]
+				derivative += helper[1].diff(other_helper[0]) * other_helper[1]
 			if derivative:
 				dependent_helpers[i].append( (helper[0], derivative) )
 	
 	def line(f_entry):
 		for j in range(n):
-			entry = sympy.diff( f_entry, y(j) )
+			entry = f_entry.diff(y(j))
 			for helper in dependent_helpers[j]:
-				entry += sympy.diff(f_entry,helper[0]) * helper[1]
+				entry += f_entry.diff(helper[0]) * helper[1]
 			if simplify:
-				entry = sympy.simplify(entry, ratio=1.0)
+				entry = entry.simplify(ratio=1.0)
 			yield entry
 	
 	for f_entry in f():
@@ -262,7 +262,7 @@ class jitcode(ode,jitcxde):
 		f_sym_wc = (entry.subs(self.general_subs) for entry in self.f_sym())
 		
 		if simplify:
-			f_sym_wc = (sympy.simplify(entry,ratio=1) for entry in f_sym_wc)
+			f_sym_wc = (entry.simplify(ratio=1) for entry in f_sym_wc)
 		
 		
 		arguments = self._default_arguments()
@@ -625,7 +625,7 @@ class jitcode_lyap(jitcode):
 				for line in _jac_from_f_with_helpers(f_basic, helpers, False, n):
 					expression = sum( entry * y(k+(i+1)*n) for k,entry in enumerate(line) if entry )
 					if simplify:
-						expression = sympy.simplify( expression, ratio=1.0 )
+						expression = expression.simplify(ratio=1.0)
 					yield expression
 		
 		super(jitcode_lyap, self).__init__(
