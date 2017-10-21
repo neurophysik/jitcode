@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 # -*- coding: utf-8 -*-
 
 """
@@ -20,7 +20,7 @@ Without further ado, here is the example code (`complete running example <https:
 .. literalinclude:: ../examples/SW_of_Roesslers.py
 	:linenos:
 	:dedent: 1
-	:lines: 66-
+	:lines: 63-
 	:emphasize-lines: 9, 25-27, 40, 29, 46, 47, 31, 32
 
 Explanation of selected features and choices:
@@ -29,12 +29,9 @@ Explanation of selected features and choices:
 
 * Since we need :math:`\\sum_{j=0}^N x_j` to calculate the derivative of :math:`z` for every oscillator, it is prudent to only calculate this once. Therefore we define a helper symbol for this in lines 27–29, which we employ in line 42. (See the arguments of `jitcode` for details.) While we used a Sympy sum for this purpose, we might as well have used a Python sum, i.e. skipping line 28 and for line 29: `helpers = [( sum_z, sum( y(3*j+2) for j in range(N) ) )]`.
 
-* In line 32, we implement :math:`\\sin(t)`. For this purpose we had to import `t` in line 1. Also, we need to use `sympy.sin` – in contrast to `math.sin` or `numpy.sin`.
+* In line 32, we implement :math:`\\sin(t)`. For this purpose we had to import `t` in line 1. Also, we need to use `symengine.sin` – in contrast to `math.sin` or `numpy.sin`.
 
 * As this is a large system, we use a generator function instead of a list to define :math:`f` (lines 33-43) and have the code automatically be split into chunks of 150 lines, corresponding to the equations of fifty oscillators, line 51. (For this system, any reasonably sized multiple of 3 is a good choice for `chunk_size`; for other systems, the precise choice of the value may be crucial.) See `large_systems` for the rationale.
-
-* In lines 35-39, we use `sympy.Mul(·,·,evaluate=False)` instead of plain multiplication to avoid SymPy automatically expanding this term (see `SymPy Issue 4596`_).
-
 """
 
 if __name__ == "__main__":
@@ -65,7 +62,7 @@ if __name__ == "__main__":
 	# example-start
 	from jitcode import jitcode, y, t
 	import numpy as np
-	import sympy
+	import symengine
 	
 	# parameters
 	# ----------
@@ -87,17 +84,13 @@ if __name__ == "__main__":
 	# generate differential equations
 	# -------------------------------
 	
-	sum_z = sympy.Symbol("sum_z")
-	j = sympy.Symbol("j")
-	helpers = [( sum_z, sympy.Sum( y(3*j+2), (j,0,N-1) ) )]
+	sum_z = symengine.Symbol("sum_z")
+	helpers = [( sum_z, sum( y(3*j+2) for j in range(N) ) )]
 	
 	def f():
 		for i in range(N):
-			coupling_term = sympy.Mul(
-				k * sympy.sin(t),
-				sum( (y(3*j)-y(3*i)) for j in range(N) if A[i,j] ),
-				evaluate = False
-			)
+			coupling_sum = sum( y(3*j)-y(3*i) for j in range(N) if A[i,j] )
+			coupling_term = k * symengine.sin(t) * coupling_sum
 			yield -ω[i] * y(3*i+1) - y(3*i+2) + coupling_term
 			yield  ω[i] * y(3*i) + a*y(3*i+1)
 			coupling_term_2 = k * (sum_z-N*y(3*i+2))

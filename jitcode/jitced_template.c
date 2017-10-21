@@ -179,9 +179,6 @@ static PyMethodDef {{module_name}}_methods[] = {
 	{NULL, NULL, 0, NULL}
 };
 
-
-{% if Python_version==3: %}
-
 static struct PyModuleDef moduledef =
 {
         PyModuleDef_HEAD_INIT,
@@ -202,12 +199,3 @@ PyMODINIT_FUNC PyInit_{{module_name}}(void)
     return module;
 }
 
-{% elif Python_version==2: %}
-
-PyMODINIT_FUNC init{{module_name}}(void)
-{
-	Py_InitModule("{{module_name}}", {{module_name}}_methods);
-	import_array();
-}
-
-{% endif %}

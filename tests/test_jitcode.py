@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import os
-from jitcode import jitcode, t, y, jitcode_lyap, ode_from_module_file, convert_to_required_symbols
+from jitcode import jitcode, t, y, jitcode_lyap
 from jitcode._jitcode import _is_C, _is_lambda
 from jitcxde_common import add_suffix
 import numpy as np
@@ -12,7 +12,7 @@ from scipy.stats import sem as standard_error
 import shutil
 import unittest
 from tempfile import mkdtemp
-from sympy import symbols
+from symengine import symbols
 from random import shuffle
 
 # control values:
@@ -50,10 +50,10 @@ c  =  0.02
 k  =  0.128
 
 f = [
-	y(0) * ( a-y(0) ) * ( y(0)-1.0 ) - y(1) + k * (y(2) - y(0)),
-	b1*y(0) - c*y(1),
-	y(2) * ( a-y(2) ) * ( y(2)-1.0 ) - y(3) + k * (y(0) - y(2)),
-	b2*y(2) - c*y(3)
+		y(0) * ( a-y(0) ) * ( y(0)-1.0 ) - y(1) + k * (y(2) - y(0)),
+		b1*y(0) - c*y(1),
+		y(2) * ( a-y(2) ) * ( y(2)-1.0 ) - y(3) + k * (y(0) - y(2)),
+		b2*y(2) - c*y(3)
 	]
 
 name = ""
@@ -162,7 +162,7 @@ class basic_test(unittest.TestCase):
 		destination = self.ODE.save_compiled(overwrite=True)
 		folder, filename = os.path.split(destination)
 		shutil.move(filename,self.tmpfile(filename))
-		self.ODE = ode_from_module_file(self.tmpfile(filename))
+		self.ODE = jitcode(n=len(f),module_location=self.tmpfile(filename))
 		self.ODE.set_integrator('dopri5')
 		self.initialise_integrator()
 		self.assertTrue(_is_C(self.ODE.f))
@@ -173,7 +173,7 @@ class basic_test(unittest.TestCase):
 		destination = self.ODE.save_compiled(overwrite=True)
 		folder, filename = os.path.split(destination)
 		shutil.move(filename,self.tmpfile(filename))
-		self.ODE = ode_from_module_file(self.tmpfile(filename))
+		self.ODE = jitcode(n=len(f),module_location=self.tmpfile(filename))
 		self.ODE.set_integrator('dopri5')
 		self.initialise_integrator()
 		self.assertTrue(_is_C(self.ODE.f))
@@ -207,7 +207,7 @@ class basic_test(unittest.TestCase):
 		self.ODE.compile_C(modulename=modulename)
 		filename = self.ODE.save_compiled(overwrite=True)
 		shutil.move(filename, self.tmpfile(filename))
-		self.ODE = ode_from_module_file(self.tmpfile(filename))
+		self.ODE = jitcode(n=len(f),module_location=self.tmpfile(filename))
 		self.ODE.set_integrator('lsoda')
 		self.initialise_integrator()
 		self.assertTrue(_is_C(self.ODE.f))
@@ -224,7 +224,7 @@ class basic_test(unittest.TestCase):
 		folder, filename = os.path.split(destination)
 		print(folder,self.tmpfile(""))
 		assert folder==os.path.dirname(self.tmpfile(""))
-		self.ODE = ode_from_module_file(self.tmpfile(filename))
+		self.ODE = jitcode(n=len(f),module_location=self.tmpfile(filename))
 		self.ODE.set_integrator('dopri5')
 		self.initialise_integrator()
 		self.assertTrue(_is_C(self.ODE.f))
@@ -322,27 +322,14 @@ class lyapunov_test(unittest.TestCase):
 	
 	def tearDown(self):
 		self.initialise_integrator()
-		data = np.vstack(self.ODE.integrate(t)[1] for t in range(10,100000,10))
+		times = range(10,100000,10)
+		data = np.vstack( self.ODE.integrate(time)[1] for time in times )
 		result = np.average(data[1000:], axis=0)
 		margin = standard_error(data[1000:], axis=0)
 		print(data,result,margin)
 		self.assertLess( np.max(margin), 0.003 )
 		for i in range(self.n):
 			self.assertLess( result[i]-lyaps[i], 3*margin[i] )
-
-dynvars = x_1,y_1,x_2,y_2 = symbols("x, y, y_1, y_2")
-f_dv_helpers = [ ( coupling, k*(x_2-x_1) ) ]
-f_dv = [ 
-	a*x_1**2 - a*x_1+ coupling - x_1**3 + x_1**2 - y_1,
-	b1*x_1 - c*y_1,
-	x_2 * ( a-x_2 ) * ( x_2-1.0 ) - y_2 - coupling,
-	b2*x_2 - c*y_2,
-	]
-
-class basic_test_with_conversion(basic_test):
-	@classmethod
-	def setUpClass(self):
-		self.argdict = convert_to_required_symbols(dynvars, f_dv, f_dv_helpers)
 
 def f_generator():
 	for entry in f:
@@ -351,7 +338,7 @@ def f_generator():
 class basic_test_with_generator_function(basic_test):
 	@classmethod
 	def setUpClass(self):
-		self.argdict = {"f_sym": f_generator, "n": 4}
+		self.argdict = {"f_sym": f_generator, "n": len(f)}
 
 a_par, c_par, k_par = symbols("a_par c_par k_par")
 f_params_helpers = [ ( coupling, k_par*(y(2)-y(0)) ) ]
@@ -388,6 +375,10 @@ class errors_test(unittest.TestCase):
 		with self.assertRaises(NameError):
 			ODE2.compile_C(modulename="foo")
 	
+	def test_wrong_n(self):
+		with self.assertRaises(ValueError):
+			ODE = jitcode(f,n=len(f)*2)
+	
 	def test_dimension_mismatch(self):
 		ODE = jitcode(f)
 		with self.assertRaises(ValueError):
@@ -408,7 +399,6 @@ class errors_test(unittest.TestCase):
 		ODE = jitcode([x])
 		with self.assertRaises(ValueError):
 			ODE.check()
-		
 
 if __name__ == "__main__":
 	unittest.main(buffer=True)
