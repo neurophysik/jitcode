@@ -225,8 +225,8 @@ class jitcode(ode,jitcxde):
 					sympy.Matrix(list(f_sym_wc)),
 					symbols = (get_helper(i) for i in count())
 				)
-			more_helpers = _cse[0]
-			f_sym_wc = _cse[1][0]
+			more_helpers = list(map(symengine.sympify,_cse[0]))
+			f_sym_wc = map(symengine.sympify,_cse[1][0])
 			
 			if more_helpers:
 				arguments.append(("f_helper","double *__restrict const"))
@@ -238,7 +238,7 @@ class jitcode(ode,jitcxde):
 					)
 				self._number_of_f_helpers = len(more_helpers)
 		
-		set_dy = sympy.Function("set_dy")
+		set_dy = symengine.Function("set_dy")
 		self.render_and_write_code(
 			(set_dy(i,entry) for i,entry in enumerate(f_sym_wc)),
 			name = "f",
@@ -274,7 +274,7 @@ class jitcode(ode,jitcxde):
 		self._generate_helpers_C()
 		self._generate_jac_sym()
 		
-		jac_sym_wc = sympy.Matrix([ [entry.subs(self.general_subs) for entry in line] for line in self.jac_sym ])
+		jac_sym_wc = symengine.Matrix([ [entry.subs(self.general_subs) for entry in line] for line in self.jac_sym ])
 		self.sparse_jac = sparse
 		
 		arguments = self._default_arguments()
@@ -283,13 +283,13 @@ class jitcode(ode,jitcxde):
 		
 		if do_cse:
 			get_helper = sympy.Function("get_jac_helper")
-			set_helper = sympy.Function("set_jac_helper")
+			set_helper = symengine.Function("set_jac_helper")
 			
 			_cse = sympy.cse(
-					jac_sym_wc,
+					sympy.sympify(jac_sym_wc),
 					symbols = (get_helper(i) for i in count())
 				)
-			more_helpers = _cse[0]
+			more_helpers = list(map(symengine.sympify,_cse[0]))
 			jac_sym_wc = _cse[1][0]
 			
 			if more_helpers:
@@ -302,9 +302,9 @@ class jitcode(ode,jitcxde):
 					)
 				self._number_of_jac_helpers = len(more_helpers)
 		
-		jac_sym_wc = jac_sym_wc.tolist()
+		jac_sym_wc = map(symengine.sympify,jac_sym_wc.tolist())
 		
-		set_dfdy = sympy.Function("set_dfdy")
+		set_dfdy = symengine.Function("set_dfdy")
 		
 		self.render_and_write_code(
 			(
@@ -340,8 +340,8 @@ class jitcode(ode,jitcxde):
 		"""
 		
 		if self.helpers:
-			get_helper = sympy.Function("get_general_helper")
-			set_helper = sympy.Function("set_general_helper")
+			get_helper = symengine.Function("get_general_helper")
+			set_helper = symengine.Function("set_general_helper")
 			
 			for i,helper in enumerate(self.helpers):
 				self.general_subs[helper[0]] = get_helper(i)
