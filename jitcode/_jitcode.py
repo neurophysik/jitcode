@@ -188,7 +188,7 @@ class jitcode(ode,jitcxde):
 			self.generate_f_C()
 			self.report("generated C code for f")
 	
-	def generate_f_C(self, simplify=True, do_cse=False, chunk_size=100):
+	def generate_f_C(self, simplify=False, do_cse=False, chunk_size=100):
 		"""
 		translates the derivative to C code using SymPy’s `C-code printer <http://docs.sympy.org/dev/modules/printing.html#module-sympy.printing.ccode>`_.
 		
@@ -218,20 +218,20 @@ class jitcode(ode,jitcxde):
 			arguments.append(("general_helper","double const *__restrict const"))
 		
 		if do_cse:
-			get_helper = symengine.Function("get_f_helper")
+			get_helper = sympy.Function("get_f_helper")
 			set_helper = symengine.Function("set_f_helper")
 			
 			_cse = sympy.cse(
-					sympy.Matrix(list(f_sym_wc)),
+					sympy.Matrix(sympy.sympify(list(f_sym_wc))),
 					symbols = (get_helper(i) for i in count())
 				)
-			more_helpers = list(map(symengine.sympify,_cse[0]))
-			f_sym_wc = map(symengine.sympify,_cse[1][0])
+			more_helpers = symengine.sympify(_cse[0])
+			f_sym_wc = symengine.sympify(_cse[1][0])
 			
 			if more_helpers:
 				arguments.append(("f_helper","double *__restrict const"))
 				self.render_and_write_code(
-					(set_helper(i, helper[1]) for i,helper in enumerate(more_helpers)),
+					(set_helper(i,helper[1]) for i,helper in enumerate(more_helpers)),
 					name = "f_helpers",
 					chunk_size = chunk_size,
 					arguments = arguments
@@ -289,8 +289,8 @@ class jitcode(ode,jitcxde):
 					sympy.sympify(jac_sym_wc),
 					symbols = (get_helper(i) for i in count())
 				)
-			more_helpers = list(map(symengine.sympify,_cse[0]))
-			jac_sym_wc = _cse[1][0]
+			more_helpers = symengine.sympify(_cse[0])
+			jac_sym_wc = symengine.sympify(_cse[1][0])
 			
 			if more_helpers:
 				arguments.append(("jac_helper","double *__restrict const"))
@@ -417,14 +417,14 @@ class jitcode(ode,jitcxde):
 				self._lambda_subs.append((y(i),symbol))
 			self._lambda_args.extend(self.control_pars)
 	
-	def generate_f_lambda(self, simplify=True, do_cse=False):
+	def generate_f_lambda(self, simplify=None, do_cse=False):
 		"""
 		translates the symbolic derivative to a function using SymPy’s `lambdify <http://docs.sympy.org/latest/modules/utilities/lambdify.html>`_ tool.
 		
 		Parameters
 		----------
 		simplify : boolean
-			Whether the derivative should be `simplified <http://docs.sympy.org/dev/modules/simplify/simplify.html>`_ (with `ratio=1.0`) before translating to C code. The main reason why you could want to disable this is if your derivative is already optimised and so large that simplifying takes a considerable amount of time.
+			Whether the derivative should be `simplified <http://docs.sympy.org/dev/modules/simplify/simplify.html>`_ (with `ratio=1.0`) before translating to C code. The main reason why you could want to enable this is if you expect your derivative not to be optimised and so large that simplifying takes a considerable amount of time. If `None`, this will be automatically disabled for `n>10`.
 		
 		do_cse : boolean
 			Whether a `common-subexpression detection <http://docs.sympy.org/dev/modules/rewriting.html#module-sympy.simplify.cse_main>`_ should be applied when lambdifying.
@@ -433,6 +433,9 @@ class jitcode(ode,jitcxde):
 		self._prepare_lambdas()
 		
 		f_sym_wc = (ordered_subs(entry,self._lambda_subs) for entry in self.f_sym())
+		
+		if simplify is None:
+			simplify = self.n<=10
 		if simplify:
 			f_sym_wc = (entry.simplify(ratio=1.0) for entry in f_sym_wc)
 		
