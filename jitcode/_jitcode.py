@@ -59,6 +59,25 @@ def _jac_from_f_with_helpers(f, helpers, simplify, n):
 	for f_entry in f():
 		yield line(f_entry)
 
+def _lambda_wrapper(core_f,control_pars):
+	# I would like to do this:
+	# return lambda t,Y,*c_pars: core_f(np.hstack([t,Y,c_pars]))
+	# but since SciPy’s ODE fails to handle variadic functions, it has to be this:
+	
+	n = len(control_pars)
+	if   n==0: return lambda t,Y          : core_f(hstack([t,Y          ]))
+	elif n==1: return lambda t,Y,p        : core_f(hstack([t,Y,p        ]))
+	elif n==2: return lambda t,Y,p,q      : core_f(hstack([t,Y,p,q      ]))
+	elif n==3: return lambda t,Y,p,q,r    : core_f(hstack([t,Y,p,q,r    ]))
+	elif n==4: return lambda t,Y,p,q,r,s  : core_f(hstack([t,Y,p,q,r,s  ]))
+	elif n==5: return lambda t,Y,p,q,r,s,u: core_f(hstack([t,Y,p,q,r,s,u]))
+	else:
+		cpars = ",".join( par.name for par in control_pars )
+		return eval(
+				"lambda t,Y,%s: core_f(hstack([t,Y,%s]))" % (cpars,cpars),
+				{"core_f":core_f, "hstack":hstack}
+			)
+
 class jitcode(ode,jitcxde):
 	"""
 	Parameters
@@ -409,7 +428,7 @@ class jitcode(ode,jitcxde):
 			if self.helpers:
 				warn("Lambdification handles helpers by plugging them in. This may be very inefficient")
 			
-			self._lambda_subs = self.helpers[::-1]
+			self._lambda_subs = list(reversed(self.helpers))
 			self._lambda_args = [t]
 			for i in range(self.n):
 				symbol = symengine.Symbol("dummy_argument_%i"%i)
@@ -441,17 +460,8 @@ class jitcode(ode,jitcxde):
 		
 		lambdify = symengine.LambdifyCSE if do_cse else symengine.Lambdify
 		core_f = lambdify(self._lambda_args,list(f_sym_wc))
-		if not self.control_pars:
-			self.f = lambda t,Y: core_f(np.hstack([t,Y]))
-		else:
-			# I would like to do this:
-			# self.f = lambda t,Y,*c_pars: core_f(np.hstack([t,Y,c_pars]))
-			# but since SciPy’s ODE fails to handle variadic functions, it has to be this:
-			cpars = ",".join( par.name for par in self.control_pars )
-			self.f = eval(
-					"lambda t,Y,%s: core_f(hstack([t,Y,%s]))" % (cpars,cpars),
-					{"core_f":core_f, "hstack":hstack}
-				)
+		# self.f = lambda t,Y,*c_pars: core_f(np.hstack([t,Y,c_pars]))
+		self.f = _lambda_wrapper(core_f,self.control_pars)
 	
 	def _generate_jac_lambda(self):
 		if not _is_lambda(self.jac):
@@ -478,17 +488,8 @@ class jitcode(ode,jitcxde):
 		
 		lambdify = symengine.LambdifyCSE if do_cse else symengine.Lambdify
 		core_jac = lambdify(self._lambda_args,jac_matrix)
-		if not self.control_pars:
-			self.jac = lambda t,Y: core_jac(np.hstack([t,Y]))
-		else:
-			# I would like to do this:
-			# self.f = lambda t,Y,*c_pars: core_f(np.hstack([t,Y,c_pars]))
-			# but since SciPy’s ODE fails to handle variadic functions, it has to be this:
-			cpars = ",".join( par.name for par in self.control_pars )
-			self.jac = eval(
-					"lambda t,Y,%s: core_jac(hstack([t,Y,%s]))" % (cpars,cpars),
-					{"core_jac":core_jac, "hstack":hstack}
-				)
+		# self.jac = lambda t,Y,*c_pars: core_jac(np.hstack([t,Y,c_pars]))
+		self.jac = _lambda_wrapper(core_jac,self.control_pars)
 	
 	def generate_lambdas(self):
 		"""
