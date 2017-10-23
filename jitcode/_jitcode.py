@@ -3,22 +3,22 @@
 
 from scipy.integrate import ode
 from scipy.integrate._ode import find_integrator
-from numpy import hstack, log
-import numpy as np
 from warnings import warn
 from traceback import format_exc
 from types import FunctionType, BuiltinFunctionType
-import symengine
-import sympy
 from inspect import signature
 from itertools import count
-from jitcxde_common import (
-	jitcxde,
-	module_from_path,
-	sympify_helpers, sort_helpers,
-	random_direction, orthonormalise,
-	collect_arguments, ordered_subs
-	)
+
+from numpy import hstack, log
+import numpy as np
+import symengine
+import sympy
+
+from jitcxde_common import jitcxde
+from jitcxde_common.modules import module_from_path
+from jitcxde_common.helpers import sympify_helpers, sort_helpers
+from jitcxde_common.numerical import random_direction, orthonormalise
+from jitcxde_common.symbolic import collect_arguments, ordered_subs
 
 #: the symbol for the state that must be used to define the differential equation. It is a function and the integer argument denotes the component. You may just as well define the an analogous function directly with SymPy, but using this function is the best way to get the most of future versions of JiTCODE, in particular avoiding incompatibilities.
 y = symengine.Function("y")

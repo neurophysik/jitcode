@@ -4,7 +4,7 @@
 import os
 from jitcode import jitcode, t, y, jitcode_lyap
 from jitcode._jitcode import _is_C, _is_lambda
-from jitcxde_common import add_suffix
+from jitcxde_common.modules import add_suffix
 import numpy as np
 from numpy.testing import assert_allclose
 import platform
