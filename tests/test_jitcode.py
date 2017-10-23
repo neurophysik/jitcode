@@ -168,68 +168,6 @@ class basic_test(unittest.TestCase):
 		self.assertTrue(_is_C(self.ODE.f))
 		self.assertIsNone(self.ODE.jac)
 	
-	def test_save_and_load_with_jac(self):
-		self.ODE = jitcode(wants_jacobian=True, **self.argdict)
-		destination = self.ODE.save_compiled(overwrite=True)
-		folder, filename = os.path.split(destination)
-		shutil.move(filename,self.tmpfile(filename))
-		self.ODE = jitcode(n=len(f),module_location=self.tmpfile(filename))
-		self.ODE.set_integrator('dopri5')
-		self.initialise_integrator()
-		self.assertTrue(_is_C(self.ODE.f))
-		self.assertTrue(_is_C(self.ODE.jac))
-	
-	def test_save_and_load_with_argument(self):
-		self.ODE = jitcode(**self.argdict)
-		filename = add_suffix(get_unique_name())
-		self.ODE.save_compiled(filename, overwrite=True)
-		shutil.move(filename,self.tmpfile(filename))
-		self.ODE = jitcode(n=len(f),module_location=self.tmpfile(filename))
-		self.ODE.set_integrator('dopri5')
-		self.initialise_integrator()
-		self.assertTrue(_is_C(self.ODE.f))
-		self.assertIsNone(self.ODE.jac)
-	
-	def test_save_and_load_with_jac_and_argument(self):
-		self.ODE = jitcode(wants_jacobian=True, **self.argdict)
-		filename = add_suffix(get_unique_name())
-		self.ODE.save_compiled(filename, overwrite=True)
-		shutil.move(filename,self.tmpfile(filename))
-		self.ODE = jitcode(n=len(f),module_location=self.tmpfile(filename))
-		self.ODE.set_integrator('dopri5')
-		self.initialise_integrator()
-		self.assertTrue(_is_C(self.ODE.f))
-		self.assertTrue(_is_C(self.ODE.jac))
-	
-	def test_compile_save_and_load(self,default=False):
-		self.ODE = jitcode(wants_jacobian=True, **self.argdict)
-		modulename = None if default else get_unique_name()
-		self.ODE.compile_C(modulename=modulename)
-		filename = self.ODE.save_compiled(overwrite=True)
-		shutil.move(filename, self.tmpfile(filename))
-		self.ODE = jitcode(n=len(f),module_location=self.tmpfile(filename))
-		self.ODE.set_integrator('lsoda')
-		self.initialise_integrator()
-		self.assertTrue(_is_C(self.ODE.f))
-		self.assertTrue(_is_C(self.ODE.jac))
-	
-	def test_save_with_default_name_and_load(self):
-		self.test_compile_save_and_load(True)
-	
-	def test_save_to_directory_and_load(self):
-		self.ODE = jitcode(**self.argdict)
-		modulename = get_unique_name()
-		self.ODE.compile_C(modulename=modulename)
-		destination = self.ODE.save_compiled(self.tmpfile(""), overwrite=True)
-		folder, filename = os.path.split(destination)
-		print(folder,self.tmpfile(""))
-		assert folder==os.path.dirname(self.tmpfile(""))
-		self.ODE = jitcode(n=len(f),module_location=self.tmpfile(filename))
-		self.ODE.set_integrator('dopri5')
-		self.initialise_integrator()
-		self.assertTrue(_is_C(self.ODE.f))
-		self.assertIsNone(self.ODE.jac)
-	
 	def tearDown(self):
 		self.assertIsNotNone(self.ODE.f)
 		assert_allclose( self.ODE.f(0.0,y0,*self.extra_args), f_of_y0, rtol=1e-5 )
