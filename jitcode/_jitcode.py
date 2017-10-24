@@ -587,27 +587,27 @@ class jitcode_lyap(jitcode):
 		Whether the differential equations for the tangent vector shall be subjected to SymPy’s `simplify`. Doing so may speed up the time evolution but may slow down the generation of the code (considerably for large differential equations).
 	"""
 	
-	def __init__(self,
-				f_sym = (),
-				helpers = None,
-				wants_jacobian = False,
-				n = None,
-				control_pars = (),
-				n_lyap = -1,
-				simplify = True,
-				module_location = None
-			):
-		self.n_basic = n
+	def __init__( self, f_sym=(), n_lyap=-1, simplify=True, **kwargs ):
+		
+		self.n_basic = kwargs.pop("n",None)
+		if "helpers" not in kwargs.keys():
+			kwargs["helpers"] = ()
+		
 		f_basic = self._handle_input(f_sym,n_basic=True)
 		self._n_lyap = n_lyap if (0<=n_lyap<=self.n_basic) else self.n_basic
 		
-		helpers = sort_helpers(sympify_helpers(helpers or []))
+		kwargs["helpers"] = sort_helpers(sympify_helpers(kwargs["helpers"] or []))
 		
 		def f_lyap():
 			yield from f_basic()
 			
 			for i in range(self._n_lyap):
-				for line in _jac_from_f_with_helpers(f_basic,helpers,False,self.n_basic):
+				for line in _jac_from_f_with_helpers(
+						f = f_basic,
+						helpers = kwargs["helpers"],
+						simplify = False,
+						n = self.n_basic
+					):
 					expression = sum(
 							entry * y(k+(i+1)*self.n_basic)
 							for k,entry in enumerate(line)
@@ -619,11 +619,8 @@ class jitcode_lyap(jitcode):
 		
 		super(jitcode_lyap, self).__init__(
 				f_lyap,
-				helpers = helpers,
-				wants_jacobian = wants_jacobian,
 				n = self.n_basic*(self._n_lyap+1),
-				control_pars = control_pars,
-				module_location = module_location
+				**kwargs
 			)
 		
 	def set_initial_value(self, y, t=0.0):
@@ -677,9 +674,9 @@ class jitcode_restricted_lyap(jitcode_lyap):
 		A basis of the plane, whose projection shall be removed.
 	"""
 	
-	def __init__(self, f_sym=(), helpers=None, vectors=[], **kwargs):
+	def __init__(self, f_sym=(), vectors=[], **kwargs):
 		kwargs["n_lyap"] = 1
-		super(jitcode_restricted_lyap, self).__init__(f_sym,helpers,**kwargs)
+		super(jitcode_restricted_lyap,self).__init__(f_sym,**kwargs)
 		self.vectors = [ vector/np.linalg.norm(vector) for vector in vectors ]
 	
 	def norms(self):
