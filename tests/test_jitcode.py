@@ -219,8 +219,8 @@ class helpers_test(unittest.TestCase):
 	def test_identity_of_lyaps(self):
 		n = len(f)
 		x = np.random.random((n+1)*n)
-		ODE1 = jitcode_lyap(f, n_lyap=n)
-		ODE2 = jitcode_lyap(f_alt, get_f_alt_helpers(), n_lyap=n)
+		ODE1 = jitcode_lyap(f,n_lyap=n)
+		ODE2 = jitcode_lyap(f_alt,helpers=get_f_alt_helpers(),n_lyap=n)
 		ODE1.set_integrator("dopri5")
 		ODE2.set_integrator("dopri5")
 		assert_allclose(ODE1.f(0.0,x), ODE2.f(0.0,x))
@@ -230,25 +230,25 @@ class lyapunov_test(unittest.TestCase):
 		self.n = len(f)
 	
 	def test_lyapunov(self):
-		self.ODE = jitcode_lyap(f, n_lyap=self.n)
+		self.ODE = jitcode_lyap(f,n_lyap=self.n)
 		self.ODE.set_integrator("dopri5")
 	
 	def test_lyapunov_with_jac(self):
-		self.ODE = jitcode_lyap(f, n_lyap=self.n)
+		self.ODE = jitcode_lyap(f,n_lyap=self.n)
 		self.ODE.set_integrator("vode")
 	
 	def test_lyapunov_with_helpers(self):
-		self.ODE = jitcode_lyap(f_alt, get_f_alt_helpers(), n_lyap=self.n)
+		self.ODE = jitcode_lyap(f_alt,helpers=get_f_alt_helpers(),n_lyap=self.n)
 		self.ODE.set_integrator("dopri5")
 	
 	def test_lyapunov_with_helpers_and_jac(self):
-		self.ODE = jitcode_lyap(f_alt, get_f_alt_helpers(), n_lyap=self.n)
+		self.ODE = jitcode_lyap(f_alt,helpers=get_f_alt_helpers(),n_lyap=self.n)
 		self.ODE.set_integrator("vode")
 	
 	def test_lyapunov_save_and_load_with_jac(self):
-		self.ODE = jitcode_lyap(f, n_lyap=self.n, wants_jacobian=True)
+		self.ODE = jitcode_lyap(f,n_lyap=self.n,wants_jacobian=True)
 		filename = self.ODE.save_compiled(overwrite=True)
-		self.ODE = jitcode_lyap((), n=self.n, n_lyap=self.n, module_location=filename)
+		self.ODE = jitcode_lyap((),n=self.n,n_lyap=self.n,module_location=filename)
 		self.ODE.set_integrator("vode")
 		self.assertTrue(_is_C(self.ODE.f))
 		self.assertTrue(_is_C(self.ODE.jac))
