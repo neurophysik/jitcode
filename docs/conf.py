@@ -6,8 +6,8 @@ from setuptools_scm import get_version
 MOCK_MODULES = [
 	'numpy', 'numpy.testing', 'numpy.random',
 	'scipy', 'scipy.integrate', 'scipy.integrate._ode', 'scipy.stats',
-#	'sympy', 'sympy.core', 'sympy.core.cache', 'sympy.printing', 'sympy.printing.ccode',
-	'jitcode']
+	'symengine', 'symengine.printing', 'symengine.lib.symengine_wrapper',
+	]
 sys.modules.update((mod_name, Mock()) for mod_name in MOCK_MODULES)
 
 class ode_mock(object): pass
