@@ -3,7 +3,7 @@ from io import open
 
 requirements = [
 	'jitcxde_common >=1',
-	'sympy',
+	'sympy', 'symengine',
 	'scipy',
 	'numpy'
 ]
@@ -15,6 +15,7 @@ setup(
 	author = 'Gerrit Ansmann',
 	author_email = 'gansmann@uni-bonn.de',
 	url = 'http://github.com/neurophysik/jitcode',
+	python_requires=">=3.3",
 	packages = ['jitcode'],
 	package_data = {'jitcode': ['jitced_template.c']},
 	include_package_data = True,
