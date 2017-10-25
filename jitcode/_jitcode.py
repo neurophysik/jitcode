@@ -20,10 +20,10 @@ from jitcxde_common.helpers import sympify_helpers, sort_helpers
 from jitcxde_common.numerical import random_direction, orthonormalise
 from jitcxde_common.symbolic import collect_arguments, ordered_subs
 
-#: the symbol for the state that must be used to define the differential equation. It is a function and the integer argument denotes the component. You may just as well define the an analogous function directly with SymPy, but using this function is the best way to get the most of future versions of JiTCODE, in particular avoiding incompatibilities.
+#: the symbol for the state that must be used to define the differential equation. It is a function and the integer argument denotes the component. You may just as well define an analogous function directly with SymEngine or SymPy, but using this function is the best way to get the most of future versions of JiTCODE, in particular avoiding incompatibilities.
 y = symengine.Function("y")
 
-#: the symbol for time for defining the differential equation. If your differential equation has no explicit time dependency (“autonomous system”), you do not need this. You may just as well define the an analogous symbol directly with SymPy, but using this function is the best way to get the most of future versions of JiTCODE, in particular avoiding incompatibilities.
+#: the symbol for time for defining the differential equation. If your differential equation has no explicit time dependency (“autonomous system”), you do not need this. You may just as well define an analogous symbol directly with SymEngine or SymPy, but using this function is the best way to get the most of future versions of JiTCODE, in particular avoiding incompatibilities.
 t = symengine.Symbol("t", real=True)
 
 def _can_use_jacobian(integratorname):
@@ -82,10 +82,10 @@ class jitcode(ode,jitcxde):
 	"""
 	Parameters
 	----------
-	f_sym : iterable of SymPy expressions or generator function yielding SymPy expressions
+	f_sym : iterable of symbolic expressions or generator function yielding symbolic expressions
 		The `i`-th element is the `i`-th component of the value of the ODE’s derivative :math:`f(t,y)`.
 	
-	helpers : list of length-two iterables, each containing a SymPy symbol and a SymPy expression
+	helpers : list of length-two iterables, each containing a symbol and a symbolic expression
 		Each helper is a variable that will be calculated before evaluating the derivative and can be used in the latter’s computation. The first component of the tuple is the helper’s symbol as referenced in the derivative or other helpers, the second component describes how to compute it from `t`, `y` and other helpers. This is for example useful to realise a mean-field coupling, where the helper could look like `(mean, sum(y(i) for i in range(100))/100)`. (See `example_2` for an example.)
 	
 	wants_jacobian : boolean
@@ -94,7 +94,7 @@ class jitcode(ode,jitcxde):
 	n : integer
 		Length of `f_sym`. While JiTCODE can easily determine this itself (and will, if necessary), this may take some time if `f_sym` is a generator function and `n` is large. Take care that this value is correct – if it isn’t, you will not get a helpful error message.
 	
-	control_pars : list of SymPy symbols
+	control_pars : list of symbols
 		Each symbol corresponds to a control parameter that can be used when defining the equations and set after compilation `scipy.ode`’s `set_f_params` or `set_jac_params` (in the same order as given here). Using this makes sense if you need to do a parameter scan with short integrations for each parameter and you are spending a considerable amount of time compiling.
 	
 	verbose : boolean
@@ -184,7 +184,7 @@ class jitcode(ode,jitcxde):
 	
 	def generate_jac_sym(self, simplify=True):
 		"""
-		generates the Jacobian using SymPy’s differentiation.
+		generates the Jacobian using SymEngine’s differentiation.
 		
 		Parameters
 		----------
@@ -207,20 +207,20 @@ class jitcode(ode,jitcxde):
 			self.generate_f_C()
 			self.report("generated C code for f")
 	
-	def generate_f_C(self, simplify=False, do_cse=False, chunk_size=100):
+	def generate_f_C(self, simplify=None, do_cse=False, chunk_size=100):
 		"""
-		translates the derivative to C code using SymPy’s `C-code printer <http://docs.sympy.org/dev/modules/printing.html#module-sympy.printing.ccode>`_.
+		translates the derivative to C code using SymEngine’s `C-code printer <https://github.com/symengine/symengine/pull/1054>`_.
 		
 		Parameters
 		----------
-		simplify : boolean
-			Whether the derivative should be `simplified <http://docs.sympy.org/dev/modules/simplify/simplify.html>`_ (with `ratio=1.0`) before translating to C code. The main reason why you could want to disable this is if your derivative is already  optimised and so large that simplifying takes a considerable amount of time.
+		simplify : boolean or None
+			Whether the derivative should be `simplified <http://docs.sympy.org/dev/modules/simplify/simplify.html>`_ (with `ratio=1.0`) before translating to C code. The main reason why you could want to enable this is if you expect your derivative not to be optimised and not be so large that simplifying takes a considerable amount of time. If `None`, this will be automatically disabled for `n>10`.
 		
 		do_cse : boolean
-			Whether SymPy’s `common-subexpression detection <http://docs.sympy.org/dev/modules/rewriting.html#module-sympy.simplify.cse_main>`_ should be applied before translating to C code. It is almost always better to let the compiler do this (unless you want to set the compiler optimisation to `-O2` or lower): For simple differential equations this should not make any difference to the compiler’s optimisations. For large ones, it may make a difference but also take long. As this requires all entries of `f` at once, it may void advantages gained from using generator functions as an input.
+			Whether SymPy’s `common-subexpression detection <http://docs.sympy.org/dev/modules/rewriting.html#module-sympy.simplify.cse_main>`_ should be applied before translating to C code. It is almost always better to let the compiler do this (unless you want to set the compiler optimisation to `-O2` or lower): For simple differential equations this should not make any difference to the compiler’s optimisations. For large ones, it may make a difference but also take long. As this requires all entries of `f` at once, it may void advantages gained from using generator functions as an input. Also, this feature uses SymPy and not SymEngine.
 		
 		chunk_size : integer
-			If the number of instructions in the final C code exceeds this number, it will be split into chunks of this size. After the generation of each chunk, SymPy’s cache is cleared. See `Handling very large differential equations <http://jitcde-common.readthedocs.io/#handling-very-large-differential-equations>`_ on why this is useful and how to best choose this value.
+			If the number of instructions in the final C code exceeds this number, it will be split into chunks of this size. See `Handling very large differential equations <http://jitcde-common.readthedocs.io/#handling-very-large-differential-equations>`_ on why this is useful and how to best choose this value.
 			If smaller than 1, no chunking will happen.
 		"""
 		
@@ -228,6 +228,8 @@ class jitcode(ode,jitcxde):
 		
 		f_sym_wc = (entry.subs(self.general_subs) for entry in self.f_sym())
 		
+		if simplify is None:
+			simplify = self.n<=10
 		if simplify:
 			f_sym_wc = (entry.simplify(ratio=1) for entry in f_sym_wc)
 		
@@ -274,20 +276,20 @@ class jitcode(ode,jitcxde):
 	
 	def generate_jac_C(self, do_cse=False, chunk_size=100, sparse=True):
 		"""
-		translates the symbolic Jacobian to C code using SymPy’s `C-code printer <http://docs.sympy.org/dev/modules/printing.html#module-sympy.printing.ccode>`_. If the symbolic Jacobian has not been generated, it generates it by calling `generate_jac_sym`.
+		translates the symbolic Jacobian to C code using SymEngine’s `C-code printer <https://github.com/symengine/symengine/pull/1054>`_. If the symbolic Jacobian has not been generated, it generates it by calling `generate_jac_sym`.
 		
 		Parameters
 		----------
 		
 		do_cse : boolean
-			Whether SymPy’s `common-subexpression detection <http://docs.sympy.org/dev/modules/rewriting.html#module-sympy.simplify.cse_main>`_ should be applied before translating to C code. It is almost always better to let the compiler do this (unless you want to set the compiler optimisation to `-O2` or lower): For simple differential equations this should not make any difference to the compiler’s optimisations. For large ones, it may make a difference but also take long. As this requires the entire Jacobian at once, it may void advantages gained from using generator functions as an input.
+			Whether SymPy’s `common-subexpression detection <http://docs.sympy.org/dev/modules/rewriting.html#module-sympy.simplify.cse_main>`_ should be applied before translating to C code. It is almost always better to let the compiler do this (unless you want to set the compiler optimisation to `-O2` or lower): For simple differential equations this should not make any difference to the compiler’s optimisations. For large ones, it may make a difference but also take long. As this requires the entire Jacobian at once, it may void advantages gained from using generator functions as an input. Also, this feature uses SymPy and not SymEngine.
 		
 		chunk_size : integer
-			If the number of instructions in the final C code exceeds this number, it will be split into chunks of this size. After the generation of each chunk, SymPy’s cache is cleared. See `Handling very large differential equations <http://jitcde-common.readthedocs.io/#handling-very-large-differential-equations>`_ on why this is useful and how to best choose this value.
+			If the number of instructions in the final C code exceeds this number, it will be split into chunks of this size. See `Handling very large differential equations <http://jitcde-common.readthedocs.io/#handling-very-large-differential-equations>`_ on why this is useful and how to best choose this value.
 			If smaller than 1, no chunking will happen.
 		
 		sparse : boolean
-			Whether a sparse Jacobian should be assumed for optimisation. Note that this does not mean that the Jacobian is stored, parsed or handled as a sparse matrix. This kind of optimisation would require SciPy’s ODE to be able to handle sparse matrices.
+			Whether a sparse Jacobian should be assumed for optimisation. Note that this does not mean that the Jacobian is stored, parsed or handled as a sparse matrix. This kind of optimisation would require SciPy’s ODE to be able to handle sparse matrices without structure in the sparseness.
 		"""
 		
 		self._generate_helpers_C()
@@ -346,12 +348,12 @@ class jitcode(ode,jitcxde):
 	
 	def generate_helpers_C(self, chunk_size=100):
 		"""
-		translates the helpers to C code using SymPy’s `C-code printer <http://docs.sympy.org/dev/modules/printing.html#module-sympy.printing.ccode>`_.
+		translates the helpers to C code using SymEngine’s `C-code printer <https://github.com/symengine/symengine/pull/1054>`_.
 		
 		Parameters
 		----------
 		chunk_size : integer
-			If the number of instructions in the final C code exceeds this number, it will be split into chunks of this size. After the generation of each chunk, SymPy’s cache is cleared. See `large_systems` on why this is useful.
+			If the number of instructions in the final C code exceeds this number, it will be split into chunks of this size. See `large_systems` on why this is useful.
 			
 			If there is an obvious grouping of your helpers, the group size suggests itself for `chunk_size`.
 			
@@ -438,15 +440,15 @@ class jitcode(ode,jitcxde):
 	
 	def generate_f_lambda(self, simplify=None, do_cse=False):
 		"""
-		translates the symbolic derivative to a function using SymPy’s `lambdify <http://docs.sympy.org/latest/modules/utilities/lambdify.html>`_ tool.
+		translates the symbolic derivative to a function using SymEngines `Lambdify` or `LambdifyCSE`.
 		
 		Parameters
 		----------
 		simplify : boolean
-			Whether the derivative should be `simplified <http://docs.sympy.org/dev/modules/simplify/simplify.html>`_ (with `ratio=1.0`) before translating to C code. The main reason why you could want to enable this is if you expect your derivative not to be optimised and so large that simplifying takes a considerable amount of time. If `None`, this will be automatically disabled for `n>10`.
+			Whether the derivative should be `simplified <http://docs.sympy.org/dev/modules/simplify/simplify.html>`_ (with `ratio=1.0`) before translating to C code. The main reason why you could want to enable this is if you expect your derivative not to be optimised and not be so large that simplifying takes a considerable amount of time. If `None`, this will be automatically disabled for `n>10`.
 		
 		do_cse : boolean
-			Whether a `common-subexpression detection <http://docs.sympy.org/dev/modules/rewriting.html#module-sympy.simplify.cse_main>`_ should be applied when lambdifying.
+			Whether a common-subexpression detection, namely `LambdifyCSE`, should be used.
 		"""
 		
 		self._prepare_lambdas()
@@ -470,12 +472,12 @@ class jitcode(ode,jitcxde):
 	
 	def generate_jac_lambda(self,do_cse=False):
 		"""
-		translates the symbolic Jacobian to a function using SymPy’s `lambdify <http://docs.sympy.org/latest/modules/utilities/lambdify.html>`_ tool. If the symbolic Jacobian has not been generated, it is generated by calling `generate_jac_sym`.
+		translates the symbolic Jacobain to a function using SymEngines `Lambdify` or `LambdifyCSE`. If the symbolic Jacobian has not been generated, it is generated by calling `generate_jac_sym`.
 		
 		Parameters
 		----------
 		do_cse : boolean
-			Whether a `common-subexpression detection <http://docs.sympy.org/dev/modules/rewriting.html#module-sympy.simplify.cse_main>`_ should be applied when lambdifying.
+			Whether a common-subexpression detection, namely `LambdifyCSE`, should be used.
 		"""
 		
 		self._prepare_lambdas()
@@ -584,11 +586,10 @@ class jitcode_lyap(jitcode):
 		Number of Lyapunov exponents to calculate. If negative or larger than the dimension of the system, all Lyapunov exponents are calculated.
 	
 	simplify : boolean
-		Whether the differential equations for the tangent vector shall be subjected to SymPy’s `simplify`. Doing so may speed up the time evolution but may slow down the generation of the code (considerably for large differential equations).
+		Whether the differential equations for the tangent vector shall be subjected to SymEngine’s `simplify`. Doing so may speed up the time evolution but may slow down the generation of the code (considerably for large differential equations).
 	"""
 	
 	def __init__( self, f_sym=(), n_lyap=-1, simplify=True, **kwargs ):
-		
 		self.n_basic = kwargs.pop("n",None)
 		if "helpers" not in kwargs.keys():
 			kwargs["helpers"] = ()
