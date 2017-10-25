@@ -1,11 +1,7 @@
 # define NPY_NO_DEPRECATED_API NPY_1_8_API_VERSION
 # include <Python.h>
 # include <numpy/arrayobject.h>
-
 # include <math.h>
-
-# pragma GCC diagnostic push
-# pragma GCC diagnostic ignored "-Wunused-parameter"
 
 # define TYPE_INDEX NPY_DOUBLE
 
@@ -168,8 +164,6 @@ static PyObject * py_jac(PyObject *self, PyObject *args)
 	return PyArray_Return(dfdY);
 }
 {% endif %}
-
-# pragma GCC diagnostic pop
 
 static PyMethodDef {{module_name}}_methods[] = {
 	{"f", py_f, METH_VARARGS, NULL},
