@@ -5,9 +5,6 @@
 For instance, we can calculate and print the Lyapunov exponents for the system from `example` as follows (changes highlighted):
 """
 
-from __future__ import print_function
-
-
 if __name__ == "__main__":
 	# example-start
 	from jitcode import jitcode_lyap, y
@@ -39,7 +36,7 @@ if __name__ == "__main__":
 	for time in times:
 		lyaps.append(ODE.integrate(time)[1])
 	
-	# converting to Numpy array for easier handling
+	# converting to NumPy array for easier handling
 	lyaps = np.vstack(lyaps)
 	
 	for i in range(n):
