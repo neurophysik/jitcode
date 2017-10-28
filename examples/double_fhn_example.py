@@ -15,7 +15,7 @@ Suppose our differential equation is :math:`\dot{y} = f(y)` with :math:`y∈ℝ^
 	\\end{matrix} \\right),
 
 and :math:`a = -0.025794`, :math:`b_1 = 0.0065`, :math:`b_2 = 0.0135`, :math:`c = 0.02`, and :math:`k = 0.128`.
-Then the following code integrates the above for 100000 time units, with :math:`y(t=0) = (1,2,3,4)`, and writes the results to :code:`timeseries.dat`:
+Then the following code integrates the above for 100000 time units (after discarding 2000 time units of transients), with :math:`y(t=0) = (1,2,3,4)`, and writes the results to :code:`timeseries.dat`:
 """
 
 if __name__ == "__main__":
@@ -42,7 +42,7 @@ if __name__ == "__main__":
 	ODE.set_integrator("dopri5")
 	ODE.set_initial_value(initial_state,0.0)
 	
-	times = range(10,100000,10)
+	times = 2000+np.arange(100000)
 	data = []
 	for time in times:
 		data.append(ODE.integrate(time))
