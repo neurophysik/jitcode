@@ -23,21 +23,27 @@ vectors = [
 		np.array([0.,1.,0.,1.])
 	]
 
-ODE = jitcode_restricted_lyap( f, vectors=vectors, verbose=False, control_pars=[k] )
+ODE = jitcode_restricted_lyap(
+		f,
+		vectors = vectors,
+		verbose = False,
+		control_pars = [k]
+	)
+# Simplification would lead to trajectories diverging from the synchronisation manifold due to numerical noise.
 ODE.generate_f_C(simplify=False)
 ODE.set_integrator("dopri5")
 
 scenarios = [
-		{"k":-0.128, "sign": 1},
-		{"k":-0.2  , "sign": 1},
-		{"k": 0.128, "sign":-1},
-		{"k": 0.2  , "sign":-1},
-		{"k": 0    , "sign": 0},
+		{"k":-0.1, "sign": 1},
+		{"k":-0.2, "sign": 1},
+		{"k": 0.1, "sign":-1},
+		{"k": 0.2, "sign":-1},
+		{"k": 0  , "sign": 0},
 	]
 
 for scenario in scenarios:
 	ODE.set_f_params(scenario["k"])
-
+	
 	if scenario["sign"]<0:
 		initial_state = np.random.random(4)
 	else:
