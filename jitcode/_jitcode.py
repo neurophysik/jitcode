@@ -26,6 +26,12 @@ y = symengine.Function("y")
 #: the symbol for time for defining the differential equation. If your differential equation has no explicit time dependency (“autonomous system”), you do not need this. You may just as well define an analogous symbol directly with SymEngine or SymPy, but using this function is the best way to get the most of future versions of JiTCODE, in particular avoiding incompatibilities.
 t = symengine.Symbol("t", real=True)
 
+class UnsuccessfulIntegration(Exception):
+	"""
+		This exception is raised when the integrator cannot meet the accuracy and step-size requirements. If you want to know the exact state of your system before the integration fails or similar, catch this exception.
+	"""
+	pass
+
 def _can_use_jacobian(integratorname):
 	integrator = find_integrator(integratorname)
 	parameters = signature(integrator.__init__).parameters
@@ -576,10 +582,14 @@ class jitcode(ode,jitcxde):
 		super(jitcode, self).set_jac_params(*args)
 		return self
 	
-	# This wrapper exists only to avoid pointless errors and confusing warnings.
+	# This wrapper exists only to avoid pointless errors and confusing warnings as well as raising a proper exception in case the integration fails.
 	def integrate(self,t,step=False,relax=False):
 		if t>self.t or step or relax:
-			return super(jitcode,self).integrate(t,step,relax)
+			result = super(jitcode,self).integrate(t,step,relax)
+			if self.successful():
+				return result
+			else:
+				raise UnsuccessfulIntegration
 		elif t==self.t:
 			return self.y
 		else:

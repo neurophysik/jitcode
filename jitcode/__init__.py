@@ -1,6 +1,7 @@
 from ._jitcode import (
 		t, y,
 		jitcode, jitcode_lyap, jitcode_restricted_lyap,
+		UnsuccessfulIntegration
 		)
 
 try:

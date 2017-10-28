@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import os
-from jitcode import jitcode, t, y, jitcode_lyap
+from jitcode import jitcode, t, y, jitcode_lyap, UnsuccessfulIntegration
 from jitcode._jitcode import _is_C, _is_lambda
 from jitcxde_common.modules import add_suffix
 import numpy as np
@@ -351,6 +351,13 @@ class errors_test(unittest.TestCase):
 		ODE.set_initial_value(initial,0)
 		ODE.set_integrator("dopri5")
 		assert_allclose(initial,ODE.integrate(0))
+	
+	def test_failed_integration(self):
+		ODE = jitcode(f)
+		ODE.set_initial_value([0,1,2,3],0)
+		ODE.set_integrator("dopri5",atol=1e-10,rtol=0,nsteps=10)
+		with self.assertRaises(UnsuccessfulIntegration):
+			ODE.integrate(100)
 
 if __name__ == "__main__":
 	unittest.main(buffer=True)
