@@ -676,7 +676,7 @@ class jitcode_lyap(jitcode):
 
 class jitcode_restricted_lyap(jitcode_lyap):
 	"""
-	Calculates the largest Lyapunov exponent in orthogonal direction to a predefined plane, i.e. the projection of tangent vector onto that plane vanishes. See `this test <https://github.com/neurophysik/jitcode/blob/master/tests/test_restricted_lyap.py>`_ for an example of usage. The handling is the same as that for `jitcode_lyap` except for:
+	Calculates the largest Lyapunov exponent in orthogonal direction to a predefined plane, i.e. the projection of the tangent vector onto that plane vanishes. See `this test <https://github.com/neurophysik/jitcode/blob/master/tests/test_restricted_lyap.py>`_ for an example of usage. The handling is the same as that for `jitcode_lyap` except for:
 	
 	Parameters
 	----------
