@@ -46,15 +46,17 @@ for scenario in scenarios:
 	ODE.set_initial_value(initial_state,0.0)
 	
 	times = range(10,100000,10)
-	data = np.hstack(ODE.integrate(time)[1] for time in times)
+	lyaps = np.hstack(ODE.integrate(time)[1] for time in times)
 	
+	# Check that we are still on the synchronisation manifold:
 	assert ODE.y[0]==ODE.y[2]
 	assert ODE.y[1]==ODE.y[3]
 	
-	lyap = np.average(data[500:])
-	margin = sem(data[500:])
-	sign = 0 if abs(lyap)<margin else np.sign(lyap)
-	assert sign==scenario["sign"], "Test failed in scenario %s. (Lyapunov exponent: %f±%f)" % (scenario,lyap,margin)
+	Lyap = np.average(lyaps[500:])
+	margin = sem(lyaps[500:])
+	sign = np.sign(Lyap) if abs(Lyap)>margin else 0
+	assert sign==scenario["sign"], "Test failed in scenario %s. (Lyapunov exponent: %f±%f)" % (scenario,Lyap,margin)
 	print(".",end="",flush=True)
 
 print("")
+
