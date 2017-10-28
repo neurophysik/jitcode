@@ -94,7 +94,7 @@ class jitcode(ode,jitcxde):
 	n : integer
 		Length of `f_sym`. While JiTCODE can easily determine this itself (and will, if necessary), this may take some time if `f_sym` is a generator function and `n` is large. Take care that this value is correct – if it isn’t, you will not get a helpful error message.
 	
-	control_pars : list of symbols
+	control_pars : iterable of symbols
 		Each symbol corresponds to a control parameter that can be used when defining the equations and set after compilation `scipy.ode`’s `set_f_params` or `set_jac_params` (in the same order as given here). Using this makes sense if you need to do a parameter scan with short integrations for each parameter and you are spending a considerable amount of time compiling.
 	
 	verbose : boolean
@@ -546,9 +546,9 @@ class jitcode(ode,jitcxde):
 		super(jitcode, self).set_initial_value(initial_value, time)
 		return self
 	
-	def set_integrator(self, name, **integrator_params):
+	def set_integrator(self,name,nsteps=10**6,**integrator_params):
 		"""
-		Same as the analogous function in SciPy’s ODE, except that it automatically generates the derivative and Jacobian, if they do not exist yet and are needed.
+		Same as the analogous function in SciPy’s ODE, except that it automatically generates the derivative and Jacobian, if they do not exist yet and are needed. Also note that the parameter `nsteps` is set to a much higher value per default.
 		"""
 		
 		if name == 'zvode':
@@ -557,7 +557,7 @@ class jitcode(ode,jitcxde):
 		self._wants_jacobian |= _can_use_jacobian(name)
 		self._initiate()
 		
-		super(jitcode, self).set_integrator(name, **integrator_params)
+		super(jitcode, self).set_integrator(name,nsteps=nsteps,**integrator_params)
 		return self
 	
 	def set_f_params(self, *args):
@@ -575,6 +575,15 @@ class jitcode(ode,jitcxde):
 		super(jitcode, self).set_f_params  (*args)
 		super(jitcode, self).set_jac_params(*args)
 		return self
+	
+	# This wrapper exists only to avoid pointless errors and confusing warnings.
+	def integrate(self,t,step=False,relax=False):
+		if t>self.t or step or relax:
+			return super(jitcode,self).integrate(t,step,relax)
+		elif t==self.t:
+			return self.y
+		else:
+			raise ValueError("Target time smaller than current time. Cannot integrate backwards in time")
 
 class jitcode_lyap(jitcode):
 	"""
