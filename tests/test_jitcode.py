@@ -337,6 +337,20 @@ class errors_test(unittest.TestCase):
 		ODE = jitcode([x])
 		with self.assertRaises(ValueError):
 			ODE.check()
+	
+	def test_backwards_integration(self):
+		ODE = jitcode(f)
+		ODE.set_initial_value([0,1,2,3],0)
+		ODE.set_integrator("dopri5")
+		with self.assertRaises(ValueError):
+			ODE.integrate(-1)
+	
+	def test_zero_integration(self):
+		ODE = jitcode(f)
+		initial = np.random.random(4)
+		ODE.set_initial_value(initial,0)
+		ODE.set_integrator("dopri5")
+		assert_allclose(initial,ODE.integrate(0))
 
 if __name__ == "__main__":
 	unittest.main(buffer=True)
