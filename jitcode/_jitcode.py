@@ -12,7 +12,6 @@ from itertools import count
 from numpy import hstack, log
 import numpy as np
 import symengine
-import sympy
 
 from jitcxde_common import jitcxde
 from jitcxde_common.modules import module_from_path
@@ -245,6 +244,7 @@ class jitcode(ode,jitcxde):
 			arguments.append(("general_helper","double const *__restrict const"))
 		
 		if do_cse:
+			import sympy
 			get_helper = sympy.Function("get_f_helper")
 			set_helper = symengine.Function("set_f_helper")
 			
@@ -309,6 +309,7 @@ class jitcode(ode,jitcxde):
 			arguments.append(("general_helper","double const *__restrict const"))
 		
 		if do_cse:
+			import sympy
 			get_helper = sympy.Function("get_jac_helper")
 			set_helper = symengine.Function("set_jac_helper")
 			
