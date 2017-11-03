@@ -18,6 +18,7 @@ from jitcxde_common.modules import module_from_path
 from jitcxde_common.helpers import sympify_helpers, sort_helpers
 from jitcxde_common.numerical import random_direction, orthonormalise
 from jitcxde_common.symbolic import collect_arguments, ordered_subs
+from jitcxde_common.transversal import GroupHandler
 
 #: the symbol for the state that must be used to define the differential equation. It is a function and the integer argument denotes the component. You may just as well define an analogous function directly with SymEngine or SymPy, but using this function is the best way to get the most of future versions of JiTCODE, in particular avoiding incompatibilities.
 y = symengine.Function("y")
@@ -685,6 +686,119 @@ class jitcode_lyap(jitcode):
 		return self._y[:self.n_basic], lyaps, tangent_vectors
 
 
+class jitcode_transversal_lyap(jitcode):
+	"""
+	Calculates the largest Lyapunov exponent in orthogonal direction to a predefined synchronisation manifold, i.e. the projection of the tangent vector onto that manifold vanishes. In contrast to `jitcode_restricted_lyap`, this performs some transformations tailored to this specific application that may strongly reduce the number of differential equations and ensure a dynamics on the synchronisation manifold.
+	
+	See `this test <https://github.com/neurophysik/jitcode/blob/master/tests/test_transversal_lyap.py>`_ for an example of usage. The handling is the same as that for `jitcode` except for:
+	
+	Parameters
+	----------
+	groups : iterable of iterables of integers
+		each group is an iterable of indices that identify dynamical variables that are synchronised on the synchronisation manifold.
+	
+	simplify : boolean
+		Whether the transformed differential equations shall be subjected to SymEngine’s `simplify`. Doing so may speed up the time evolution but may slow down the generation of the code (considerably for large differential equations).
+	"""
+	
+	def __init__( self, f_sym=(), groups=(), simplify=True, **kwargs ):
+		self.G = GroupHandler(groups)
+		self.n = kwargs.pop("n",None)
+		if "helpers" not in kwargs.keys():
+			kwargs["helpers"] = ()
+		
+		f_basic_0 = self._handle_input(f_sym)
+		f_basic,extracted = self.G.extract_main(f_basic_0())
+		helpers = sort_helpers(sympify_helpers(kwargs["helpers"] or []))
+		
+		z = symengine.Function("z")
+		z_vector = [z(i) for i in range(self.n)]
+		tangent_vector = self.G.back_transform(z_vector)
+		
+		substitutions = {
+				y(i): z(self.G.main_indices[self.G.group_from_index(i)])
+				for i in range(self.n)
+			}
+		
+		back_substitutions = { z(i):y(i) for i in range(self.n) }
+		
+		def tangent_vector_f():
+			for line in _jac_from_f_with_helpers(
+					f = f_basic,
+					helpers = helpers,
+					simplify = False,
+					n = self.n
+				):
+				yield sum(
+						entry * tangent_vector[k]
+						for k,entry in enumerate(line)
+						if entry
+					)
+		
+		def finalise(entry):
+			entry = entry.subs(substitutions).subs(back_substitutions)
+			if simplify:
+				entry = entry.simplify(ratio=1)
+			return entry
+		
+		def f_lyap():
+			for entry in self.G.iterate(tangent_vector_f()):
+				if type(entry)==int:
+					yield finalise(extracted[self.G.main_indices[entry]])
+				else:
+					yield finalise(entry[0]-entry[1])
+		
+		kwargs["helpers"] = ((helper[0],finalise(helper[1])) for helper in helpers)
+		
+		super(jitcode_transversal_lyap, self).__init__(
+				f_lyap,
+				n=self.n,
+				**kwargs
+			)
+		
+	def set_initial_value(self, y, t=0.0):
+		"""
+		Like the analogous function of `jitcode`/`scipy.integrate.ode`, except that only one initial value per group of synchronised components has to be provided (in the same order as the `groups` argument of the constructor).
+		"""
+		assert len(y)==len(self.G.groups), "Initial state too long. Provied only one value per synchronisation group"
+		
+		new_y = random_direction(self.n)
+		for k,i in enumerate(self.G.main_indices):
+			new_y[i] = y[k]
+		
+		super(jitcode_transversal_lyap, self).set_initial_value(hstack(new_y), t)
+	
+	def norm(self):
+		tangent_vector = self._y[self.G.tangent_indices]
+		norm = np.linalg.norm(tangent_vector)
+		tangent_vector /= norm
+		if not np.isfinite(norm):
+			warn("Norm of perturbation vector for Lyapunov exponent out of numerical bounds. You probably waited too long before renormalising and should call integrate with smaller intervals between steps (as renormalisations happen once with every call of integrate).")
+		self._y[self.G.tangent_indices] = tangent_vector
+		return norm
+	
+	def integrate(self, *args, **kwargs):
+		"""
+		Like SciPy’s ODE’s `integrate`, except for orthonormalising the tangent vector and:
+		
+		Returns
+		-------
+		y : one-dimensional NumPy array
+			The state of the system. Only one initial value per group of synchronised components is returned (in the same order as the `groups` argument of the constructor).
+		
+		lyaps : one-dimensional NumPy array
+			The “local” Lyapunov exponent as estimated from the growth or shrinking of the tangent vector during the integration time of this very `integrate` command, i.e., :math:`\\frac{\\ln (α_i^{(p)})}{s_i}` in the notation of [BGGS80]_
+		"""
+		
+		old_t = self.t
+		super(jitcode_transversal_lyap, self).integrate(*args, **kwargs)
+		delta_t = self.t-old_t
+		norm = self.norm()
+		lyap = log(norm) / delta_t
+		super(jitcode_transversal_lyap, self).set_initial_value(self._y, self.t)
+		
+		return self._y[self.G.main_indices], lyap
+
 class jitcode_restricted_lyap(jitcode_lyap):
 	"""
 	Calculates the largest Lyapunov exponent in orthogonal direction to a predefined plane, i.e. the projection of the tangent vector onto that plane vanishes. See `this test <https://github.com/neurophysik/jitcode/blob/master/tests/test_restricted_lyap.py>`_ for an example of usage. The handling is the same as that for `jitcode_lyap` except for:
@@ -710,4 +824,5 @@ class jitcode_restricted_lyap(jitcode_lyap):
 		if not np.isfinite(norm):
 			warn("Norm of perturbation vector for Lyapunov exponent out of numerical bounds. You probably waited too long before renormalising and should call integrate with smaller intervals between steps (as renormalisations happen once with every call of integrate).")
 		return norm, tangent_vector
+
 
