@@ -17,7 +17,7 @@ from jitcxde_common import jitcxde
 from jitcxde_common.modules import module_from_path
 from jitcxde_common.helpers import sympify_helpers, sort_helpers
 from jitcxde_common.numerical import random_direction, orthonormalise
-from jitcxde_common.symbolic import collect_arguments, ordered_subs
+from jitcxde_common.symbolic import collect_arguments, ordered_subs, replace_function
 from jitcxde_common.transversal import GroupHandler
 
 #: the symbol for the state that must be used to define the differential equation. It is a function and the integer argument denotes the component. You may just as well define an analogous function directly with SymEngine or SymPy, but using this function is the best way to get the most of future versions of JiTCODE, in particular avoiding incompatibilities.
@@ -720,8 +720,6 @@ class jitcode_transversal_lyap(jitcode):
 				for i in range(self.n)
 			}
 		
-		back_substitutions = { z(i):y(i) for i in range(self.n) }
-		
 		def tangent_vector_f():
 			for line in _jac_from_f_with_helpers(
 					f = f_basic,
@@ -736,10 +734,10 @@ class jitcode_transversal_lyap(jitcode):
 					)
 		
 		def finalise(entry):
-			entry = entry.subs(substitutions).subs(back_substitutions)
+			entry = entry.subs(substitutions)
 			if simplify:
 				entry = entry.simplify(ratio=1)
-			return entry
+			return replace_function(entry,z,y)
 		
 		def f_lyap():
 			for entry in self.G.iterate(tangent_vector_f()):
