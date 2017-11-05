@@ -715,11 +715,6 @@ class jitcode_transversal_lyap(jitcode):
 		z_vector = [z(i) for i in range(self.n)]
 		tangent_vector = self.G.back_transform(z_vector)
 		
-		substitutions = {
-				y(i): z(self.G.main_indices[self.G.group_from_index(i)])
-				for i in range(self.n)
-			}
-		
 		def tangent_vector_f():
 			for line in _jac_from_f_with_helpers(
 					f = f_basic,
@@ -732,6 +727,11 @@ class jitcode_transversal_lyap(jitcode):
 						for k,entry in enumerate(line)
 						if entry
 					)
+		
+		substitutions = {
+				y(i): z(self.G.map_to_main(i))
+				for i in range(self.n)
+			}
 		
 		def finalise(entry):
 			entry = entry.subs(substitutions)
@@ -758,13 +758,12 @@ class jitcode_transversal_lyap(jitcode):
 		"""
 		Like the analogous function of `jitcode`/`scipy.integrate.ode`, except that only one initial value per group of synchronised components has to be provided (in the same order as the `groups` argument of the constructor).
 		"""
-		assert len(y)==len(self.G.groups), "Initial state too long. Provied only one value per synchronisation group"
+		assert len(y)==len(self.G.groups), "Initial state too long. Provide only one value per synchronisation group"
 		
-		new_y = random_direction(self.n)
-		for k,i in enumerate(self.G.main_indices):
-			new_y[i] = y[k]
-		
-		super(jitcode_transversal_lyap, self).set_initial_value(hstack(new_y), t)
+		new_y = np.empty(self.n)
+		new_y[self.G.main_indices] = y
+		new_y[self.G.tangent_indices] = random_direction(len(self.G.tangent_indices))
+		super(jitcode_transversal_lyap, self).set_initial_value(new_y, t)
 	
 	def norm(self):
 		tangent_vector = self._y[self.G.tangent_indices]
