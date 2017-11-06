@@ -704,8 +704,7 @@ class jitcode_transversal_lyap(jitcode):
 		self.G = GroupHandler(groups)
 		self.n = kwargs.pop("n",None)
 		
-		f_basic_0 = self._handle_input(f_sym)
-		f_basic,extracted = self.G.extract_main(f_basic_0())
+		f_basic,extracted = self.G.extract_main(self._handle_input(f_sym))
 		helpers = sort_helpers(sympify_helpers( kwargs.pop("helpers",[]) ))
 		
 		z = symengine.Function("z")
