@@ -689,7 +689,7 @@ class jitcode_transversal_lyap(jitcode):
 	"""
 	Calculates the largest Lyapunov exponent in orthogonal direction to a predefined synchronisation manifold, i.e. the projection of the tangent vector onto that manifold vanishes. In contrast to `jitcode_restricted_lyap`, this performs some transformations tailored to this specific application that may strongly reduce the number of differential equations and ensure a dynamics on the synchronisation manifold.
 	
-	See `this test <https://github.com/neurophysik/jitcode/blob/master/tests/test_transversal_lyap.py>`_ for an example of usage. The handling is the same as that for `jitcode` except for:
+	The handling is the same as that for `jitcode` except for:
 	
 	Parameters
 	----------

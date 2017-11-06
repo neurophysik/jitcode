@@ -98,7 +98,6 @@ These can then be further processed to obtain the Lyapunov exponents.
 The tangent vectors are initialised with random vectors, and you have to take care of the preiterations that the tangent vectors require to align themselves.
 
 Estimates for the Lyapunov vectors are returned as well.
-There also is a class (`jitcode_restricted_lyap`) that allows to calculate the largest transversal Lyapunov exponents to some manifold (such as a synchronisation manifold).
 
 .. automodule:: double_fhn_lyapunov
 
@@ -107,6 +106,17 @@ There also is a class (`jitcode_restricted_lyap`) that allows to calculate the l
 	:start-after: example-start
 	:dedent: 1
 	:linenos:
+
+.. _transversal:
+
+Calculating transversal Lyapunov exponents with `jitcode_transversal_lyap`
+--------------------------------------------------------------------------
+
+`jitcode_transversal_lyap` is a variant of `jitcode_lyap` that calculates Lyapunov exponents transversal to a user-defined synchronisation manifold.
+It automatically conflates the differential equations of a group of synchronised components into one equation on the synchronisation manifold.
+Moreover, it transforms the equations for the tangent vectors such that the tangent vector is automatically orthogonal to the synchronisation manifold.
+
+.. automodule:: double_fhn_transversal_lyap
 
 Command reference
 -----------------
@@ -126,6 +136,9 @@ Lyapunov exponents
 ^^^^^^^^^^^^^^^^^^
 
 .. autoclass:: jitcode_lyap
+	:members:
+
+.. autoclass:: jitcode_transversal_lyap
 	:members:
 
 .. autoclass:: jitcode_restricted_lyap
