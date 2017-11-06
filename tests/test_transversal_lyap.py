@@ -113,7 +113,7 @@ for scenario in scenarios:
 		sign2 = np.sign(Lyap2) if abs(Lyap2)>margin2 else 0
 		assert sign1==coupling["sign"]
 		assert sign2==coupling["sign"]
-		assert abs(Lyap1-Lyap2) < margin1+margin2, "%f±%f \t %f±%f"%(Lyap1,margin1,Lyap2,margin2)
+		assert abs(Lyap1-Lyap2)<max(margin1,margin2), "%f±%f \t %f±%f"%(Lyap1,margin1,Lyap2,margin2)
 		print( ".", end="", flush=True )
 
 print("")
