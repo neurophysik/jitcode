@@ -1,20 +1,18 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
 
-from scipy.integrate import ode
-from scipy.integrate._ode import find_integrator
 from warnings import warn
-from traceback import format_exc
 from types import FunctionType, BuiltinFunctionType
 from inspect import signature
 from itertools import count
 
+from scipy.integrate import ode
+from scipy.integrate._ode import find_integrator
 from numpy import hstack, log
 import numpy as np
 import symengine
 
 from jitcxde_common import jitcxde
-from jitcxde_common.modules import module_from_path
 from jitcxde_common.helpers import sympify_helpers, sort_helpers
 from jitcxde_common.numerical import random_direction, orthonormalise
 from jitcxde_common.symbolic import collect_arguments, ordered_subs, replace_function
@@ -156,10 +154,10 @@ class jitcode(ode,jitcxde):
 			whether to abort on the first failure. If false, an error is raised only after all problems are printed.
 		"""
 		
-		failed = False
+		self.failed_check = False
 		
 		def problem(message):
-			failed = True
+			self.failed_check = True
 			if fail_fast:
 				raise ValueError(message)
 			else:
@@ -180,7 +178,7 @@ class jitcode(ode,jitcxde):
 				if symbol not in valid_symbols:
 					problem("Invalid symbol (%s) in equation %i."  % (symbol.name, i))
 		
-		if failed:
+		if self.failed_check:
 			raise ValueError("Check failed.")
 	
 	def _generate_jac_sym(self):
@@ -803,7 +801,7 @@ class jitcode_restricted_lyap(jitcode_lyap):
 		A basis of the plane, whose projection shall be removed.
 	"""
 	
-	def __init__(self, f_sym=(), vectors=[], **kwargs):
+	def __init__(self, f_sym=(), vectors=(), **kwargs):
 		kwargs["n_lyap"] = 1
 		super(jitcode_restricted_lyap,self).__init__(f_sym,**kwargs)
 		self.vectors = [ vector/np.linalg.norm(vector) for vector in vectors ]

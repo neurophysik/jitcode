@@ -2,18 +2,19 @@
 # -*- coding: utf-8 -*-
 
 import os
-from jitcode import jitcode, t, y, jitcode_lyap, UnsuccessfulIntegration
-from jitcode._jitcode import _is_C, _is_lambda
-from jitcxde_common.modules import add_suffix
-import numpy as np
-from numpy.testing import assert_allclose
 import platform
-from scipy.stats import sem as standard_error
 import shutil
 import unittest
 from tempfile import mkdtemp
-from symengine import symbols
 from random import shuffle
+
+import numpy as np
+from numpy.testing import assert_allclose
+from scipy.stats import sem as standard_error
+from symengine import symbols
+
+from jitcode import jitcode, y, jitcode_lyap, UnsuccessfulIntegration
+from jitcode._jitcode import _is_C, _is_lambda
 
 # control values:
 
