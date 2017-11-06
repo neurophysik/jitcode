@@ -612,13 +612,11 @@ class jitcode_lyap(jitcode):
 	
 	def __init__( self, f_sym=(), n_lyap=-1, simplify=True, **kwargs ):
 		self.n_basic = kwargs.pop("n",None)
-		if "helpers" not in kwargs.keys():
-			kwargs["helpers"] = ()
 		
 		f_basic = self._handle_input(f_sym,n_basic=True)
 		self._n_lyap = n_lyap if (0<=n_lyap<=self.n_basic) else self.n_basic
 		
-		kwargs["helpers"] = sort_helpers(sympify_helpers(kwargs["helpers"] or []))
+		helpers = sort_helpers(sympify_helpers( kwargs.pop("helpers",[]) ))
 		
 		def f_lyap():
 			yield from f_basic()
@@ -626,7 +624,7 @@ class jitcode_lyap(jitcode):
 			for i in range(self._n_lyap):
 				for line in _jac_from_f_with_helpers(
 						f = f_basic,
-						helpers = kwargs["helpers"],
+						helpers = helpers,
 						simplify = False,
 						n = self.n_basic
 					):
@@ -641,6 +639,7 @@ class jitcode_lyap(jitcode):
 		
 		super(jitcode_lyap, self).__init__(
 				f_lyap,
+				helpers = helpers,
 				n = self.n_basic*(self._n_lyap+1),
 				**kwargs
 			)
@@ -704,12 +703,10 @@ class jitcode_transversal_lyap(jitcode):
 	def __init__( self, f_sym=(), groups=(), simplify=True, **kwargs ):
 		self.G = GroupHandler(groups)
 		self.n = kwargs.pop("n",None)
-		if "helpers" not in kwargs.keys():
-			kwargs["helpers"] = ()
 		
 		f_basic_0 = self._handle_input(f_sym)
 		f_basic,extracted = self.G.extract_main(f_basic_0())
-		helpers = sort_helpers(sympify_helpers(kwargs["helpers"] or []))
+		helpers = sort_helpers(sympify_helpers( kwargs.pop("helpers",[]) ))
 		
 		z = symengine.Function("z")
 		z_vector = [z(i) for i in range(self.n)]
@@ -746,11 +743,12 @@ class jitcode_transversal_lyap(jitcode):
 				else:
 					yield finalise(entry[0]-entry[1])
 		
-		kwargs["helpers"] = ((helper[0],finalise(helper[1])) for helper in helpers)
+		helpers = ((helper[0],finalise(helper[1])) for helper in helpers)
 		
 		super(jitcode_transversal_lyap, self).__init__(
 				f_lyap,
-				n=self.n,
+				helpers = helpers,
+				n = self.n,
 				**kwargs
 			)
 		
