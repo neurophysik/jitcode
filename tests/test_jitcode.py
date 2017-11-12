@@ -117,6 +117,17 @@ class basic_test(unittest.TestCase):
 		self.assertTrue(_is_C(self.ODE.f))
 		self.assertTrue(_is_C(self.ODE.jac))
 	
+	def test_omp(self):
+		self.ODE = jitcode(wants_jacobian=True, **self.argdict)
+		self.ODE.generate_f_C(chunk_size=1,do_cse=True)
+		self.ODE.generate_jac_C(chunk_size=1,do_cse=True)
+		self.ODE.generate_helpers_C(chunk_size=1)
+		self.ODE.compile_C(omp=True)
+		self.ODE.set_integrator('lsoda')
+		self.initialise_integrator()
+		self.assertTrue(_is_C(self.ODE.f))
+		self.assertTrue(_is_C(self.ODE.jac))
+	
 	def test_initialise_first(self):
 		self.ODE = jitcode(**self.argdict)
 		self.initialise_integrator()
