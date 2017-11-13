@@ -605,14 +605,16 @@ class jitcode_lyap(jitcode):
 		Number of Lyapunov exponents to calculate. If negative or larger than the dimension of the system, all Lyapunov exponents are calculated.
 	
 	simplify : boolean
-		Whether the differential equations for the tangent vector shall be subjected to SymEngine’s `simplify`. Doing so may speed up the time evolution but may slow down the generation of the code (considerably for large differential equations).
+		Whether the differential equations for the tangent vector shall be subjected to SymEngine’s `simplify`. Doing so may speed up the time evolution but may slow down the generation of the code (considerably for large differential equations). If `None`, this will be automatically disabled for `n>10`.
 	"""
 	
-	def __init__( self, f_sym=(), n_lyap=-1, simplify=True, **kwargs ):
+	def __init__( self, f_sym=(), n_lyap=-1, simplify=None, **kwargs ):
 		self.n_basic = kwargs.pop("n",None)
 		
 		f_basic = self._handle_input(f_sym,n_basic=True)
 		self._n_lyap = n_lyap if (0<=n_lyap<=self.n_basic) else self.n_basic
+		if simplify is None:
+			simplify = self.n_basic<=10
 		
 		helpers = sort_helpers(sympify_helpers( kwargs.pop("helpers",[]) ))
 		
@@ -695,15 +697,18 @@ class jitcode_transversal_lyap(jitcode):
 		each group is an iterable of indices that identify dynamical variables that are synchronised on the synchronisation manifold.
 	
 	simplify : boolean
-		Whether the transformed differential equations shall be subjected to SymEngine’s `simplify`. Doing so may speed up the time evolution but may slow down the generation of the code (considerably for large differential equations).
+		Whether the transformed differential equations shall be subjected to SymEngine’s `simplify`. Doing so may speed up the time evolution but may slow down the generation of the code (considerably for large differential equations). If `None`, this will be automatically disabled for `n>10`.
 	"""
 	
-	def __init__( self, f_sym=(), groups=(), simplify=True, **kwargs ):
+	def __init__( self, f_sym=(), groups=(), simplify=None, **kwargs ):
 		self.G = GroupHandler(groups)
 		self.n = kwargs.pop("n",None)
 		
 		f_basic,extracted = self.G.extract_main(self._handle_input(f_sym))
 		helpers = sort_helpers(sympify_helpers( kwargs.pop("helpers",[]) ))
+		
+		if simplify is None:
+			simplify = self.n<=10
 		
 		z = symengine.Function("z")
 		z_vector = [z(i) for i in range(self.n)]
