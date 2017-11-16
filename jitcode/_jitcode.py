@@ -653,12 +653,12 @@ class jitcode_lyap(jitcode):
 				**kwargs
 			)
 		
-	def set_initial_value(self, y, t=0.0):
+	def set_initial_value(self, y, time=0.0):
 		new_y = [y]
 		for _ in range(self._n_lyap):
 			new_y.append(random_direction(self.n_basic))
 		
-		super(jitcode_lyap, self).set_initial_value(hstack(new_y), t)
+		super(jitcode_lyap, self).set_initial_value(hstack(new_y), time)
 	
 	def norms(self):
 		n = self.n_basic
@@ -763,7 +763,7 @@ class jitcode_transversal_lyap(jitcode):
 				**kwargs
 			)
 		
-	def set_initial_value(self, y, t=0.0):
+	def set_initial_value(self, y, time=0.0):
 		"""
 		Like the analogous function of `jitcode`/`scipy.integrate.ode`, except that only one initial value per group of synchronised components has to be provided (in the same order as the `groups` argument of the constructor).
 		"""
@@ -772,7 +772,7 @@ class jitcode_transversal_lyap(jitcode):
 		new_y = np.empty(self.n)
 		new_y[self.G.main_indices] = y
 		new_y[self.G.tangent_indices] = random_direction(len(self.G.tangent_indices))
-		super(jitcode_transversal_lyap, self).set_initial_value(new_y, t)
+		super(jitcode_transversal_lyap, self).set_initial_value(new_y, time)
 	
 	def norm(self):
 		tangent_vector = self._y[self.G.tangent_indices]
