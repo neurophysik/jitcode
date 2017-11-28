@@ -301,7 +301,7 @@ class jitcode(ode,jitcxde):
 		self._generate_helpers_C()
 		self._generate_jac_sym()
 		
-		jac_sym_wc = symengine.Matrix([ [entry.subs(self.general_subs) for entry in line] for line in self.jac_sym ])
+		jac_sym_wc = ( (entry.subs(self.general_subs) for entry in line) for line in self.jac_sym )
 		self.sparse_jac = sparse
 		
 		arguments = self._default_arguments()
@@ -312,13 +312,14 @@ class jitcode(ode,jitcxde):
 			import sympy
 			get_helper = sympy.Function("get_jac_helper")
 			set_helper = symengine.Function("set_jac_helper")
+			jac_sym_wc = sympy.Matrix([ [sympy.sympify(entry) for entry in line] for line in jac_sym_wc ])
 			
 			_cse = sympy.cse(
 					sympy.sympify(jac_sym_wc),
 					symbols = (get_helper(i) for i in count())
 				)
 			more_helpers = symengine.sympify(_cse[0])
-			jac_sym_wc = symengine.sympify(_cse[1][0])
+			jac_sym_wc = symengine.sympify(_cse[1][0].tolist())
 			
 			if more_helpers:
 				arguments.append(("jac_helper","double *__restrict const"))
@@ -330,8 +331,6 @@ class jitcode(ode,jitcxde):
 					omp = False
 					)
 				self._number_of_jac_helpers = len(more_helpers)
-		
-		jac_sym_wc = map(symengine.sympify,jac_sym_wc.tolist())
 		
 		set_dfdy = symengine.Function("set_dfdy")
 		
