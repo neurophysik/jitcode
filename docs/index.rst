@@ -115,6 +115,7 @@ Calculating transversal Lyapunov exponents with `jitcode_transversal_lyap`
 `jitcode_transversal_lyap` is a variant of `jitcode_lyap` that calculates Lyapunov exponents transversal to a user-defined synchronisation manifold.
 It automatically conflates the differential equations of a group of synchronised components into one equation on the synchronisation manifold.
 Moreover, it transforms the equations for the tangent vectors such that the tangent vector is automatically orthogonal to the synchronisation manifold.
+If you are interested in the mathematical details, please read `the accompanying paper`_.
 
 .. automodule:: double_fhn_transversal_lyap
 
@@ -171,4 +172,6 @@ References
 .. _SymEngine: https://github.com/symengine/symengine
 
 .. _SymPy: http://www.sympy.org/
+
+.. _the accompanying paper: http://arxiv.org/abs/1711.09886
 
