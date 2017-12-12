@@ -7,6 +7,7 @@ MOCK_MODULES = [
 	'numpy', 'numpy.testing', 'numpy.random',
 	'scipy', 'scipy.integrate', 'scipy.integrate._ode', 'scipy.stats',
 	'symengine', 'symengine.printing', 'symengine.lib.symengine_wrapper',
+	'jitcxde_common.helpers','jitcxde_common.numerical','jitcxde_common.symbolic','jitcxde_common.transversal'
 	]
 sys.modules.update((mod_name, Mock()) for mod_name in MOCK_MODULES)
 
