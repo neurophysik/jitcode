@@ -14,11 +14,6 @@ sys.modules.update((mod_name, Mock()) for mod_name in MOCK_MODULES)
 class ode_mock(object): pass
 sys.modules['scipy.integrate'] = Mock(ode=ode_mock)
 
-# class Symbol(object):
-# 	def __init__(*args, **kwargs):
-# 		pass
-# sys.modules['sympy'] = Mock(Function=Symbol, Symbol=Symbol)
-
 sys.path.insert(0,os.path.abspath("../examples"))
 sys.path.insert(0,os.path.abspath("../jitcode"))
 
