@@ -84,38 +84,38 @@ class basic_test(unittest.TestCase):
 		self.ODE = jitcode(**self.argdict)
 		self.ODE.set_integrator('dopri5')
 		self.initialise_integrator()
-		self.assertTrue(_is_C(self.ODE.f))
-		self.assertIsNone(self.ODE.jac)
+		self.assertTrue(_is_C(self.ODE.integrator.f))
+		self.assertIsNone(self.ODE.integrator.jac)
 	
 	def test_standard_order_with_jac(self):
 		self.ODE = jitcode(**self.argdict)
 		self.ODE.set_integrator('vode')
 		self.initialise_integrator()
-		self.assertTrue(_is_C(self.ODE.f))
-		self.assertTrue(_is_C(self.ODE.jac))
+		self.assertTrue(_is_C(self.ODE.integrator.f))
+		self.assertTrue(_is_C(self.ODE.integrator.jac))
 	
 	def test_heavily_chunked_f(self):
 		self.ODE = jitcode(wants_jacobian=True, **self.argdict)
 		self.ODE.generate_f_C(chunk_size=1,do_cse=True)
 		self.ODE.set_integrator('dopri5')
 		self.initialise_integrator()
-		self.assertTrue(_is_C(self.ODE.f))
+		self.assertTrue(_is_C(self.ODE.integrator.f))
 	
 	def test_heavily_chunked_jac(self):
 		self.ODE = jitcode(**self.argdict)
 		self.ODE.generate_jac_C(chunk_size=1,do_cse=True)
 		self.ODE.set_integrator('vode')
 		self.initialise_integrator()
-		self.assertTrue(_is_C(self.ODE.f))
-		self.assertTrue(_is_C(self.ODE.jac))
+		self.assertTrue(_is_C(self.ODE.integrator.f))
+		self.assertTrue(_is_C(self.ODE.integrator.jac))
 	
 	def test_heavily_chunked_helpers(self):
 		self.ODE = jitcode(**self.argdict)
 		self.ODE.generate_helpers_C(chunk_size=1)
 		self.ODE.set_integrator('vode')
 		self.initialise_integrator()
-		self.assertTrue(_is_C(self.ODE.f))
-		self.assertTrue(_is_C(self.ODE.jac))
+		self.assertTrue(_is_C(self.ODE.integrator.f))
+		self.assertTrue(_is_C(self.ODE.integrator.jac))
 	
 	def test_omp(self):
 		self.ODE = jitcode(wants_jacobian=True, **self.argdict)
@@ -125,49 +125,45 @@ class basic_test(unittest.TestCase):
 		self.ODE.compile_C(omp=True)
 		self.ODE.set_integrator('lsoda')
 		self.initialise_integrator()
-		self.assertTrue(_is_C(self.ODE.f))
-		self.assertTrue(_is_C(self.ODE.jac))
+		self.assertTrue(_is_C(self.ODE.integrator.f))
+		self.assertTrue(_is_C(self.ODE.integrator.jac))
 	
 	def test_initialise_first(self):
 		self.ODE = jitcode(**self.argdict)
 		self.initialise_integrator()
 		self.ODE.set_integrator('dop853')
-		self.assertTrue(_is_C(self.ODE.f))
-		self.assertIsNotNone(self.ODE.jac)
+		self.assertTrue(_is_C(self.ODE.integrator.f))
 	
 	def test_lambdas(self):
 		self.ODE = jitcode(**self.argdict)
 		self.ODE.generate_lambdas()
 		self.ODE.set_integrator('dopri5')
 		self.initialise_integrator()
-		self.assertTrue(_is_lambda(self.ODE.f))
-		self.assertIsNone(self.ODE.jac)
+		self.assertTrue(_is_lambda(self.ODE.integrator.f))
+		self.assertIsNone(self.ODE.integrator.jac)
 	
 	def test_lambdas_without_jac(self):
 		self.ODE = jitcode(**self.argdict)
 		self.ODE.generate_lambdas()
-		self.assertIsNone(self.ODE.jac)
+		self.assertIsNone(self.ODE.integrator.jac)
 		self.ODE.set_integrator('vode')
 		self.initialise_integrator()
-		#self.assertFalse(_is_C(self.ODE.f))
-		#self.assertFalse(_is_C(self.ODE.jac))
 	
 	def test_compile_without_jac(self):
 		self.ODE = jitcode(**self.argdict)
 		self.ODE.compile_C()
-		self.assertIsNone(self.ODE.jac)
 		self.ODE.set_integrator('lsoda')
 		self.initialise_integrator()
-		self.assertTrue(_is_C(self.ODE.f))
-		self.assertTrue(_is_C(self.ODE.jac))
+		self.assertTrue(_is_C(self.ODE.integrator.f))
+		self.assertTrue(_is_C(self.ODE.integrator.jac))
 	
 	def test_generate_jac_manually(self):
 		self.ODE = jitcode(**self.argdict)
 		self.ODE.generate_jac_C()
 		self.ODE.set_integrator('dopri5')
 		self.initialise_integrator()
-		self.assertTrue(_is_C(self.ODE.f))
-		self.assertTrue(_is_C(self.ODE.jac))
+		self.assertTrue(_is_C(self.ODE.integrator.f))
+		self.assertTrue(_is_C(self.ODE.integrator.jac))
 	
 	def test_save_and_load(self):
 		self.ODE = jitcode(**self.argdict)
@@ -177,14 +173,14 @@ class basic_test(unittest.TestCase):
 		self.ODE = jitcode(n=len(f),module_location=self.tmpfile(filename))
 		self.ODE.set_integrator('dopri5')
 		self.initialise_integrator()
-		self.assertTrue(_is_C(self.ODE.f))
-		self.assertIsNone(self.ODE.jac)
+		self.assertTrue(_is_C(self.ODE.integrator.f))
+		self.assertIsNone(self.ODE.integrator.jac)
 	
 	def tearDown(self):
-		self.assertIsNotNone(self.ODE.f)
-		assert_allclose( self.ODE.f(0.0,y0,*self.extra_args), f_of_y0, rtol=1e-5 )
-		if not self.ODE.jac is None:
-			assert_allclose( self.ODE.jac(0.0,y0,*self.extra_args), jac_of_y0, rtol=1e-5)
+		self.assertIsNotNone(self.ODE.integrator.f)
+		assert_allclose( self.ODE.integrator.f(0.0,y0,*self.extra_args), f_of_y0, rtol=1e-5 )
+		if not self.ODE.integrator.jac is None:
+			assert_allclose( self.ODE.integrator.jac(0.0,y0,*self.extra_args), jac_of_y0, rtol=1e-5)
 		assert_allclose( self.ODE.integrate(1.0), y1, rtol=1e-5 )
 		if platform.system() != "Windows":
 			# Windows blocks loaded module files from removal.
@@ -226,7 +222,7 @@ class helpers_test(unittest.TestCase):
 		ODE2 = jitcode(f_alt, get_f_alt_helpers())
 		ODE1.set_integrator("vode")
 		ODE2.set_integrator("vode")
-		assert_allclose(ODE1.jac(0.0,x), ODE2.jac(0.0,x))
+		assert_allclose(ODE1.integrator.jac(0.0,x), ODE2.integrator.jac(0.0,x))
 	
 	def test_identity_of_lyaps(self):
 		n = len(f)
@@ -235,7 +231,7 @@ class helpers_test(unittest.TestCase):
 		ODE2 = jitcode_lyap(f_alt,helpers=get_f_alt_helpers(),n_lyap=n)
 		ODE1.set_integrator("dopri5")
 		ODE2.set_integrator("dopri5")
-		assert_allclose(ODE1.f(0.0,x), ODE2.f(0.0,x))
+		assert_allclose(ODE1.integrator.f(0.0,x), ODE2.integrator.f(0.0,x))
 
 class lyapunov_test(unittest.TestCase):
 	def setUp(self):
@@ -262,8 +258,8 @@ class lyapunov_test(unittest.TestCase):
 		filename = self.ODE.save_compiled(overwrite=True)
 		self.ODE = jitcode_lyap((),n=self.n,n_lyap=self.n,module_location=filename)
 		self.ODE.set_integrator("vode")
-		self.assertTrue(_is_C(self.ODE.f))
-		self.assertTrue(_is_C(self.ODE.jac))
+		self.assertTrue(_is_C(self.ODE.integrator.f))
+		self.assertTrue(_is_C(self.ODE.integrator.jac))
 	
 	def initialise_integrator(self):
 		if isinstance(self.ODE,jitcode) and self.ODE.f_sym():

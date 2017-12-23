@@ -82,7 +82,7 @@ def _lambda_wrapper(core_f,control_pars):
 				{"core_f":core_f, "hstack":hstack}
 			)
 
-class jitcode(ode,jitcxde):
+class jitcode(jitcxde):
 	"""
 	Parameters
 	----------
@@ -117,7 +117,6 @@ class jitcode(ode,jitcxde):
 				verbose = True,
 				module_location = None,
 			):
-		ode.__init__(self,None)
 		jitcxde.__init__(self,n,verbose,module_location)
 		
 		self.f_sym = self._handle_input(f_sym)
@@ -384,7 +383,7 @@ class jitcode(ode,jitcxde):
 		self._helper_C_source = True
 	
 	def _compile_C(self):
-		if (not _is_C(self.f)) or self._lacks_jacobian:
+		if (not _is_C(self.integrator.f)) or self._lacks_jacobian:
 			self.compile_C()
 			self.report("compiled C code")
 	
@@ -435,7 +434,7 @@ class jitcode(ode,jitcxde):
 			)
 	
 	def _generate_f_lambda(self):
-		if not _is_lambda(self.f):
+		if not _is_lambda(self.integrator.f):
 			self.generate_f_lambda()
 			self.report("generated lambdified f")
 	
@@ -477,10 +476,10 @@ class jitcode(ode,jitcxde):
 		lambdify = symengine.LambdifyCSE if do_cse else symengine.Lambdify
 		core_f = lambdify(self._lambda_args,list(f_sym_wc))
 		# self.f = lambda t,Y,*c_pars: core_f(np.hstack([t,Y,c_pars]))
-		self.f = _lambda_wrapper(core_f,self.control_pars)
+		self.integrator.f = _lambda_wrapper(core_f,self.control_pars)
 	
 	def _generate_jac_lambda(self):
-		if not _is_lambda(self.jac):
+		if not _is_lambda(self.integrator.jac):
 			self.generate_jac_lambda()
 			self.report("generated lambdified Jacobian")
 	
@@ -505,7 +504,7 @@ class jitcode(ode,jitcxde):
 		lambdify = symengine.LambdifyCSE if do_cse else symengine.Lambdify
 		core_jac = lambdify(self._lambda_args,jac_matrix)
 		# self.jac = lambda t,Y,*c_pars: core_jac(np.hstack([t,Y,c_pars]))
-		self.jac = _lambda_wrapper(core_jac,self.control_pars)
+		self.integrator.jac = _lambda_wrapper(core_jac,self.control_pars)
 	
 	def generate_lambdas(self):
 		"""
@@ -517,14 +516,19 @@ class jitcode(ode,jitcxde):
 			self._generate_jac_lambda()
 		self.compile_attempt = False
 	
+	@property
+	def integrator(self):
+		if not hasattr(self,"_integrator"):
+			self._integrator = ode(None)
+		return self._integrator
 	
 	@property
 	def is_initiated(self):
-		return (self.f is not None) and not self._lacks_jacobian
+		return (self.integrator.f is not None) and not self._lacks_jacobian
 	
 	@property
 	def _lacks_jacobian(self):
-		return self._wants_jacobian and (self.jac is None)
+		return self._wants_jacobian and (self.integrator.jac is None)
 	
 	def _initiate(self):
 		if self.compile_attempt is None:
@@ -532,9 +536,9 @@ class jitcode(ode,jitcxde):
 		
 		if not self.is_initiated:
 			if self.compile_attempt:
-				self.f = self.jitced.f
+				self.integrator.f = self.jitced.f
 				if hasattr(self.jitced,"jac"):
-					self.jac = self.jitced.jac
+					self.integrator.jac = self.jitced.jac
 			else:
 				self.generate_lambdas()
 		
@@ -549,6 +553,18 @@ class jitcode(ode,jitcxde):
 		
 		self._initiate()
 	
+	@property
+	def t(self):
+		return self.integrator.t
+	
+	@property
+	def _y(self):
+		return self.integrator._y
+	
+	@property
+	def y(self):
+		return self.integrator._y
+	
 	def set_initial_value(self, initial_value, time=0.0):
 		"""
 		Same as the analogous function in SciPy’s ODE. Note that this calls `set_integrator`, if no integrator has been set yet.
@@ -557,7 +573,7 @@ class jitcode(ode,jitcxde):
 		if self.n != len(initial_value):
 			raise ValueError("The dimension of the initial value does not match the dimension of your differential equations.")
 		
-		super(jitcode, self).set_initial_value(initial_value, time)
+		self.integrator.set_initial_value(initial_value, time)
 		return self
 	
 	def set_integrator(self,name,nsteps=10**6,**integrator_params):
@@ -571,30 +587,30 @@ class jitcode(ode,jitcxde):
 		self._wants_jacobian |= _can_use_jacobian(name)
 		self._initiate()
 		
-		super(jitcode, self).set_integrator(name,nsteps=nsteps,**integrator_params)
+		self.integrator.set_integrator(name,nsteps=nsteps,**integrator_params)
 		return self
 	
 	def set_f_params(self, *args):
 		"""
 		Same as for SciPy’s ODE, except that it also sets the parameters of the Jacobian (because they should be the same anyway).
 		"""
-		super(jitcode, self).set_f_params  (*args)
-		super(jitcode, self).set_jac_params(*args)
+		self.integrator.set_f_params  (*args)
+		self.integrator.set_jac_params(*args)
 		return self
 	
 	def set_jac_params(self, *args):
 		"""
 		Same as for SciPy’s ODE, except that it also sets the parameters of `f` (because they should be the same anyway).
 		"""
-		super(jitcode, self).set_f_params  (*args)
-		super(jitcode, self).set_jac_params(*args)
+		self.integrator.set_f_params  (*args)
+		self.integrator.set_jac_params(*args)
 		return self
 	
 	# This wrapper exists only to avoid pointless errors and confusing warnings as well as raising a proper exception in case the integration fails.
 	def integrate(self,t,step=False,relax=False):
 		if t>self.t or step or relax:
-			result = super(jitcode,self).integrate(t,step,relax)
-			if self.successful():
+			result = self.integrator.integrate(t,step,relax)
+			if self.integrator.successful():
 				return result
 			else:
 				raise UnsuccessfulIntegration
@@ -651,7 +667,7 @@ class jitcode_lyap(jitcode):
 				n = self.n_basic*(self._n_lyap+1),
 				**kwargs
 			)
-		
+	
 	def set_initial_value(self, y, time=0.0):
 		new_y = [y]
 		for _ in range(self._n_lyap):
