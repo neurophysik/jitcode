@@ -574,7 +574,6 @@ class jitcode(jitcxde):
 			raise ValueError("The dimension of the initial value does not match the dimension of your differential equations.")
 		
 		self.integrator.set_initial_value(initial_value, time)
-		return self
 	
 	def set_integrator(self,name,nsteps=10**6,**integrator_params):
 		"""
@@ -588,7 +587,6 @@ class jitcode(jitcxde):
 		self._initiate()
 		
 		self.integrator.set_integrator(name,nsteps=nsteps,**integrator_params)
-		return self
 	
 	def set_f_params(self, *args):
 		"""
@@ -596,7 +594,6 @@ class jitcode(jitcxde):
 		"""
 		self.integrator.set_f_params  (*args)
 		self.integrator.set_jac_params(*args)
-		return self
 	
 	def set_jac_params(self, *args):
 		"""
@@ -604,7 +601,6 @@ class jitcode(jitcxde):
 		"""
 		self.integrator.set_f_params  (*args)
 		self.integrator.set_jac_params(*args)
-		return self
 	
 	# This wrapper exists only to avoid pointless errors and confusing warnings as well as raising a proper exception in case the integration fails.
 	def integrate(self,t,step=False,relax=False):
