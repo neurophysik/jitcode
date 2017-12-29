@@ -122,14 +122,24 @@ class jitcode(jitcxde):
 		self.f_sym = self._handle_input(f_sym)
 		self._f_C_source = False
 		self.helpers = sort_helpers(sympify_helpers(helpers or []))
+		self.control_pars = control_pars
+		
 		self._wants_jacobian = wants_jacobian
 		self.jac_sym = None
 		self._jac_C_source = False
 		self._helper_C_source = False
-		self.control_pars = control_pars
+		
+		if self.jitced is None:
+			self.f = None
+			self.jac = None
+		else:
+			self.f = self.jitced.f
+			self.jac = self.jitced.jac if hasattr(self.jitced,"jac") else None
+		
 		self._number_of_jac_helpers = None
 		self._number_of_f_helpers = None
 		self._number_of_general_helpers = len(self.helpers)
+		
 		self._lambda_subs = None
 		self._lambda_args = None
 		self.general_subs = {
@@ -383,7 +393,7 @@ class jitcode(jitcxde):
 		self._helper_C_source = True
 	
 	def _compile_C(self):
-		if (not _is_C(self.integrator.f)) or self._lacks_jacobian:
+		if (not _is_C(self.f)) or self._lacks_jacobian:
 			self.compile_C()
 			self.report("compiled C code")
 	
@@ -432,9 +442,13 @@ class jitcode(jitcxde):
 				extra_compile_args, extra_link_args,
 				omp
 			)
+		
+		self.f = self.jitced.f
+		if hasattr(self.jitced,"jac"):
+			self.jac = self.jitced.jac
 	
 	def _generate_f_lambda(self):
-		if not _is_lambda(self.integrator.f):
+		if not _is_lambda(self.f):
 			self.generate_f_lambda()
 			self.report("generated lambdified f")
 	
@@ -476,7 +490,7 @@ class jitcode(jitcxde):
 		lambdify = symengine.LambdifyCSE if do_cse else symengine.Lambdify
 		core_f = lambdify(self._lambda_args,list(f_sym_wc))
 		# self.f = lambda t,Y,*c_pars: core_f(np.hstack([t,Y,c_pars]))
-		self.integrator.f = _lambda_wrapper(core_f,self.control_pars)
+		self.f = _lambda_wrapper(core_f,self.control_pars)
 	
 	def _generate_jac_lambda(self):
 		if not _is_lambda(self.integrator.jac):
@@ -504,7 +518,7 @@ class jitcode(jitcxde):
 		lambdify = symengine.LambdifyCSE if do_cse else symengine.Lambdify
 		core_jac = lambdify(self._lambda_args,jac_matrix)
 		# self.jac = lambda t,Y,*c_pars: core_jac(np.hstack([t,Y,c_pars]))
-		self.integrator.jac = _lambda_wrapper(core_jac,self.control_pars)
+		self.jac = _lambda_wrapper(core_jac,self.control_pars)
 	
 	def generate_lambdas(self):
 		"""
@@ -535,12 +549,12 @@ class jitcode(jitcxde):
 			self._attempt_compilation(reset=False)
 		
 		if not self.is_initiated:
-			if self.compile_attempt:
-				self.integrator.f = self.jitced.f
-				if hasattr(self.jitced,"jac"):
-					self.integrator.jac = self.jitced.jac
-			else:
+			if not self.compile_attempt:
 				self.generate_lambdas()
+			
+			self.integrator.f = self.f
+			if self.jac is not None:
+				self.integrator.jac = self.jac
 		
 		if self._lacks_jacobian:
 			self.compile_attempt = None
