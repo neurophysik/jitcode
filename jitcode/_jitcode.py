@@ -129,6 +129,8 @@ class jitcode(jitcxde):
 		self._jac_C_source = False
 		self._helper_C_source = False
 		
+		self.backend = None
+		
 		if self.jitced is None:
 			self.f = None
 			self.jac = None
@@ -587,11 +589,17 @@ class jitcode(jitcxde):
 		if self.n != len(initial_value):
 			raise ValueError("The dimension of the initial value does not match the dimension of your differential equations.")
 		
-		self.integrator.set_initial_value(initial_value, time)
+		if self.backend is None:
+			self.set_integrator("")
+		
+		if self.backend == "ode":
+			self.integrator.set_initial_value(initial_value, time)
+		else:
+			raise AssertionError
 	
 	def set_integrator(self,name,nsteps=10**6,**integrator_params):
 		"""
-		Same as the analogous function in SciPy’s ODE, except that it automatically generates the derivative and Jacobian, if they do not exist yet and are needed. Also note that the parameter `nsteps` is set to a much higher value per default.
+		Same as the analogous function in SciPy’s ODE, except that it automatically generates the derivative and Jacobian, if they do not exist yet and are needed. Note that the parameter `nsteps` is set to a much higher value per default.
 		"""
 		
 		if name == 'zvode':
@@ -600,6 +608,7 @@ class jitcode(jitcxde):
 		self._wants_jacobian |= _can_use_jacobian(name)
 		self._initiate()
 		
+		self.backend = "ode"
 		self.integrator.set_integrator(name,nsteps=nsteps,**integrator_params)
 	
 	def set_f_params(self, *args):
