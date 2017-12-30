@@ -539,45 +539,19 @@ class jitcode(jitcxde):
 		return self._integrator
 	
 	@property
-	def is_initiated(self):
-		if self.backend is None:
-			return False
-		elif self.backend == "ode":
-			return (self.integrator.f is not None) and not self._lacks_jacobian
-		else:
-			raise AssertionError
-	
-	@property
 	def _lacks_jacobian(self):
-		if self.backend is None:
-			raise AssertionError
-		elif self.backend == "ode":
-			return self._wants_jacobian and (self.integrator.jac is None)
-		else:
-			raise AssertionError
-	
-	def _initiate(self):
-		if self.compile_attempt is None:
-			self._attempt_compilation(reset=False)
-		
-		if not self.is_initiated:
-			if not self.compile_attempt:
-				self.generate_lambdas()
-			
-			self.integrator.f = self.f
-			if self.jac is not None:
-				self.integrator.jac = self.jac
-		
-		if self._lacks_jacobian:
-			self.compile_attempt = None
-			self._initiate()
+		return self._wants_jacobian and self.jac is None
 	
 	def generate_functions(self):
 		"""
 		The central function-generating function. Tries to compile the derivative and, if wanted, the Jacobian. If this fails, it generates lambdified functions as a fallback.
 		"""
 		
-		self._initiate()
+		if self.compile_attempt is None or self._lacks_jacobian:
+			self._attempt_compilation(reset=False)
+		
+		if not self.compile_attempt:
+			self.generate_lambdas()
 	
 	@property
 	def t(self):
@@ -616,10 +590,19 @@ class jitcode(jitcxde):
 			raise NotImplementedError("JiTCODE does not natively support complex numbers yet.")
 		
 		self._wants_jacobian |= _can_use_jacobian(name)
+		self.generate_functions()
 		
+		# This will become more complicated soon:
 		self.backend = "ode"
-		self.integrator.set_integrator(name,nsteps=nsteps,**integrator_params)
-		self._initiate()
+		
+		if self.backend == "ode":
+			self.integrator.set_integrator(name,nsteps=nsteps,**integrator_params)
+			self.integrator.f = self.f
+			if self.jac is not None:
+				self.integrator.jac = self.jac
+		else:
+			raise AssertionError
+	
 	
 	def set_f_params(self, *args):
 		"""
