@@ -495,7 +495,7 @@ class jitcode(jitcxde):
 		self.f = _lambda_wrapper(core_f,self.control_pars)
 	
 	def _generate_jac_lambda(self):
-		if not _is_lambda(self.integrator.jac):
+		if not _is_lambda(self.jac):
 			self.generate_jac_lambda()
 			self.report("generated lambdified Jacobian")
 	
@@ -533,12 +533,6 @@ class jitcode(jitcxde):
 		self.compile_attempt = False
 	
 	@property
-	def integrator(self):
-		if not hasattr(self,"_integrator"):
-			self._integrator = ode(None)
-		return self._integrator
-	
-	@property
 	def _lacks_jacobian(self):
 		return self._wants_jacobian and self.jac is None
 	
@@ -555,15 +549,21 @@ class jitcode(jitcxde):
 	
 	@property
 	def t(self):
-		return self.integrator.t
+		if self.backend=="ode":
+			return self.integrator.t
+		else:
+			raise RuntimeError("You must call set_integrator first.")
 	
 	@property
 	def _y(self):
-		return self.integrator._y
+		if self.backend=="ode":
+			return self.integrator._y
+		else:
+			raise RuntimeError("You must call set_integrator first.")
 	
 	@property
 	def y(self):
-		return self.integrator._y
+		return self._y
 	
 	def set_initial_value(self, initial_value, time=0.0):
 		"""
@@ -589,6 +589,14 @@ class jitcode(jitcxde):
 		if name == 'zvode':
 			raise NotImplementedError("JiTCODE does not natively support complex numbers yet.")
 		
+		# Store old state and params:
+		if self.backend == "ode":
+			initial_conditions = self.integrator._y, self.integrator.t
+			params = self.integrator.f_params
+		else:
+			initial_conditions = None
+			params = None
+		
 		self._wants_jacobian |= _can_use_jacobian(name)
 		self.generate_functions()
 		
@@ -596,40 +604,48 @@ class jitcode(jitcxde):
 		self.backend = "ode"
 		
 		if self.backend == "ode":
+			self.integrator = ode(self.f,self.jac)
 			self.integrator.set_integrator(name,nsteps=nsteps,**integrator_params)
-			self.integrator.f = self.f
-			if self.jac is not None:
-				self.integrator.jac = self.jac
 		else:
 			raise AssertionError
-	
+		
+		# Restore state and params, if applicable:
+		if initial_conditions is not None:
+			self.set_initial_value(*initial_conditions)
+		if params is not None:
+			self.set_f_params(*params)
 	
 	def set_f_params(self, *args):
 		"""
 		Same as for SciPy’s ODE, except that it also sets the parameters of the Jacobian (because they should be the same anyway).
 		"""
-		self.integrator.set_f_params  (*args)
-		self.integrator.set_jac_params(*args)
+		if self.backend=="ode":
+			self.integrator.set_f_params  (*args)
+			self.integrator.set_jac_params(*args)
+		else:
+			raise RuntimeError("You must call set_integrator first.")
 	
 	def set_jac_params(self, *args):
 		"""
 		Same as for SciPy’s ODE, except that it also sets the parameters of `f` (because they should be the same anyway).
 		"""
-		self.integrator.set_f_params  (*args)
-		self.integrator.set_jac_params(*args)
+		self.set_f_params(*args)
 	
 	# This wrapper exists only to avoid pointless errors and confusing warnings as well as raising a proper exception in case the integration fails.
 	def integrate(self,t,step=False,relax=False):
-		if t>self.t or step or relax:
-			result = self.integrator.integrate(t,step,relax)
-			if self.integrator.successful():
-				return result
+		if self.backend=="ode":
+			if t>self.t or step or relax:
+				result = self.integrator.integrate(t,step,relax)
+				if self.integrator.successful():
+					return result
+				else:
+					raise UnsuccessfulIntegration
+			elif t==self.t:
+				return self.y
 			else:
-				raise UnsuccessfulIntegration
-		elif t==self.t:
-			return self.y
+				raise ValueError("Target time smaller than current time. Cannot integrate backwards in time")
 		else:
-			raise ValueError("Target time smaller than current time. Cannot integrate backwards in time")
+			raise RuntimeError("You must call set_integrator first.")
 
 class jitcode_lyap(jitcode):
 	"""
