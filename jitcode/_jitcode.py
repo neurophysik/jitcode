@@ -540,11 +540,21 @@ class jitcode(jitcxde):
 	
 	@property
 	def is_initiated(self):
-		return (self.integrator.f is not None) and not self._lacks_jacobian
+		if self.backend is None:
+			return False
+		elif self.backend == "ode":
+			return (self.integrator.f is not None) and not self._lacks_jacobian
+		else:
+			raise AssertionError
 	
 	@property
 	def _lacks_jacobian(self):
-		return self._wants_jacobian and (self.integrator.jac is None)
+		if self.backend is None:
+			raise AssertionError
+		elif self.backend == "ode":
+			return self._wants_jacobian and (self.integrator.jac is None)
+		else:
+			raise AssertionError
 	
 	def _initiate(self):
 		if self.compile_attempt is None:
@@ -606,10 +616,10 @@ class jitcode(jitcxde):
 			raise NotImplementedError("JiTCODE does not natively support complex numbers yet.")
 		
 		self._wants_jacobian |= _can_use_jacobian(name)
-		self._initiate()
 		
 		self.backend = "ode"
 		self.integrator.set_integrator(name,nsteps=nsteps,**integrator_params)
+		self._initiate()
 	
 	def set_f_params(self, *args):
 		"""
