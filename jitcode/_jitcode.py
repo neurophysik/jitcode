@@ -34,7 +34,7 @@ class UnsuccessfulIntegration(Exception):
 
 def _can_use_jacobian(integratorname):
 	integrator = find_integrator(integratorname)
-	parameters = signature(integrator.__init__).parameters
+	parameters = signature(integrator).parameters
 	return "with_jacobian" in parameters
 
 def _is_C(function):
