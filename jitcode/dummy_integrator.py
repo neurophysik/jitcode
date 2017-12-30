@@ -31,4 +31,7 @@ class empty_integrator(object):
 	
 	def integrate(self,t,step=False,relax=False):
 		raise RuntimeError("You must call set_integrator first.")
-
+	
+	def successful(self):
+		raise RuntimeError("You must call set_integrator first.")
+	
