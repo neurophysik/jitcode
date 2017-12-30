@@ -41,6 +41,35 @@ def _is_C(function):
 def _is_lambda(function):
 	return isinstance(function, FunctionType)
 
+# Dummy class when no integrator is defined.
+# Exists only to store states and params and to raise exceptions.
+class empty_integrator(object):
+	def __init__(self):
+		self.f_params = ()
+		self.jac_params = ()
+		self._y = []
+		self._t = None
+	
+	@property
+	def t(self):
+		if self._t is None:
+			raise RuntimeError("You must call set_integrator first.")
+		else:
+			return self._t
+	
+	def set_initial_value(self, initial_value, time=0.0):
+		self._y = initial_value
+		self._t = time
+	
+	def set_f_params(self,*args):
+		self.f_params = args
+	
+	def set_jac_params(self,*args):
+		self.jac_params = args
+	
+	def integrate(self,t,step=False,relax=False):
+		raise RuntimeError("You must call set_integrator first.")
+
 def _jac_from_f_with_helpers(f, helpers, simplify, n):
 	dependent_helpers = [[] for i in range(n)]
 	for i in range(n):
@@ -129,7 +158,7 @@ class jitcode(jitcxde):
 		self._jac_C_source = False
 		self._helper_C_source = False
 		
-		self.backend = None
+		self.integrator = empty_integrator()
 		
 		if self.jitced is None:
 			self.f = None
@@ -549,17 +578,11 @@ class jitcode(jitcxde):
 	
 	@property
 	def t(self):
-		if self.backend=="ode":
-			return self.integrator.t
-		else:
-			raise RuntimeError("You must call set_integrator first.")
+		return self.integrator.t
 	
 	@property
 	def _y(self):
-		if self.backend=="ode":
-			return self.integrator._y
-		else:
-			raise RuntimeError("You must call set_integrator first.")
+		return self.integrator._y
 	
 	@property
 	def y(self):
@@ -567,19 +590,13 @@ class jitcode(jitcxde):
 	
 	def set_initial_value(self, initial_value, time=0.0):
 		"""
-		Same as the analogous function in SciPy’s ODE. Note that this calls `set_integrator`, if no integrator has been set yet.
+		Same as the analogous function in SciPy’s ODE.
 		"""
 		
 		if self.n != len(initial_value):
 			raise ValueError("The dimension of the initial value does not match the dimension of your differential equations.")
 		
-		if self.backend is None:
-			self.set_integrator("")
-		
-		if self.backend == "ode":
-			self.integrator.set_initial_value(initial_value, time)
-		else:
-			raise AssertionError
+		self.integrator.set_initial_value(initial_value, time)
 	
 	def set_integrator(self,name,nsteps=10**6,**integrator_params):
 		"""
@@ -590,40 +607,31 @@ class jitcode(jitcxde):
 			raise NotImplementedError("JiTCODE does not natively support complex numbers yet.")
 		
 		# Store old state and params:
-		if self.backend == "ode":
-			initial_conditions = self.integrator._y, self.integrator.t
-			params = self.integrator.f_params
-		else:
-			initial_conditions = None
-			params = None
+		state = self.integrator._y
+		try:
+			time = self.integrator.t
+		except (AttributeError,RuntimeError):
+			time = None
+		params = self.integrator.f_params
 		
 		self._wants_jacobian |= _can_use_jacobian(name)
 		self.generate_functions()
 		
-		# This will become more complicated soon:
-		self.backend = "ode"
-		
-		if self.backend == "ode":
-			self.integrator = ode(self.f,self.jac)
-			self.integrator.set_integrator(name,nsteps=nsteps,**integrator_params)
-		else:
-			raise AssertionError
+		self.integrator = ode(self.f,self.jac)
+		self.integrator.set_integrator(name,nsteps=nsteps,**integrator_params)
 		
 		# Restore state and params, if applicable:
-		if initial_conditions is not None:
-			self.set_initial_value(*initial_conditions)
-		if params is not None:
-			self.set_f_params(*params)
+		if time is not None:
+			self.integrator.set_initial_value(state,time)
+		self.integrator.set_f_params  (*params)
+		self.integrator.set_jac_params(*params)
 	
 	def set_f_params(self, *args):
 		"""
 		Same as for SciPy’s ODE, except that it also sets the parameters of the Jacobian (because they should be the same anyway).
 		"""
-		if self.backend=="ode":
-			self.integrator.set_f_params  (*args)
-			self.integrator.set_jac_params(*args)
-		else:
-			raise RuntimeError("You must call set_integrator first.")
+		self.integrator.set_f_params  (*args)
+		self.integrator.set_jac_params(*args)
 	
 	def set_jac_params(self, *args):
 		"""
@@ -633,19 +641,16 @@ class jitcode(jitcxde):
 	
 	# This wrapper exists only to avoid pointless errors and confusing warnings as well as raising a proper exception in case the integration fails.
 	def integrate(self,t,step=False,relax=False):
-		if self.backend=="ode":
-			if t>self.t or step or relax:
-				result = self.integrator.integrate(t,step,relax)
-				if self.integrator.successful():
-					return result
-				else:
-					raise UnsuccessfulIntegration
-			elif t==self.t:
-				return self.y
+		if t>self.t or step or relax:
+			result = self.integrator.integrate(t,step,relax)
+			if self.integrator.successful():
+				return result
 			else:
-				raise ValueError("Target time smaller than current time. Cannot integrate backwards in time")
+				raise UnsuccessfulIntegration
+		elif t==self.t:
+			return self.y
 		else:
-			raise RuntimeError("You must call set_integrator first.")
+			raise ValueError("Target time smaller than current time. Cannot integrate backwards in time")
 
 class jitcode_lyap(jitcode):
 	"""

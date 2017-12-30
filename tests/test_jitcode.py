@@ -370,12 +370,6 @@ class errors_test(unittest.TestCase):
 	def test_no_integrator(self):
 		ODE = jitcode(f)
 		with self.assertRaises(RuntimeError):
-			ODE.t
-		with self.assertRaises(RuntimeError):
-			ODE.y
-		with self.assertRaises(RuntimeError):
-			ODE.set_f_params()
-		with self.assertRaises(RuntimeError):
 			ODE.integrate(1.0)
 
 if __name__ == "__main__":
