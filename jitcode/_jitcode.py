@@ -18,6 +18,8 @@ from jitcxde_common.numerical import random_direction, orthonormalise
 from jitcxde_common.symbolic import collect_arguments, ordered_subs, replace_function
 from jitcxde_common.transversal import GroupHandler
 
+from .dummy_integrator import empty_integrator
+
 #: the symbol for the state that must be used to define the differential equation. It is a function and the integer argument denotes the component. You may just as well define an analogous function directly with SymEngine or SymPy, but using this function is the best way to get the most of future versions of JiTCODE, in particular avoiding incompatibilities.
 y = symengine.Function("y")
 
@@ -40,35 +42,6 @@ def _is_C(function):
 
 def _is_lambda(function):
 	return isinstance(function, FunctionType)
-
-# Dummy class when no integrator is defined.
-# Exists only to store states and params and to raise exceptions.
-class empty_integrator(object):
-	def __init__(self):
-		self.f_params = ()
-		self.jac_params = ()
-		self._y = []
-		self._t = None
-	
-	@property
-	def t(self):
-		if self._t is None:
-			raise RuntimeError("You must call set_integrator first.")
-		else:
-			return self._t
-	
-	def set_initial_value(self, initial_value, time=0.0):
-		self._y = initial_value
-		self._t = time
-	
-	def set_f_params(self,*args):
-		self.f_params = args
-	
-	def set_jac_params(self,*args):
-		self.jac_params = args
-	
-	def integrate(self,t,step=False,relax=False):
-		raise RuntimeError("You must call set_integrator first.")
 
 def _jac_from_f_with_helpers(f, helpers, simplify, n):
 	dependent_helpers = [[] for i in range(n)]
