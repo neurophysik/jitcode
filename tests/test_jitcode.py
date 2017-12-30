@@ -366,6 +366,17 @@ class errors_test(unittest.TestCase):
 		ODE.set_integrator("dopri5",atol=1e-10,rtol=0,nsteps=10)
 		with self.assertRaises(UnsuccessfulIntegration):
 			ODE.integrate(100)
+	
+	def test_no_integrator(self):
+		ODE = jitcode(f)
+		with self.assertRaises(RuntimeError):
+			ODE.t
+		with self.assertRaises(RuntimeError):
+			ODE.y
+		with self.assertRaises(RuntimeError):
+			ODE.set_f_params()
+		with self.assertRaises(RuntimeError):
+			ODE.integrate(1.0)
 
 if __name__ == "__main__":
 	unittest.main(buffer=True)
