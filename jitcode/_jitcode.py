@@ -579,13 +579,7 @@ class jitcode(jitcxde):
 		if name == 'zvode':
 			raise NotImplementedError("JiTCODE does not natively support complex numbers yet.")
 		
-		# Store old state and params:
-		state = self.integrator._y
-		try:
-			time = self.integrator.t
-		except (AttributeError,RuntimeError):
-			time = None
-		params = self.integrator.f_params
+		old_integrator = self.integrator
 		
 		self._wants_jacobian |= _can_use_jacobian(name)
 		self.generate_functions()
@@ -594,10 +588,12 @@ class jitcode(jitcxde):
 		self.integrator.set_integrator(name,nsteps=nsteps,**integrator_params)
 		
 		# Restore state and params, if applicable:
-		if time is not None:
-			self.integrator.set_initial_value(state,time)
-		self.integrator.set_f_params  (*params)
-		self.integrator.set_jac_params(*params)
+		try:
+			self.integrator.set_initial_value(old_integrator._y,old_integrator.t)
+		except (AttributeError,RuntimeError):
+			pass
+		self.integrator.set_f_params  (*old_integrator.f_params  )
+		self.integrator.set_jac_params(*old_integrator.jac_params)
 	
 	def set_f_params(self, *args):
 		"""
