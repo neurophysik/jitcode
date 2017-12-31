@@ -17,7 +17,7 @@ from jitcxde_common.numerical import random_direction, orthonormalise
 from jitcxde_common.symbolic import collect_arguments, ordered_subs, replace_function
 from jitcxde_common.transversal import GroupHandler
 
-from .integrator_tools import empty_integrator, IVP_wrapper, integrator_info
+from .integrator_tools import empty_integrator, IVP_wrapper, IVP_wrapper_no_interpolation, integrator_info
 
 #: the symbol for the state that must be used to define the differential equation. It is a function and the integer argument denotes the component. You may just as well define an analogous function directly with SymEngine or SymPy, but using this function is the best way to get the most of future versions of JiTCODE, in particular avoiding incompatibilities.
 y = symengine.Function("y")
@@ -565,9 +565,35 @@ class jitcode(jitcxde):
 		
 		self.integrator.set_initial_value(initial_value, time)
 	
-	def set_integrator(self,name,nsteps=10**6,**integrator_params):
+	def set_integrator(self,name,nsteps=10**6,interpolate=True,**integrator_params):
 		"""
-		Same as the analogous function in SciPy’s ODE, except that it automatically generates the derivative and Jacobian, if they do not exist yet and are needed. Note that the parameter `nsteps` is set to a much higher value per default.
+		Analogous to the function in SciPy’s ODE with the same name. This automatically generates the derivative and Jacobian, if they do not exist yet and are needed. You can also choose integrators from `scipy.integrate.solve_ivp`.
+		
+		Parameters
+		----------
+		name: name of the integrator
+			One of the following (or a new method supported by either backend):
+			
+			* `"BDF"` – Implicit backward-differentiation formula via `solve_ivp`
+			* `"dopri5"` – Dormand’s and Prince’s explicit fifth-order method via `ode`
+			* `"dop853"` – DoP853 (explicit) via `ode`
+			* `"lsoda"` – LSODA (implicit) via `ode`
+			* `"LSODA"` – LSODA (implicit) via `solve_ivp`
+			* `"Radau"` – The implicit Radau method via `solve_ivp`
+			* `"RK23"` – Bogacki’s and Shampine’s explicit third-order method via `solve_ivp`
+			* `"RK45"` – Dormand’s and Prince’s explicit fifth-order method via `solve_ivp`
+			* `"vode"` – VODE (explicit) via `ode`
+			
+			The `solve_ivp` methods are slightly faster for large differential equations, but they come with a massive overhead that makes them considerably slower for small differential equations. Implicit solvers are slower than explicit ones, except for stiff problems. If you don’t know what to choose, start with `"dopri5"`.
+		
+		nsteps: integer
+ 			Same as the respective parameter of the `ode` solvers, but with a higher default value to avoid annoying errors when getting rid of transients.
+		
+		interpolate: boolean
+			Whether the sampled solutions for `solve_ivp` solvers shall be obtained using interpolation. If your sampling step is small, this may make things faster; otherwise it depends. This may also make the results slightly less accurate.
+		
+		integrator_params
+			Parameters passed to the respective integrator. See its documentation for more.
 		"""
 		
 		info = integrator_info(name)
@@ -581,7 +607,10 @@ class jitcode(jitcxde):
 			self.integrator = ode(self.f,self.jac)
 			self.integrator.set_integrator(name,nsteps=nsteps,**integrator_params)
 		elif info["backend"] == "ivp":
-			self.integrator = IVP_wrapper(name,self.f,self.jac,**integrator_params)
+			if not interpolate and name=="LSODA":
+				raise NotImplementedError("LSODA doesn’t work without interpolation.")
+			IVP = IVP_wrapper if interpolate else IVP_wrapper_no_interpolation
+			self.integrator = IVP(name,self.f,self.jac,**integrator_params)
 		
 		# Restore state and params, if applicable:
 		try:

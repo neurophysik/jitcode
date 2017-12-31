@@ -56,6 +56,7 @@ class IVP_wrapper(object):
 	
 	def set_initial_value(self, initial_value, time=0.0):
 		self.t = time
+		self.y = initial_value
 		self.kwargs["t0"] = time
 		self.kwargs["y0"] = initial_value
 		self.backend = self.ivp_class(**self.kwargs)
@@ -78,6 +79,15 @@ class IVP_wrapper(object):
 	def successful(self):
 		return self.backend.status != "failed"
 
+class IVP_wrapper_no_interpolation(IVP_wrapper):
+	def integrate(self,t,step=False,relax=False):
+		self.backend.t_bound = t
+		self.backend.status = "running"
+		while self.backend.status == "running":
+			self.backend.step()
+		self._y = self.backend.y
+		self.t = t
+		return self._y
 
 class empty_integrator(object):
 	"""
