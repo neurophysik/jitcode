@@ -186,6 +186,45 @@ class basic_test(unittest.TestCase):
 			# Windows blocks loaded module files from removal.
 			shutil.rmtree(self.directory)
 
+integrators = [
+		#  name     with_jac
+		("dopri5"  , False),
+		("dop853"  , False),
+		("lsoda"   , True ),
+		("vode"    , True ),
+		("RK23"    , False),
+		("RK45"    , False),
+		("Radau"   , True ),
+		("BDF"     , True ),
+		("LSODA"   , True ),
+	]
+
+class integrator_test(unittest.TestCase):
+	def test_normal_integration(self):
+		for integrator in integrators:
+			with self.subTest(integrator=integrator):
+				ODE = jitcode(f)
+				ODE.set_integrator(integrator[0])
+				assert ODE._wants_jacobian == integrator[1]
+				ODE.set_initial_value(y0,0.0)
+				assert_allclose( ODE.integrate(1.0), y1, rtol=1e-3 )
+	
+	# Takes forever
+	# def test_lyapunov(self):
+	# 	for integrator in integrators:
+	# 		with self.subTest(integrator=integrator):
+	# 			n_lyap = len(f)
+	# 			ODE = jitcode_lyap(f,n_lyap=n_lyap)
+	# 			ODE.set_integrator(integrator[0])
+	# 			ODE.set_initial_value(y0,0.0)
+	# 			times = range(10,100000,10)
+	# 			data = np.vstack( ODE.integrate(time)[1] for time in times )
+	# 			result = np.average(data[1000:], axis=0)
+	# 			margin = standard_error(data[1000:], axis=0)
+	# 			self.assertLess( np.max(margin), 0.003 )
+	# 			for i in range(n_lyap):
+	# 				self.assertLess( result[i]-lyaps[i], 3*margin[i] )
+
 f1, f2, f3, f4 = symbols("f1, f2, f3, f4")
 coupling, first_y, first_y_sq = symbols("coupling, first_y, first_y_sq")
 a_alt, b1_alt, b2_alt, c_alt, k_alt = symbols("a_alt, b1_alt, b2_alt, c_alt, k_alt")
@@ -272,7 +311,6 @@ class lyapunov_test(unittest.TestCase):
 		data = np.vstack( self.ODE.integrate(time)[1] for time in times )
 		result = np.average(data[1000:], axis=0)
 		margin = standard_error(data[1000:], axis=0)
-		print(data,result,margin)
 		self.assertLess( np.max(margin), 0.003 )
 		for i in range(self.n):
 			self.assertLess( result[i]-lyaps[i], 3*margin[i] )
