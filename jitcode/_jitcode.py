@@ -584,7 +584,7 @@ class jitcode(jitcxde):
 			* `"RK45"` – Dormand’s and Prince’s explicit fifth-order method via `solve_ivp`
 			* `"vode"` – VODE (explicit) via `ode`
 			
-			The `solve_ivp` methods are slightly faster for large differential equations, but they come with a massive overhead that makes them considerably slower for small differential equations. Implicit solvers are slower than explicit ones, except for stiff problems. If you don’t know what to choose, start with `"dopri5"`.
+			The `solve_ivp` methods are usually slightly faster for large differential equations, but they come with a massive overhead that makes them considerably slower for small differential equations. Implicit solvers are slower than explicit ones, except for stiff problems. If you don’t know what to choose, start with `"dopri5"`.
 		
 		nsteps: integer
  			Same as the respective parameter of the `ode` solvers, but with a higher default value to avoid annoying errors when getting rid of transients.
