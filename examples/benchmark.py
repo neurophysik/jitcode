@@ -1,10 +1,15 @@
 import numpy as np
 from numpy.random import choice, uniform
 from time import process_time
-from scipy.integrate import ode, solve_ivp, RK45
+from scipy.integrate import ode, solve_ivp, odeint
+from scipy.integrate._ivp.ivp import METHODS
 from jitcode import jitcode, y
 from symengine import sin
 
+solver_ode = "dopri5"
+solver_ivp = "RK45"
+
+# Context manager for timing
 class timer(object):
 	def __init__(self,name):
 		self.name = name
@@ -17,49 +22,58 @@ class timer(object):
 		duration = end-self.start
 		print("%s took %.5f s" % (self.name,duration))
 
-
+# The actual test
 def test_scenario(name,fun,initial,times,rtol,atol):
-	print(20*"-",name,20*"-",sep="\n")
+	print(40*"-",name,40*"-",sep="\n")
 	
-	with timer("ode with dopri5"):
+	with timer("ode (%s)"%solver_ode):
 		I = ode(fun)
-		I.set_integrator("dopri5",rtol=rtol,atol=atol,nsteps=10**8)
+		I.set_integrator(solver_ode,rtol=rtol,atol=atol,nsteps=10**8)
 		I.set_initial_value(initial,0.0)
 		result = np.vstack(I.integrate(time) for time in times)
 	assert I.successful()
 	
-	with timer("solve_ivp without result"):
+	inv_fun = lambda y,t: fun(t,y)
+	with timer("odeint with suboptimal function (LSODA)"):
+		result = odeint(
+				func=inv_fun,
+				y0=initial, t=[0.0]+list(times),
+				rtol=rtol, atol=atol,
+				mxstep=10**8
+				)
+	
+	with timer("solve_ivp (%s) without result"%solver_ivp):
 		I = solve_ivp(
 				fun,
 				t_span=(0,times[-1]),
 				y0=initial,
-				method='RK45', rtol=rtol, atol=atol
+				method=solver_ivp, rtol=rtol, atol=atol
 			)
 	assert I.status != -1
 	
-	with timer("solve_ivp"):
+	with timer("solve_ivp (%s)"%solver_ivp):
 		I = solve_ivp(
 				fun,
 				t_span=(0,times[-1]), t_eval=times,
 				y0=initial,
-				method='RK45', rtol=rtol, atol=atol
+				method=solver_ivp, rtol=rtol, atol=atol
 			)
 		result = I.y
 	assert I.status != -1
 	
-	with timer("solve_ivp with dense_output"):
+	with timer("solve_ivp (%s) with dense_output"%solver_ivp):
 		I = solve_ivp(
 				fun,
 				t_span=(0,times[-1]),
 				y0=initial,
-				method='RK45', rtol=rtol, atol=atol,
+				method=solver_ivp, rtol=rtol, atol=atol,
 				dense_output=True
 			)
 		result = np.vstack(I.sol(time) for time in times)
 	assert I.status != -1
 	
-	with timer("RK45 with dense output"):
-		I = RK45(
+	with timer("%s with dense output"%solver_ivp):
+		I = METHODS[solver_ivp](
 				fun=fun,
 				y0=initial, t0=0.0, t_bound=times[-1],
 				rtol=rtol, atol=atol
@@ -72,8 +86,8 @@ def test_scenario(name,fun,initial,times,rtol,atol):
 		result = np.vstack(solutions())
 	assert I.status != "failed"
 	
-	with timer("RK45 with manual resetting"):
-		I = RK45(
+	with timer("%s with manual resetting"%solver_ivp):
+		I = METHODS[solver_ivp](
 				fun=fun,
 				y0=initial, t0=0.0, t_bound=times[-1],
 				rtol=rtol, atol=atol
@@ -88,12 +102,12 @@ def test_scenario(name,fun,initial,times,rtol,atol):
 		result = np.vstack(solutions())
 	assert I.status != "failed"
 	
-	with timer("RK45 with reinitialising"):
+	with timer("%s with reinitialising"%solver_ivp):
 		def solutions():
 			current_time = 0.0
 			state = initial
 			for time in times:
-				I = RK45(
+				I = METHODS[solver_ivp](
 						fun=fun,
 						y0=state, t0=current_time, t_bound=time,
 						rtol=rtol, atol=atol
@@ -106,11 +120,13 @@ def test_scenario(name,fun,initial,times,rtol,atol):
 				yield state
 		result = np.vstack(solutions())
 
+# Using compiled functions to make things faster
 def get_compiled_function(f):
-	dummy = jitcode(f)
+	dummy = jitcode(f,verbose=False)
 	dummy.compile_C()
 	return dummy.f
 
+# The actual scenarios
 test_scenario(
 	name = "two coupled FitzHugh–Nagumo oscillators",
 	fun = get_compiled_function([
@@ -142,8 +158,8 @@ test_scenario(
 	name = "random network of Kuramoto oscillators",
 	fun = get_compiled_function(kuramotos_f),
 	initial = uniform(0,2*np.pi,n),
-	times = range(1,10001),
-	rtol = 1e-10,
+	times = range(1,10001,10),
+	rtol = 1e-13,
 	atol = 1e-6,
 )
 
