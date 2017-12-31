@@ -71,9 +71,9 @@ class IVP_wrapper(object):
 	def integrate(self,t,step=False,relax=False):
 		while self.backend.t < t:
 			self.backend.step()
-		self.y = self.backend.dense_output()(t)
+		self._y = self.backend.dense_output()(t)
 		self.t = t
-		return self.y
+		return self._y
 	
 	def successful(self):
 		return self.backend.status != "failed"
