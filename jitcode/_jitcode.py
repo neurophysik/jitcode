@@ -7,7 +7,6 @@ from inspect import signature
 from itertools import count
 
 from scipy.integrate import ode
-from scipy.integrate._ode import find_integrator
 from numpy import hstack, log
 import numpy as np
 import symengine
@@ -18,7 +17,7 @@ from jitcxde_common.numerical import random_direction, orthonormalise
 from jitcxde_common.symbolic import collect_arguments, ordered_subs, replace_function
 from jitcxde_common.transversal import GroupHandler
 
-from .dummy_integrator import empty_integrator
+from .integrator_tools import empty_integrator, IVP_wrapper, integrator_info
 
 #: the symbol for the state that must be used to define the differential equation. It is a function and the integer argument denotes the component. You may just as well define an analogous function directly with SymEngine or SymPy, but using this function is the best way to get the most of future versions of JiTCODE, in particular avoiding incompatibilities.
 y = symengine.Function("y")
@@ -31,11 +30,6 @@ class UnsuccessfulIntegration(Exception):
 		This exception is raised when the integrator cannot meet the accuracy and step-size requirements. If you want to know the exact state of your system before the integration fails or similar, catch this exception.
 	"""
 	pass
-
-def _can_use_jacobian(integratorname):
-	integrator = find_integrator(integratorname)
-	parameters = signature(integrator).parameters
-	return "with_jacobian" in parameters
 
 def _is_C(function):
 	return isinstance(function, BuiltinFunctionType)
@@ -576,16 +570,18 @@ class jitcode(jitcxde):
 		Same as the analogous function in SciPy’s ODE, except that it automatically generates the derivative and Jacobian, if they do not exist yet and are needed. Note that the parameter `nsteps` is set to a much higher value per default.
 		"""
 		
-		if name == 'zvode':
-			raise NotImplementedError("JiTCODE does not natively support complex numbers yet.")
+		info = integrator_info(name)
+		self._wants_jacobian |= info["wants_jac"]
 		
 		old_integrator = self.integrator
 		
-		self._wants_jacobian |= _can_use_jacobian(name)
 		self.generate_functions()
 		
-		self.integrator = ode(self.f,self.jac)
-		self.integrator.set_integrator(name,nsteps=nsteps,**integrator_params)
+		if info["backend"] == "ode":
+			self.integrator = ode(self.f,self.jac)
+			self.integrator.set_integrator(name,nsteps=nsteps,**integrator_params)
+		elif info["backend"] == "ivp":
+			self.integrator = IVP_wrapper(name,self.f,self.jac,**integrator_params)
 		
 		# Restore state and params, if applicable:
 		try:
