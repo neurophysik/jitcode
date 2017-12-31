@@ -104,7 +104,7 @@ def get_compiled_function(f):
 	return dummy.f
 
 test_scenario(
-	name = "two coupled FitzHughs",
+	name = "two coupled FitzHugh–Nagumo oscillators",
 	fun = get_compiled_function([
 			y(0)*(-0.025794-y(0))*(y(0)-1.0)-y(1)+0.128*(y(2)-y(0)),
 			0.0065*y(0)-0.02*y(1),
@@ -131,7 +131,7 @@ def kuramotos_f():
 		yield omega[i] + c/(n-1)*coupling_sum
 
 test_scenario(
-	name = "network of Kuramotos",
+	name = "random network of Kuramoto oscillators",
 	fun = get_compiled_function(kuramotos_f),
 	initial = uniform(0,2*np.pi,n),
 	times = range(1,10001),
