@@ -209,13 +209,27 @@ class integrator_test(unittest.TestCase):
 				ODE.set_initial_value(y0,0.0)
 				assert_allclose( ODE.integrate(1.0), y1, rtol=1e-3 )
 	
+	def test_no_interpolation(self):
+		for integrator in ["RK23","RK45","Radau","BDF"]:
+			with self.subTest(integrator=integrator):
+				ODE = jitcode(f)
+				ODE.set_integrator(integrator,interpolate=False)
+				ODE.set_initial_value(y0,0.0)
+				assert_allclose( ODE.integrate(1.0), y1, rtol=1e-3 )
+	
+	def test_no_interpolation_LSODA(self):
+		ODE = jitcode(f)
+		with self.assertRaises(NotImplementedError):
+			ODE.set_integrator("LSODA",interpolate=False)
+	
 	# Takes forever
 	# def test_lyapunov(self):
 	# 	for integrator in integrators:
 	# 		with self.subTest(integrator=integrator):
 	# 			n_lyap = len(f)
 	# 			ODE = jitcode_lyap(f,n_lyap=n_lyap)
-	# 			ODE.set_integrator(integrator[0])
+	# 			interpolate = integrator[0]=="LSODA"
+	# 			ODE.set_integrator(integrator[0],interpolate=interpolate)
 	# 			ODE.set_initial_value(y0,0.0)
 	# 			times = range(10,100000,10)
 	# 			data = np.vstack( ODE.integrate(time)[1] for time in times )
