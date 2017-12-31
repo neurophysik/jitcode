@@ -26,63 +26,70 @@ def test_scenario(name,fun,initial,times,rtol,atol):
 		I.set_integrator("dopri5",rtol=rtol,atol=atol,nsteps=10**8)
 		I.set_initial_value(initial,0.0)
 		result = np.vstack(I.integrate(time) for time in times)
-
+	assert I.successful()
+	
 	with timer("solve_ivp without result"):
-		solve_ivp(
+		I = solve_ivp(
 				fun,
 				t_span=(0,times[-1]),
 				y0=initial,
 				method='RK45', rtol=rtol, atol=atol
 			)
-
+	assert I.status != -1
+	
 	with timer("solve_ivp"):
-		result = solve_ivp(
+		I = solve_ivp(
 				fun,
 				t_span=(0,times[-1]), t_eval=times,
 				y0=initial,
 				method='RK45', rtol=rtol, atol=atol
-			).y
-
+			)
+		result = I.y
+	assert I.status != -1
+	
 	with timer("solve_ivp with dense_output"):
-		interpolator = solve_ivp(
+		I = solve_ivp(
 				fun,
 				t_span=(0,times[-1]),
 				y0=initial,
 				method='RK45', rtol=rtol, atol=atol,
 				dense_output=True
-			).sol
-		result = np.vstack(interpolator(time) for time in times)
-
+			)
+		result = np.vstack(I.sol(time) for time in times)
+	assert I.status != -1
+	
 	with timer("RK45 with dense output"):
-		def integrator():
-			I = RK45(
-					fun=fun,
-					y0=initial, t0=0.0, t_bound=times[-1],
-					rtol=rtol, atol=atol
-				)
+		I = RK45(
+				fun=fun,
+				y0=initial, t0=0.0, t_bound=times[-1],
+				rtol=rtol, atol=atol
+			)
+		def solutions():
 			for time in times:
 				while I.t < time:
 					I.step()
 				yield I.dense_output()(time)
-		result = np.vstack(integrator())
-
+		result = np.vstack(solutions())
+	assert I.status != "failed"
+	
 	with timer("RK45 with manual resetting"):
-		def integrator():
-			I = RK45(
-					fun=fun,
-					y0=initial, t0=0.0, t_bound=times[-1],
-					rtol=rtol, atol=atol
-				)
+		I = RK45(
+				fun=fun,
+				y0=initial, t0=0.0, t_bound=times[-1],
+				rtol=rtol, atol=atol
+			)
+		def solutions():
 			for time in times:
 				I.t_bound = time
 				I.status = "running"
 				while I.status == "running":
 					I.step()
 				yield I.y
-		result = np.vstack(integrator())
-
+		result = np.vstack(solutions())
+	assert I.status != "failed"
+	
 	with timer("RK45 with reinitialising"):
-		def integrator():
+		def solutions():
 			current_time = 0.0
 			state = initial
 			for time in times:
@@ -93,10 +100,11 @@ def test_scenario(name,fun,initial,times,rtol,atol):
 					)
 				while I.status == "running":
 					I.step()
+				assert I.status != "failed"
 				current_time = time
 				state = I.y
 				yield state
-		result = np.vstack(integrator())
+		result = np.vstack(solutions())
 
 def get_compiled_function(f):
 	dummy = jitcode(f)
