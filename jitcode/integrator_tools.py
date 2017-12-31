@@ -51,7 +51,7 @@ class IVP_wrapper(object):
 		self.f_params = ()
 		self.jac_params = ()
 	
-	def set_integrator(self,**kwargs):
+	def set_integrator(self,*args,**kwargs):
 		raise AssertionError("This method should not be called")
 	
 	def set_initial_value(self, initial_value, time=0.0):
