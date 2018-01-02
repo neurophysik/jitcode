@@ -142,6 +142,14 @@ class basic_test(unittest.TestCase):
 		self.assertTrue(_is_lambda(self.ODE.f))
 		self.assertIsNone(self.ODE.jac)
 	
+	def test_lambdas_with_jac(self):
+		self.ODE = jitcode(wants_jacobian=True,**self.argdict)
+		self.ODE.generate_lambdas()
+		self.ODE.set_integrator('vode')
+		self.initialise_integrator()
+		self.assertTrue(_is_lambda(self.ODE.f))
+		self.assertTrue(_is_lambda(self.ODE.jac))
+	
 	def test_lambdas_without_jac(self):
 		self.ODE = jitcode(**self.argdict)
 		self.ODE.generate_lambdas()
@@ -201,13 +209,22 @@ integrators = [
 
 class integrator_test(unittest.TestCase):
 	def test_normal_integration(self):
-		for integrator in integrators:
-			with self.subTest(integrator=integrator):
-				ODE = jitcode(f)
-				ODE.set_integrator(integrator[0])
-				assert ODE._wants_jacobian == integrator[1]
-				ODE.set_initial_value(y0,0.0)
-				assert_allclose( ODE.integrate(1.0), y1, rtol=1e-3 )
+		for lambdas in (True,False):
+			for integrator in integrators:
+				with self.subTest(integrator=integrator,lambdas=lambdas):
+					ODE = jitcode(f,verbose=False)
+					if lambdas:
+						ODE.generate_f_lambda()
+						ODE.generate_jac_lambda()
+					ODE.set_integrator(integrator[0])
+					assert ODE._wants_jacobian == integrator[1]
+					assert not  _is_C(ODE.f) == lambdas
+					assert _is_lambda(ODE.f) == lambdas
+					if integrator[1]:
+						assert _is_lambda(ODE.jac) == lambdas
+						assert not  _is_C(ODE.jac) == lambdas
+					ODE.set_initial_value(y0,0.0)
+					assert_allclose( ODE.integrate(1.0), y1, rtol=1e-3 )
 	
 	def test_no_interpolation(self):
 		for integrator in ["RK23","RK45","Radau","BDF"]:
@@ -222,22 +239,22 @@ class integrator_test(unittest.TestCase):
 		with self.assertRaises(NotImplementedError):
 			ODE.set_integrator("LSODA",interpolate=False)
 	
-	# Takes forever
-	# def test_lyapunov(self):
-	# 	for integrator in integrators:
-	# 		with self.subTest(integrator=integrator):
-	# 			n_lyap = len(f)
-	# 			ODE = jitcode_lyap(f,n_lyap=n_lyap)
-	# 			interpolate = integrator[0]=="LSODA"
-	# 			ODE.set_integrator(integrator[0],interpolate=interpolate)
-	# 			ODE.set_initial_value(y0,0.0)
-	# 			times = range(10,100000,10)
-	# 			data = np.vstack( ODE.integrate(time)[1] for time in times )
-	# 			result = np.average(data[1000:], axis=0)
-	# 			margin = standard_error(data[1000:], axis=0)
-	# 			self.assertLess( np.max(margin), 0.003 )
-	# 			for i in range(n_lyap):
-	# 				self.assertLess( result[i]-lyaps[i], 3*margin[i] )
+	#Takes forever
+	def test_lyapunov(self):
+		for integrator in integrators:
+			with self.subTest(integrator=integrator):
+				n_lyap = len(f)
+				ODE = jitcode_lyap(f,n_lyap=n_lyap)
+				interpolate = integrator[0]=="LSODA"
+				ODE.set_integrator(integrator[0],interpolate=interpolate)
+				ODE.set_initial_value(y0,0.0)
+				times = range(10,100000,10)
+				data = np.vstack( ODE.integrate(time)[1] for time in times )
+				result = np.average(data[1000:], axis=0)
+				margin = standard_error(data[1000:], axis=0)
+				self.assertLess( np.max(margin), 0.003 )
+				for i in range(n_lyap):
+					self.assertLess( result[i]-lyaps[i], 3*margin[i] )
 
 f1, f2, f3, f4 = symbols("f1, f2, f3, f4")
 coupling, first_y, first_y_sq = symbols("coupling, first_y, first_y_sq")
