@@ -4,8 +4,8 @@ The JiTCODE module
 Overview
 --------
 
-JiTCODE (just-in-time compilation for ordinary differential equations) is an extension of `SciPy’s ODE`_ (`scipy.integrate.ode`).
-Where SciPy’s ODE takes a Python function as an argument, JiTCODE takes an iterable (or generator function) of symbolic expressions, which it translates to C code, compiles on the fly, and uses as the function to feed into SciPy’s ODE.
+JiTCODE (just-in-time compilation for ordinary differential equations) is an extension of SciPy’s `ODE`_ (`scipy.integrate.ode`) or `Solve IVP`_ (`scipy.integrate.solve_ivp`).
+Where the latter take a Python function as an argument, JiTCODE takes an iterable (or generator function) of symbolic expressions, which it translates to C code, compiles on the fly, and uses as the function to feed into SciPy’s ODE or Solve IVP.
 Symbolic expressions are mostly handled by `SymEngine`_, `SymPy`_’s compiled-backend-to-be (see `SymPy vs. SymEngine`_ for details).
 
 This design has the following advantages:
@@ -34,7 +34,7 @@ For most applications, the only difference to SciPy’s ODE in terms of handling
 However, you can also tweak this step by step, if you desire (see `tweak` and the `notes on compilation`_).
 If you face issues with the compiler, want to optimise the speed, or wish to integrate network dynamics, also take a look at the `common JiTC*DE documentation`_.
 
-This documentation assumes that you have read the documentation of `SciPy’s ODE`_ or are otherwise familiar with it.
+This documentation assumes that you have read the documentation of SciPy’s `ODE`_ or are otherwise familiar with it.
 As with SciPy’s ODE, this documentation assumes that the differential equation you want to solve is:
 
 .. math::
@@ -60,7 +60,7 @@ A quick example
 Details of the building process
 -------------------------------
 
-To generate the functions needed by SciPy’s ODE, JiTCODE executes a series of distinct processing steps, each of which can be invoked through a command and tweaked as needed.
+To generate the functions needed by SciPy’s ODE or Solve IVP, JiTCODE executes a series of distinct processing steps, each of which can be invoked through a command and tweaked as needed.
 These commands execute previous steps as needed, i.e., if they have not been performed yet.
 If you are happy with the default options, however, you do not need to bother with this and can just use the commands at the very end of the chain, namely `set_integrator`, `set_initial_value`, or `save_compiled`.
 
@@ -148,9 +148,11 @@ Lyapunov exponents
 What doesn’t work (yet)
 -----------------------
 
-The following feature of SciPy’s ODE class cannot be used through JiTCODE:
+The following feature of SciPy’s ODE or Solve IVP cannot be used through JiTCODE:
 
 *	The `zvode` integrator and complex arithmetics in general, as they are not easy implementable in C.
+
+*	Using control parameters with the integrators from Solve IVP.
 
 .. _reference:
 
@@ -165,7 +167,9 @@ References
 
 .. [BGGS80]  G. Benettin, L. Galgani, A. Giorgilli, and J.-M. Strelcyn: Lyapunov Characteristic Exponents for smooth dynamical systems and for Hamiltonian systems; A method for computing all of them. Meccanica 15, pp. 9–30 (1980), `10.1007/BF02128236 <http://dx.doi.org/10.1007/BF02128236>`_.
 
-.. _SciPy’s ODE: http://docs.scipy.org/doc/scipy/reference/generated/scipy.integrate.ode.html
+.. _ODE: http://docs.scipy.org/doc/scipy/reference/generated/scipy.integrate.ode.html
+
+.. _Solve IVP: http://docs.scipy.org/doc/scipy/reference/generated/scipy.integrate.solve_ivp.html
 
 .. _SymPy Issue 8997: https://github.com/sympy/sympy/issues/8997
 

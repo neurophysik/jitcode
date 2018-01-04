@@ -5,9 +5,9 @@ from setuptools_scm import get_version
 
 MOCK_MODULES = [
 	'numpy', 'numpy.testing', 'numpy.random',
-	'scipy', 'scipy.integrate', 'scipy.integrate._ode', 'scipy.stats',
+	'scipy', 'scipy.integrate', 'scipy.integrate._ode', 'scipy.stats', 'scipy.integrate._ivp.ivp',
 	'symengine', 'symengine.printing', 'symengine.lib.symengine_wrapper',
-	'jitcxde_common.helpers','jitcxde_common.numerical','jitcxde_common.symbolic','jitcxde_common.transversal'
+	'jitcxde_common.helpers','jitcxde_common.numerical','jitcxde_common.symbolic','jitcxde_common.transversal',
 	]
 sys.modules.update((mod_name, Mock()) for mod_name in MOCK_MODULES)
 
