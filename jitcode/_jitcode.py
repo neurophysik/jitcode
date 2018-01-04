@@ -489,6 +489,8 @@ class jitcode(jitcxde):
 		core_f = lambdify(self._lambda_args,list(f_sym_wc))
 		# self.f = lambda t,Y,*c_pars: core_f(np.hstack([t,Y,c_pars]))
 		self.f = _lambda_wrapper(core_f,self.control_pars)
+		
+		self.compile_attempt = False
 	
 	def _generate_jac_lambda(self):
 		if not _is_lambda(self.jac):
@@ -517,6 +519,8 @@ class jitcode(jitcxde):
 		core_jac = lambdify(self._lambda_args,jac_matrix)
 		# self.jac = lambda t,Y,*c_pars: core_jac(np.hstack([t,Y,c_pars]))
 		self.jac = _lambda_wrapper(core_jac,self.control_pars)
+		
+		self.compile_attempt = False
 	
 	def generate_lambdas(self):
 		"""
