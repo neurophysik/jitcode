@@ -302,7 +302,7 @@ class jitcode(jitcxde):
 			If smaller than 1, no chunking will happen.
 		
 		sparse : boolean
-			Whether a sparse Jacobian should be assumed for optimisation. Note that this does not mean that the Jacobian is stored, parsed or handled as a sparse matrix. This kind of optimisation would require SciPy’s ODE to be able to handle sparse matrices without structure in the sparseness.
+			Whether a sparse Jacobian should be assumed for optimisation. Note that this does not mean that the Jacobian is stored, parsed or handled as a sparse matrix. This kind of optimisation would require `ode` or `solve_ivp` to be able to handle sparse matrices without structure in the sparseness.
 		"""
 		
 		self._generate_helpers_C()
