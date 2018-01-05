@@ -6,7 +6,6 @@ from types import FunctionType, BuiltinFunctionType
 from inspect import signature
 from itertools import count
 
-from scipy.integrate import ode
 from numpy import hstack, log
 import numpy as np
 import symengine
@@ -17,19 +16,13 @@ from jitcxde_common.numerical import random_direction, orthonormalise
 from jitcxde_common.symbolic import collect_arguments, ordered_subs, replace_function
 from jitcxde_common.transversal import GroupHandler
 
-from jitcode.integrator_tools import empty_integrator, IVP_wrapper, IVP_wrapper_no_interpolation, integrator_info
+from jitcode.integrator_tools import empty_integrator, IVP_wrapper, IVP_wrapper_no_interpolation, ODE_wrapper, integrator_info, UnsuccessfulIntegration
 
 #: the symbol for the state that must be used to define the differential equation. It is a function and the integer argument denotes the component. You may just as well define an analogous function directly with SymEngine or SymPy, but using this function is the best way to get the most of future versions of JiTCODE, in particular avoiding incompatibilities.
 y = symengine.Function("y")
 
 #: the symbol for time for defining the differential equation. If your differential equation has no explicit time dependency (“autonomous system”), you do not need this. You may just as well define an analogous symbol directly with SymEngine or SymPy, but using this function is the best way to get the most of future versions of JiTCODE, in particular avoiding incompatibilities.
 t = symengine.Symbol("t", real=True)
-
-class UnsuccessfulIntegration(Exception):
-	"""
-		This exception is raised when the integrator cannot meet the accuracy and step-size requirements. If you want to know the exact state of your system before the integration fails or similar, catch this exception.
-	"""
-	pass
 
 def _is_C(function):
 	return isinstance(function, BuiltinFunctionType)
@@ -608,7 +601,7 @@ class jitcode(jitcxde):
 		self.generate_functions()
 		
 		if info["backend"] == "ode":
-			self.integrator = ode(self.f,self.jac)
+			self.integrator = ODE_wrapper(self.f,self.jac)
 			self.integrator.set_integrator(name,nsteps=nsteps,**integrator_params)
 		elif info["backend"] == "ivp":
 			if not interpolate and name=="LSODA":
@@ -637,18 +630,8 @@ class jitcode(jitcxde):
 		"""
 		self.set_f_params(*args)
 	
-	# This wrapper exists only to avoid pointless errors and confusing warnings as well as raising a proper exception in case the integration fails.
-	def integrate(self,t,step=False,relax=False):
-		if t>self.t or step or relax:
-			result = self.integrator.integrate(t,step,relax)
-			if self.integrator.successful():
-				return result
-			else:
-				raise UnsuccessfulIntegration
-		elif t==self.t:
-			return self.y
-		else:
-			raise ValueError("Target time smaller than current time. Cannot integrate backwards in time")
+	def integrate(self,*args,**kwargs):
+		return self.integrator.integrate(*args,**kwargs)
 
 class jitcode_lyap(jitcode):
 	"""

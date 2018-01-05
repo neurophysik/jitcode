@@ -1,9 +1,16 @@
 from inspect import signature
 from warnings import warn
 
+from scipy.integrate import ode
 from scipy.integrate._ode import find_integrator
 from scipy.integrate._ivp.ivp import METHODS as ivp_methods
 from numpy import inf
+
+class UnsuccessfulIntegration(Exception):
+	"""
+		This exception is raised when the integrator cannot meet the accuracy and step-size requirements. If you want to know the exact state of your system before the integration fails or similar, catch this exception.
+	"""
+	pass
 
 def integrator_info(name):
 	"""
@@ -69,25 +76,47 @@ class IVP_wrapper(object):
 		if args:
 			raise NotImplementedError("The integrators from solve_ivp do not support setting control parameters at runtime yet.")
 	
-	def integrate(self,t,step=False,relax=False):
+	def integrate(self,t):
 		while self.backend.t < t:
 			self.backend.step()
 		self._y = self.backend.dense_output()(t)
 		self.t = t
-		return self._y
+		if self.backend.status == "failed":
+			raise UnsuccessfulIntegration
+		else:
+			return self._y
 	
 	def successful(self):
 		return self.backend.status != "failed"
 
 class IVP_wrapper_no_interpolation(IVP_wrapper):
-	def integrate(self,t,step=False,relax=False):
+	def integrate(self,t):
 		self.backend.t_bound = t
 		self.backend.status = "running"
 		while self.backend.status == "running":
 			self.backend.step()
 		self._y = self.backend.y
 		self.t = t
-		return self._y
+		if self.backend.status == "failed":
+			raise UnsuccessfulIntegration
+		else:
+			return self._y
+
+class ODE_wrapper(ode):
+	"""
+	This is a wrapper around Scipy’s ODE that does nothing now but will be expanded soon.
+	"""
+	def integrate(self,t,step=False,relax=False):
+		if t>self.t or step or relax:
+			result = super(ODE_wrapper,self).integrate(t,step,relax)
+			if self.successful():
+				return result
+			else:
+				raise UnsuccessfulIntegration
+		elif t==self.t:
+			return self._y
+		else:
+			raise ValueError("Target time smaller than current time. Cannot integrate backwards in time")
 
 class empty_integrator(object):
 	"""
@@ -120,7 +149,7 @@ class empty_integrator(object):
 	def set_jac_params(self,*args):
 		self.jac_params = args
 	
-	def integrate(self,t,step=False,relax=False):
+	def integrate(self,*args,**kwargs):
 		raise RuntimeError("You must call set_integrator first.")
 	
 	def successful(self):
