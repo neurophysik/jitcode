@@ -550,7 +550,7 @@ class jitcode(jitcxde):
 	
 	@property
 	def y(self):
-		return self._y
+		return self.integrator._y
 	
 	def set_initial_value(self, initial_value, time=0.0):
 		"""
