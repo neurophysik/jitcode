@@ -41,21 +41,27 @@ class IVP_wrapper(object):
 	This is a wrapper around the integrators from scipy.integrate.solve_ivp making them work like scipy.integrate.ode or raising errors when this is not possible.
 	"""
 	
-	def __init__(self,name,f,jac=None,**kwargs):
+	def __init__(self,name,f,jac=None,with_params=False,**kwargs):
 		info = integrator_info(name)
 		self.ivp_class = info["integrator"]
 		
 		self.kwargs = {
-				"fun": f,
 				"t_bound": inf,
 				"vectorized": False,
 			}
 		self.kwargs.update(kwargs)
 		
-		if info["wants_jac"]:
-			self.kwargs["jac"] = jac
-		
 		self.params = ()
+		if with_params:
+			self.kwargs["fun"] = lambda t,y: f(t,y,*self.params)
+		else:
+			self.kwargs["fun"] = f
+		
+		if info["wants_jac"]:
+			if with_params:
+				self.kwargs["jac"] = lambda t,y: jac(t,y,*self.params)
+			else:
+				self.kwargs["jac"] = jac
 	
 	def set_integrator(self,*args,**kwargs):
 		raise AssertionError("This method should not be called")
@@ -68,8 +74,7 @@ class IVP_wrapper(object):
 		self.backend = self.ivp_class(**self.kwargs)
 	
 	def set_params(self,*args):
-		if args:
-			raise NotImplementedError("The integrators from solve_ivp do not support setting control parameters at runtime yet.")
+		self.params = args
 	
 	def integrate(self,t):
 		while self.backend.t < t:

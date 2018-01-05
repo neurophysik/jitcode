@@ -602,12 +602,22 @@ class jitcode(jitcxde):
 		
 		if info["backend"] == "ode":
 			self.integrator = ODE_wrapper(self.f,self.jac)
-			self.integrator.set_integrator(name,nsteps=nsteps,**integrator_params)
+			self.integrator.set_integrator(
+					name,
+					nsteps = nsteps,
+					**integrator_params
+				)
 		elif info["backend"] == "ivp":
 			if not interpolate and name=="LSODA":
 				raise NotImplementedError("LSODA doesn’t work without interpolation.")
 			IVP = IVP_wrapper if interpolate else IVP_wrapper_no_interpolation
-			self.integrator = IVP(name,self.f,self.jac,**integrator_params)
+			self.integrator = IVP(
+					name,
+					self.f,
+					self.jac,
+					with_params = bool(self.control_pars),
+					**integrator_params
+				)
 		
 		# Restore state and params, if applicable:
 		try:
