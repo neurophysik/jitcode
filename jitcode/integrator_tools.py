@@ -55,8 +55,7 @@ class IVP_wrapper(object):
 		if info["wants_jac"]:
 			self.kwargs["jac"] = jac
 		
-		self.f_params = ()
-		self.jac_params = ()
+		self.params = ()
 	
 	def set_integrator(self,*args,**kwargs):
 		raise AssertionError("This method should not be called")
@@ -68,11 +67,7 @@ class IVP_wrapper(object):
 		self.kwargs["y0"] = initial_value
 		self.backend = self.ivp_class(**self.kwargs)
 	
-	def set_f_params(self,*args):
-		if args:
-			raise NotImplementedError("The integrators from solve_ivp do not support setting control parameters at runtime yet.")
-	
-	def set_jac_params(self,*args):
+	def set_params(self,*args):
 		if args:
 			raise NotImplementedError("The integrators from solve_ivp do not support setting control parameters at runtime yet.")
 	
@@ -117,6 +112,14 @@ class ODE_wrapper(ode):
 			return self._y
 		else:
 			raise ValueError("Target time smaller than current time. Cannot integrate backwards in time")
+	
+	@property
+	def params(self):
+		return self.f_params
+	
+	def set_params(self,*args):
+		super(ODE_wrapper,self).set_f_params  (*args)
+		super(ODE_wrapper,self).set_jac_params(*args)
 
 class empty_integrator(object):
 	"""
@@ -124,8 +127,7 @@ class empty_integrator(object):
 	"""
 
 	def __init__(self):
-		self.f_params = ()
-		self.jac_params = ()
+		self.params = ()
 		self._y = []
 		self._t = None
 	
@@ -143,11 +145,8 @@ class empty_integrator(object):
 		self._y = initial_value
 		self._t = time
 	
-	def set_f_params(self,*args):
-		self.f_params = args
-	
-	def set_jac_params(self,*args):
-		self.jac_params = args
+	def set_params(self,*args):
+		self.params = args
 	
 	def integrate(self,*args,**kwargs):
 		raise RuntimeError("You must call set_integrator first.")

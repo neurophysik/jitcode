@@ -378,8 +378,7 @@ class basic_test_with_params(basic_test):
 		if isinstance(self.ODE,jitcode) and self.ODE.f_sym():
 			self.ODE.check()
 		self.ODE.set_initial_value(y0,0.0)
-		self.ODE.set_f_params(*params_args)
-		self.ODE.set_jac_params(*params_args)
+		self.ODE.set_parameters(*params_args)
 		self.extra_args = params_args
 
 class errors_test(unittest.TestCase):

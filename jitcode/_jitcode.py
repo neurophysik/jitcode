@@ -614,21 +614,21 @@ class jitcode(jitcxde):
 			self.integrator.set_initial_value(old_integrator._y,old_integrator.t)
 		except (AttributeError,RuntimeError):
 			pass
-		self.integrator.set_f_params  (*old_integrator.f_params  )
-		self.integrator.set_jac_params(*old_integrator.jac_params)
+		self.integrator.set_params(*old_integrator.params)
 	
+	def set_parameters(self,*args):
+		"""
+		Same as `set_f_params` and `set_jac_params` for SciPy’s ODE (both  sets of parameters are set simultaneuosly, because they should be the same anyway).
+		"""
+		self.integrator.set_params(*args)
+
 	def set_f_params(self, *args):
-		"""
-		Same as for SciPy’s ODE, except that it also sets the parameters of the Jacobian (because they should be the same anyway).
-		"""
-		self.integrator.set_f_params  (*args)
-		self.integrator.set_jac_params(*args)
+		warn("This function has been replaced by `set_parameters`")
+		self.integrator.set_params(*args)
 	
 	def set_jac_params(self, *args):
-		"""
-		Same as for SciPy’s ODE, except that it also sets the parameters of `f` (because they should be the same anyway).
-		"""
-		self.set_f_params(*args)
+		warn("This function has been replaced by `set_parameters`")
+		self.integrator.set_params(*args)
 	
 	def integrate(self,*args,**kwargs):
 		return self.integrator.integrate(*args,**kwargs)

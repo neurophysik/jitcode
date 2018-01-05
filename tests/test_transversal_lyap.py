@@ -81,8 +81,8 @@ for scenario in scenarios:
 	ODE2.set_integrator("dopri5")
 	
 	for coupling in couplings:
-		ODE1.set_f_params(coupling["k"])
-		ODE2.set_f_params(coupling["k"])
+		ODE1.set_parameters(coupling["k"])
+		ODE2.set_parameters(coupling["k"])
 		
 		if coupling["sign"]<0:
 			initial_state = np.random.random(n)
