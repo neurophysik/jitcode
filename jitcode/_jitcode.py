@@ -611,7 +611,7 @@ class jitcode(jitcxde):
 		
 		# Restore state and params, if applicable:
 		try:
-			self.integrator.set_initial_value(old_integrator._y,old_integrator.t)
+			self.set_initial_value(old_integrator._y,old_integrator.t)
 		except (AttributeError,RuntimeError):
 			pass
 		self.integrator.set_params(*old_integrator.params)
