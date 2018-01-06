@@ -44,6 +44,9 @@ class IVP_wrapper(object):
 	def __init__(self,name,f,jac=None,with_params=False,**kwargs):
 		info = integrator_info(name)
 		self.ivp_class = info["integrator"]
+		self.f = f
+		self.jac = jac
+		self.wants_jac = info["wants_jac"]
 		
 		self.kwargs = {
 				"t_bound": inf,
@@ -51,40 +54,53 @@ class IVP_wrapper(object):
 			}
 		self.kwargs.update(kwargs)
 		
+		self.with_params = with_params
 		self.params = ()
-		if with_params:
-			self.kwargs["fun"] = lambda t,y: f(t,y,*self.params)
-		else:
-			self.kwargs["fun"] = f
-		
-		if info["wants_jac"]:
-			if with_params:
-				self.kwargs["jac"] = lambda t,y: jac(t,y,*self.params)
-			else:
-				self.kwargs["jac"] = jac
+		self.kwargs["fun"] = self.f
+		if self.wants_jac:
+			self.kwargs["jac"] = jac
 	
 	def set_integrator(self,*args,**kwargs):
 		raise AssertionError("This method should not be called")
 	
+	@property
+	def _y(self):
+		return self.kwargs["y0"]
+	
+	@property
+	def t(self):
+		return self.kwargs["t0"]
+	
+	def try_to_initiate(self):
+		if (
+				"t0" in self.kwargs.keys() and
+				"y0" in self.kwargs.keys() and
+				(bool(self.params) or not self.with_params)
+			):
+			self.backend = self.ivp_class(**self.kwargs)
+	
 	def set_initial_value(self, initial_value, time=0.0):
-		self.t = time
-		self.y = initial_value
 		self.kwargs["t0"] = time
 		self.kwargs["y0"] = initial_value
-		self.backend = self.ivp_class(**self.kwargs)
+		self.try_to_initiate()
 	
 	def set_params(self,*args):
 		self.params = args
+		if self.params:
+			self.kwargs["fun"] = lambda t,y: self.f(t,y,*self.params)
+			if self.wants_jac:
+				self.kwargs["jac"] = lambda t,y: self.jac(t,y,*self.params)
+			self.try_to_initiate()
 	
 	def integrate(self,t):
 		while self.backend.t < t:
 			self.backend.step()
-		self._y = self.backend.dense_output()(t)
-		self.t = t
+		self.kwargs["y0"] = self.backend.dense_output()(t)
+		self.kwargs["t0"] = t
 		if self.backend.status == "failed":
 			raise UnsuccessfulIntegration
 		else:
-			return self._y
+			return self.kwargs["y0"]
 	
 	def successful(self):
 		return self.backend.status != "failed"
@@ -95,12 +111,12 @@ class IVP_wrapper_no_interpolation(IVP_wrapper):
 		self.backend.status = "running"
 		while self.backend.status == "running":
 			self.backend.step()
-		self._y = self.backend.y
-		self.t = t
+		self.kwargs["y0"] = self.backend.y
+		self.kwargs["t0"] = t
 		if self.backend.status == "failed":
 			raise UnsuccessfulIntegration
 		else:
-			return self._y
+			return self.kwargs["y0"]
 
 class ODE_wrapper(ode):
 	"""
