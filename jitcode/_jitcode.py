@@ -699,6 +699,12 @@ class jitcode_lyap(jitcode):
 		
 		super(jitcode_lyap, self).set_initial_value(hstack(new_y), time)
 	
+	def set_integrator(self,name,interpolate=False,**kwargs):
+		"""
+		Same as for `jitcode` except that `interpolate` defaults to False. This is to avoid an accumulation error through the nature of the interpolation algorithm.
+		"""
+		super(jitcode_lyap,self).set_integrator(name,interpolate,**kwargs)
+	
 	def norms(self):
 		n = self.n_basic
 		tangent_vectors = [ self._y[(i+1)*n:(i+2)*n] for i in range(self._n_lyap) ]
@@ -801,7 +807,7 @@ class jitcode_transversal_lyap(jitcode):
 				n = self.n,
 				**kwargs
 			)
-		
+	
 	def set_initial_value(self, y, time=0.0):
 		"""
 		Like the analogous function of `jitcode`/`scipy.integrate.ode`, except that only one initial value per group of synchronised components has to be provided (in the same order as the `groups` argument of the constructor).
@@ -812,6 +818,12 @@ class jitcode_transversal_lyap(jitcode):
 		new_y[self.G.main_indices] = y
 		new_y[self.G.tangent_indices] = random_direction(len(self.G.tangent_indices))
 		super(jitcode_transversal_lyap, self).set_initial_value(new_y, time)
+	
+	def set_integrator(self,name,interpolate=False,**kwargs):
+		"""
+		Same as for `jitcode` except that `interpolate` defaults to False. This is to avoid an accumulation error through the nature of the interpolation algorithm.
+		"""
+		super(jitcode_transversal_lyap,self).set_integrator(name,interpolate,**kwargs)
 	
 	def norm(self):
 		tangent_vector = self._y[self.G.tangent_indices]
