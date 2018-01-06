@@ -6,7 +6,7 @@ import platform
 import shutil
 import unittest
 from tempfile import mkdtemp
-from random import shuffle
+from random import shuffle, sample
 
 import numpy as np
 from numpy.testing import assert_allclose
@@ -15,6 +15,26 @@ from symengine import symbols
 
 from jitcode import jitcode, y, jitcode_lyap, UnsuccessfulIntegration
 from jitcode._jitcode import _is_C, _is_lambda
+
+integrators = [
+		#  name     with_jac
+		("dopri5"  , False),
+		("dop853"  , False),
+		("lsoda"   , True ),
+		("vode"    , True ),
+		("RK23"    , False),
+		("RK45"    , False),
+		("Radau"   , True ),
+		("BDF"     , True ),
+		("LSODA"   , True ),
+	]
+
+def some_int(with_jac=None):
+	candidates = [
+			I[0] for I in integrators
+			if (with_jac is None or I[1]==with_jac)
+		]
+	return sample(candidates,1)[0]
 
 # control values:
 
@@ -70,7 +90,7 @@ class basic_test(unittest.TestCase):
 	@classmethod
 	def setUpClass(self):
 		self.argdict = {"f_sym": f}
-		
+	
 	def setUp(self):
 		self.directory = mkdtemp()
 	
@@ -82,14 +102,14 @@ class basic_test(unittest.TestCase):
 	
 	def test_standard_order(self):
 		self.ODE = jitcode(**self.argdict)
-		self.ODE.set_integrator('dopri5')
+		self.ODE.set_integrator(some_int(False))
 		self.initialise_integrator()
 		self.assertTrue(_is_C(self.ODE.f))
 		self.assertIsNone(self.ODE.jac)
 	
 	def test_standard_order_with_jac(self):
 		self.ODE = jitcode(**self.argdict)
-		self.ODE.set_integrator('vode')
+		self.ODE.set_integrator(some_int(True))
 		self.initialise_integrator()
 		self.assertTrue(_is_C(self.ODE.f))
 		self.assertTrue(_is_C(self.ODE.jac))
@@ -97,14 +117,14 @@ class basic_test(unittest.TestCase):
 	def test_heavily_chunked_f(self):
 		self.ODE = jitcode(wants_jacobian=True, **self.argdict)
 		self.ODE.generate_f_C(chunk_size=1,do_cse=True)
-		self.ODE.set_integrator('dopri5')
+		self.ODE.set_integrator(some_int())
 		self.initialise_integrator()
 		self.assertTrue(_is_C(self.ODE.f))
 	
 	def test_heavily_chunked_jac(self):
 		self.ODE = jitcode(**self.argdict)
 		self.ODE.generate_jac_C(chunk_size=1,do_cse=True)
-		self.ODE.set_integrator('vode')
+		self.ODE.set_integrator(some_int(True))
 		self.initialise_integrator()
 		self.assertTrue(_is_C(self.ODE.f))
 		self.assertTrue(_is_C(self.ODE.jac))
@@ -112,7 +132,7 @@ class basic_test(unittest.TestCase):
 	def test_heavily_chunked_helpers(self):
 		self.ODE = jitcode(**self.argdict)
 		self.ODE.generate_helpers_C(chunk_size=1)
-		self.ODE.set_integrator('vode')
+		self.ODE.set_integrator(some_int(True))
 		self.initialise_integrator()
 		self.assertTrue(_is_C(self.ODE.f))
 		self.assertTrue(_is_C(self.ODE.jac))
@@ -123,7 +143,7 @@ class basic_test(unittest.TestCase):
 		self.ODE.generate_jac_C(chunk_size=1,do_cse=True)
 		self.ODE.generate_helpers_C(chunk_size=1)
 		self.ODE.compile_C(omp=True)
-		self.ODE.set_integrator('lsoda')
+		self.ODE.set_integrator(some_int(True))
 		self.initialise_integrator()
 		self.assertTrue(_is_C(self.ODE.f))
 		self.assertTrue(_is_C(self.ODE.jac))
@@ -131,13 +151,13 @@ class basic_test(unittest.TestCase):
 	def test_initialise_first(self):
 		self.ODE = jitcode(**self.argdict)
 		self.initialise_integrator()
-		self.ODE.set_integrator('dop853')
+		self.ODE.set_integrator(some_int())
 		self.assertTrue(_is_C(self.ODE.f))
 	
 	def test_lambdas(self):
 		self.ODE = jitcode(**self.argdict)
 		self.ODE.generate_lambdas()
-		self.ODE.set_integrator('dopri5')
+		self.ODE.set_integrator(some_int(False))
 		self.initialise_integrator()
 		self.assertTrue(_is_lambda(self.ODE.f))
 		self.assertIsNone(self.ODE.jac)
@@ -145,7 +165,7 @@ class basic_test(unittest.TestCase):
 	def test_lambdas_with_jac(self):
 		self.ODE = jitcode(wants_jacobian=True,**self.argdict)
 		self.ODE.generate_lambdas()
-		self.ODE.set_integrator('vode')
+		self.ODE.set_integrator(some_int(True))
 		self.initialise_integrator()
 		self.assertTrue(_is_lambda(self.ODE.f))
 		self.assertTrue(_is_lambda(self.ODE.jac))
@@ -154,13 +174,13 @@ class basic_test(unittest.TestCase):
 		self.ODE = jitcode(**self.argdict)
 		self.ODE.generate_lambdas()
 		self.assertIsNone(self.ODE.jac)
-		self.ODE.set_integrator('vode')
+		self.ODE.set_integrator(some_int(True))
 		self.initialise_integrator()
 	
 	def test_compile_without_jac(self):
 		self.ODE = jitcode(**self.argdict)
 		self.ODE.compile_C()
-		self.ODE.set_integrator('lsoda')
+		self.ODE.set_integrator(some_int(True))
 		self.initialise_integrator()
 		self.assertTrue(_is_C(self.ODE.f))
 		self.assertTrue(_is_C(self.ODE.jac))
@@ -168,7 +188,7 @@ class basic_test(unittest.TestCase):
 	def test_generate_jac_manually(self):
 		self.ODE = jitcode(**self.argdict)
 		self.ODE.generate_jac_C()
-		self.ODE.set_integrator('dopri5')
+		self.ODE.set_integrator(some_int(False))
 		self.initialise_integrator()
 		self.assertTrue(_is_C(self.ODE.f))
 		self.assertTrue(_is_C(self.ODE.jac))
@@ -179,7 +199,7 @@ class basic_test(unittest.TestCase):
 		folder, filename = os.path.split(destination)
 		shutil.move(filename,self.tmpfile(filename))
 		self.ODE = jitcode(n=len(f),module_location=self.tmpfile(filename))
-		self.ODE.set_integrator('dopri5')
+		self.ODE.set_integrator(some_int(False))
 		self.initialise_integrator()
 		self.assertTrue(_is_C(self.ODE.f))
 		self.assertIsNone(self.ODE.jac)
@@ -189,23 +209,10 @@ class basic_test(unittest.TestCase):
 		assert_allclose( self.ODE.f(0.0,y0,*self.extra_args), f_of_y0, rtol=1e-5 )
 		if not self.ODE.jac is None:
 			assert_allclose( self.ODE.jac(0.0,y0,*self.extra_args), jac_of_y0, rtol=1e-5)
-		assert_allclose( self.ODE.integrate(1.0), y1, rtol=1e-5 )
+		assert_allclose( self.ODE.integrate(1.0), y1, rtol=1e-3 )
 		if platform.system() != "Windows":
 			# Windows blocks loaded module files from removal.
 			shutil.rmtree(self.directory)
-
-integrators = [
-		#  name     with_jac
-		("dopri5"  , False),
-		("dop853"  , False),
-		("lsoda"   , True ),
-		("vode"    , True ),
-		("RK23"    , False),
-		("RK45"    , False),
-		("Radau"   , True ),
-		("BDF"     , True ),
-		("LSODA"   , True ),
-	]
 
 class integrator_test(unittest.TestCase):
 	def test_normal_integration(self):
@@ -254,7 +261,7 @@ class integrator_test(unittest.TestCase):
 				margin = standard_error(data[1000:], axis=0)
 				self.assertLess( np.max(margin), 0.003 )
 				for i in range(n_lyap):
-					self.assertLess( result[i]-lyaps[i], 3*margin[i] )
+					self.assertLess( result[i]-lyaps[i], 5*margin[i] )
 
 f1, f2, f3, f4 = symbols("f1, f2, f3, f4")
 coupling, first_y, first_y_sq = symbols("coupling, first_y, first_y_sq")
@@ -290,18 +297,18 @@ class helpers_test(unittest.TestCase):
 		x = np.random.random(len(f))
 		ODE1 = jitcode(f)
 		ODE2 = jitcode(f_alt, get_f_alt_helpers())
-		ODE1.set_integrator("vode")
-		ODE2.set_integrator("vode")
-		assert_allclose(ODE1.integrator.jac(0.0,x), ODE2.integrator.jac(0.0,x))
+		ODE1.set_integrator(some_int(True))
+		ODE2.set_integrator(some_int(True))
+		assert_allclose(ODE1.jac(0.0,x), ODE2.jac(0.0,x))
 	
 	def test_identity_of_lyaps(self):
 		n = len(f)
 		x = np.random.random((n+1)*n)
 		ODE1 = jitcode_lyap(f,n_lyap=n)
 		ODE2 = jitcode_lyap(f_alt,helpers=get_f_alt_helpers(),n_lyap=n)
-		ODE1.set_integrator("dopri5")
-		ODE2.set_integrator("dopri5")
-		assert_allclose(ODE1.integrator.f(0.0,x), ODE2.integrator.f(0.0,x))
+		ODE1.set_integrator(some_int())
+		ODE2.set_integrator(some_int())
+		assert_allclose(ODE1.f(0.0,x), ODE2.f(0.0,x))
 
 class lyapunov_test(unittest.TestCase):
 	def setUp(self):
@@ -309,25 +316,25 @@ class lyapunov_test(unittest.TestCase):
 	
 	def test_lyapunov(self):
 		self.ODE = jitcode_lyap(f,n_lyap=self.n)
-		self.ODE.set_integrator("dopri5")
+		self.ODE.set_integrator(some_int(False))
 	
 	def test_lyapunov_with_jac(self):
 		self.ODE = jitcode_lyap(f,n_lyap=self.n)
-		self.ODE.set_integrator("vode")
+		self.ODE.set_integrator(some_int(True))
 	
 	def test_lyapunov_with_helpers(self):
 		self.ODE = jitcode_lyap(f_alt,helpers=get_f_alt_helpers(),n_lyap=self.n)
-		self.ODE.set_integrator("dopri5")
+		self.ODE.set_integrator(some_int(False))
 	
 	def test_lyapunov_with_helpers_and_jac(self):
 		self.ODE = jitcode_lyap(f_alt,helpers=get_f_alt_helpers(),n_lyap=self.n)
-		self.ODE.set_integrator("vode")
+		self.ODE.set_integrator(some_int(True))
 	
 	def test_lyapunov_save_and_load_with_jac(self):
 		self.ODE = jitcode_lyap(f,n_lyap=self.n,wants_jacobian=True)
 		filename = self.ODE.save_compiled(overwrite=True)
 		self.ODE = jitcode_lyap((),n=self.n,n_lyap=self.n,module_location=filename)
-		self.ODE.set_integrator("vode")
+		self.ODE.set_integrator(some_int(True))
 		self.assertTrue(_is_C(self.ODE.f))
 		self.assertTrue(_is_C(self.ODE.jac))
 	
@@ -344,7 +351,7 @@ class lyapunov_test(unittest.TestCase):
 		margin = standard_error(data[1000:], axis=0)
 		self.assertLess( np.max(margin), 0.003 )
 		for i in range(self.n):
-			self.assertLess( result[i]-lyaps[i], 3*margin[i] )
+			self.assertLess( result[i]-lyaps[i], 5*margin[i] )
 
 def f_generator():
 	for entry in f:
@@ -377,8 +384,8 @@ class basic_test_with_params(basic_test):
 	def initialise_integrator(self):
 		if isinstance(self.ODE,jitcode) and self.ODE.f_sym():
 			self.ODE.check()
-		self.ODE.set_initial_value(y0,0.0)
 		self.ODE.set_parameters(*params_args)
+		self.ODE.set_initial_value(y0,0.0)
 		self.extra_args = params_args
 
 class errors_test(unittest.TestCase):
