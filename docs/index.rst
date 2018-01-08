@@ -124,7 +124,9 @@ Command reference
 
 .. automodule:: _jitcode
 	:members:
-	:exclude-members: jitcode, jitcode_lyap, jitcode_restricted_lyap
+	:exclude-members: jitcode, jitcode_lyap, jitcode_restricted_lyap, jitcode_transversal_lyap
+
+.. autoclass:: integrator_tools.UnsuccessfulIntegration
 
 The main class
 ^^^^^^^^^^^^^^
