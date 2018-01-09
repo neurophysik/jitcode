@@ -58,7 +58,7 @@ def f_generator():
 	for entry in f:
 		yield entry
 
-with_generator = {"f_sym": f_generator}
+with_generator = { "f_sym":f_generator, "n":n }
 
 # with helpers
 
