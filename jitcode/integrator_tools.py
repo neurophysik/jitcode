@@ -96,30 +96,34 @@ class IVP_wrapper(object):
 			self.try_to_initiate()
 	
 	def integrate(self,t):
-		while self.backend.t < t:
-			self.backend.step()
-		self.kwargs["y0"] = self.backend.dense_output()(t)
-		self.kwargs["t0"] = t
-		if self.backend.status == "failed":
-			raise UnsuccessfulIntegration
-		else:
-			return self.kwargs["y0"]
+		if self.backend.t < t:
+			while self.backend.t < t:
+				self.backend.step()
+				if self.backend.status == "failed":
+					raise UnsuccessfulIntegration
+			self.kwargs["y0"] = self.backend.dense_output()(t)
+			self.kwargs["t0"] = t
+		elif self.backend.t > t:
+			raise ValueError("Target time smaller than current time. Cannot integrate backwards in time")
+		return self.kwargs["y0"]
 	
 	def successful(self):
 		return self.backend.status != "failed"
 
 class IVP_wrapper_no_interpolation(IVP_wrapper):
 	def integrate(self,t):
-		self.backend.t_bound = t
-		self.backend.status = "running"
-		while self.backend.status == "running":
-			self.backend.step()
-		self.kwargs["y0"] = self.backend.y
-		self.kwargs["t0"] = t
-		if self.backend.status == "failed":
-			raise UnsuccessfulIntegration
-		else:
-			return self.kwargs["y0"]
+		if self.backend.t < t:
+			self.backend.t_bound = t
+			self.backend.status = "running"
+			while self.backend.status == "running":
+				self.backend.step()
+			self.kwargs["y0"] = self.backend.y
+			self.kwargs["t0"] = t
+			if self.backend.status == "failed":
+				raise UnsuccessfulIntegration
+		elif self.backend.t > t:
+			raise ValueError("Target time smaller than current time. Cannot integrate backwards in time")
+		return self.kwargs["y0"]
 
 class ODE_wrapper(ode):
 	"""
@@ -158,12 +162,12 @@ class empty_integrator(object):
 	@property
 	def t(self):
 		if self._t is None:
-			raise RuntimeError("You must call set_integrator first.")
+			raise RuntimeError("You must call set_initial_value first.")
 		else:
 			return self._t
 	
 	def set_integrator(self,*args,**kwargs):
-		raise AssertionError
+		raise RuntimeError("This function must not be called")
 	
 	def set_initial_value(self, initial_value, time=0.0):
 		self._y = initial_value
