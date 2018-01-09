@@ -50,7 +50,7 @@ class TestBasic(unittest.TestCase):
 	params = ()
 	
 	def setUp(self):
-		self.ODE = jitcode(f_sym=f,wants_jacobian=True)
+		self.ODE = jitcode(f_sym=f)
 	
 	def test_default(self):
 		self.ODE.generate_f_C()
