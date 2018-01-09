@@ -165,10 +165,12 @@ static PyObject * py_jac(PyObject *self, PyObject *args)
 }
 {% endif %}
 
+#define SIGNATURE "(t,y,{{'a'*control_pars|length}}/)\n--\n\n"
+
 static PyMethodDef {{module_name}}_methods[] = {
-	{"f", py_f, METH_VARARGS, NULL},
+	{"f", py_f, METH_VARARGS, "f" SIGNATURE},
 	{% if has_Jacobian: %}
-	{"jac", py_jac, METH_VARARGS, NULL},
+	{"jac", py_jac, METH_VARARGS, "jac" SIGNATURE},
 	{% endif %}
 	{NULL, NULL, 0, NULL}
 };

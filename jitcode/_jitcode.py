@@ -615,7 +615,6 @@ class jitcode(jitcxde):
 					name,
 					self.f,
 					self.jac,
-					with_params = bool(self.control_pars),
 					**integrator_params
 				)
 		

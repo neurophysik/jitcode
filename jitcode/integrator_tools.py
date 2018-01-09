@@ -41,7 +41,7 @@ class IVP_wrapper(object):
 	This is a wrapper around the integrators from scipy.integrate.solve_ivp making them work like scipy.integrate.ode or raising errors when this is not possible.
 	"""
 	
-	def __init__(self,name,f,jac=None,with_params=False,**kwargs):
+	def __init__(self,name,f,jac=None,**kwargs):
 		info = integrator_info(name)
 		self.ivp_class = info["integrator"]
 		self.f = f
@@ -54,7 +54,7 @@ class IVP_wrapper(object):
 			}
 		self.kwargs.update(kwargs)
 		
-		self.with_params = with_params
+		self.with_params = len(signature(self.f).parameters) > 2
 		self.params = ()
 		self.kwargs["fun"] = self.f
 		if self.wants_jac:
