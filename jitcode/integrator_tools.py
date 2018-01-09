@@ -54,7 +54,6 @@ class IVP_wrapper(object):
 			}
 		self.kwargs.update(kwargs)
 		
-		self.with_params = len(signature(self.f).parameters) > 2
 		self.params = ()
 		self.kwargs["fun"] = self.f
 		if self.wants_jac:
@@ -70,6 +69,10 @@ class IVP_wrapper(object):
 	@property
 	def t(self):
 		return self.kwargs["t0"]
+	
+	@property
+	def with_params(self):
+		return len(signature(self.f).parameters) > 2
 	
 	def try_to_initiate(self):
 		if (
