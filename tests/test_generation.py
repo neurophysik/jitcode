@@ -1,18 +1,12 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
 
-import os
-import platform
-import shutil
 import unittest
-from tempfile import mkdtemp
-from random import shuffle, sample
 
-import numpy as np
+from numpy.random import random
 from numpy.testing import assert_allclose
-from symengine import symbols
 
-from jitcode import jitcode, y, jitcode_lyap
+from jitcode import jitcode, jitcode_lyap
 from jitcode._jitcode import _is_C, _is_lambda
 
 from scenarios import (
@@ -70,7 +64,7 @@ class TestHelpers(TestBasic):
 
 class FurtherHelpersTests(unittest.TestCase):
 	def test_identity_of_jacs(self):
-		x = np.random.random(n)
+		x = random(n)
 		
 		def evaluate(scenario):
 			ODE = jitcode(**scenario)
@@ -88,7 +82,7 @@ class FurtherHelpersTests(unittest.TestCase):
 			)
 	
 	def test_identity_of_lyaps(self):
-		x = np.random.random((n+1)*n)
+		x = random((n+1)*n)
 		
 		def evaluate(scenario):
 			ODE = jitcode_lyap(**scenario,n_lyap=n)
