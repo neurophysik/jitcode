@@ -6,9 +6,8 @@ import unittest
 import numpy as np
 from numpy.testing import assert_allclose
 from numpy.random import random
-from symengine import symbols
 
-from jitcode import jitcode, y
+from jitcode import jitcode
 from jitcode.integrator_tools import empty_integrator, IVP_wrapper, IVP_wrapper_no_interpolation, ODE_wrapper, UnsuccessfulIntegration
 
 from scenarios import y0, y1, vanilla, with_params, params_args, n, n_params
