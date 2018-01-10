@@ -154,8 +154,6 @@ The following feature of SciPy’s ODE or Solve IVP cannot be used through JiTCO
 
 *	The `zvode` integrator and complex arithmetics in general, as they are not easy implementable in C.
 
-*	Using control parameters with the integrators from Solve IVP.
-
 .. _reference:
 
 References
