@@ -1,5 +1,4 @@
 from inspect import signature
-from warnings import warn
 
 from scipy.integrate import ode
 from scipy.integrate._ode import find_integrator
@@ -38,7 +37,7 @@ def integrator_info(name):
 
 class IVP_wrapper(object):
 	"""
-	This is a wrapper around the integrators from scipy.integrate.solve_ivp making them work like scipy.integrate.ode or raising errors when this is not possible.
+	This is a wrapper around the integrators from scipy.integrate.solve_ivp making them work like scipy.integrate.ode (mostly).
 	"""
 	
 	def __init__(self,name,f,jac=None,**kwargs):
@@ -47,17 +46,17 @@ class IVP_wrapper(object):
 		self.f = f
 		self.jac = jac
 		self.wants_jac = info["wants_jac"]
+		self.params = ()
 		
+		# Dictionary to be passed as arguments to the integrator and store stuff
 		self.kwargs = {
 				"t_bound": inf,
 				"vectorized": False,
+				"fun": self.f
 			}
-		self.kwargs.update(kwargs)
-		
-		self.params = ()
-		self.kwargs["fun"] = self.f
 		if self.wants_jac:
-			self.kwargs["jac"] = jac
+			self.kwargs["jac"] = self.jac
+		self.kwargs.update(kwargs)
 	
 	def set_integrator(self,*args,**kwargs):
 		raise AssertionError("This method should not be called")
@@ -75,6 +74,9 @@ class IVP_wrapper(object):
 		return len(signature(self.f).parameters) > 2
 	
 	def try_to_initiate(self):
+		"""
+		initiate the integrator if all required arguments have been set
+		"""
 		if (
 				"t0" in self.kwargs.keys() and
 				"y0" in self.kwargs.keys() and
@@ -90,6 +92,7 @@ class IVP_wrapper(object):
 	def set_params(self,*args):
 		self.params = args
 		if self.params:
+			# use wrapper to handle parameters
 			self.kwargs["fun"] = lambda t,y: self.f(t,y,*self.params)
 			if self.wants_jac:
 				self.kwargs["jac"] = lambda t,y: self.jac(t,y,*self.params)
@@ -113,21 +116,26 @@ class IVP_wrapper(object):
 class IVP_wrapper_no_interpolation(IVP_wrapper):
 	def integrate(self,t):
 		if self.backend.t < t:
+			# Manually un-finish the integrator:
 			self.backend.t_bound = t
 			self.backend.status = "running"
+			
 			while self.backend.status == "running":
 				self.backend.step()
+			
 			self.kwargs["y0"] = self.backend.y
 			self.kwargs["t0"] = t
 			if self.backend.status == "failed":
 				raise UnsuccessfulIntegration
+		
 		elif self.backend.t > t:
 			raise ValueError("Target time smaller than current time. Cannot integrate backwards in time")
+		
 		return self.kwargs["y0"]
 
 class ODE_wrapper(ode):
 	"""
-	This is a wrapper around Scipy’s ODE that does nothing now but will be expanded soon.
+	This is a wrapper around Scipy’s ODE that mainly avoids confusing and pointless error messages and throws proper exceptions.
 	"""
 	def integrate(self,t,step=False,relax=False):
 		if t>self.t or step or relax:
@@ -151,7 +159,7 @@ class ODE_wrapper(ode):
 
 class empty_integrator(object):
 	"""
-	This is a dummy class that mimicks some basic properties of scipy.integrate.ode. It exists to store states and parameters and to raise exceptions in the same interface.
+	This is a dummy class that mimicks some basic properties of scipy.integrate.ode or the above wrappers, respectively. It exists to store states and parameters and to raise exceptions in the same interface.
 	"""
 
 	def __init__(self):
