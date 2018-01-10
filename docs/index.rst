@@ -24,7 +24,7 @@ This design has the following advantages:
 *	**Automatically calculated Jacobian and Lyapunov exponents**
 	As the derivative is provided symbolically, SymEngines’s automatic differentiation routines can be employed to calculate the Jacobian desired by some integrators as well as the ODE for the tangent vector required for calculating the Lyapunov exponents (see `lyapunov`).
 
-*	**Symmbolic interface**
+*	**Symbolic interface**
 	You can enter your differential equations almost like you would on paper.
 	Also, if you are working with SymPy or SymEngine anyway – e.g., to calculate fixed points –, you do not need to bother much with translating your equations.
 
