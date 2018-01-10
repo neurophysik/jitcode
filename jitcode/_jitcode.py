@@ -114,7 +114,6 @@ class jitcode(jitcxde):
 		self.control_pars = control_pars
 		
 		self._wants_jacobian = wants_jacobian
-		self.jac_sym = None
 		self._jac_C_source = False
 		self._helper_C_source = False
 		
@@ -124,6 +123,7 @@ class jitcode(jitcxde):
 			self.f = None
 			self.jac = None
 		else:
+			# Load derivative and Jacobian if a compiled module has been provided
 			self.f = self.jitced.f
 			self.jac = self.jitced.jac if hasattr(self.jitced,"jac") else None
 		
@@ -131,8 +131,6 @@ class jitcode(jitcxde):
 		self._number_of_f_helpers = None
 		self._number_of_general_helpers = len(self.helpers)
 		
-		self._lambda_subs = None
-		self._lambda_args = None
 		self.general_subs = {
 				control_par: symengine.Symbol("parameter_"+control_par.name)
 				for control_par in self.control_pars
@@ -181,10 +179,12 @@ class jitcode(jitcxde):
 		if self.failed_check:
 			raise ValueError("Check failed.")
 	
-	def _generate_jac_sym(self):
-		if self.jac_sym is None:
+	@property
+	def jac_sym(self):
+		if not hasattr(self,"_jac_sym"):
 			self.generate_jac_sym()
-			#self.report("generated symbolic Jacobian")
+			self.report("generated symbolic Jacobian")
+		return self._jac_sym
 	
 	def generate_jac_sym(self, simplify=True):
 		"""
@@ -196,7 +196,7 @@ class jitcode(jitcxde):
 			Whether the resulting Jacobian should be `simplified <http://docs.sympy.org/dev/modules/simplify/simplify.html>`_ (with `ratio=1.0`). This is almost always a good thing.
 		"""
 		
-		self.jac_sym = _jac_from_f_with_helpers(self.f_sym, self.helpers, simplify, self.n)
+		self._jac_sym = _jac_from_f_with_helpers(self.f_sym, self.helpers, simplify, self.n)
 	
 	def _default_arguments(self):
 		basics = [
@@ -299,7 +299,6 @@ class jitcode(jitcxde):
 		"""
 		
 		self._generate_helpers_C()
-		self._generate_jac_sym()
 		
 		jac_sym_wc = ( (entry.subs(self.general_subs) for entry in line) for line in self.jac_sym )
 		self.sparse_jac = sparse
@@ -444,7 +443,7 @@ class jitcode(jitcxde):
 			self.report("generated lambdified f")
 	
 	def _prepare_lambdas(self):
-		if self._lambda_subs is None or self._lambda_args is None:
+		if not hasattr(self,"_lambda_subs") or not hasattr(self,"_lambda_args"):
 			if self.helpers:
 				warn("Lambdification handles helpers by plugging them in. This may be very inefficient")
 			
@@ -501,7 +500,6 @@ class jitcode(jitcxde):
 		"""
 		
 		self._prepare_lambdas()
-		self._generate_jac_sym()
 		
 		jac_matrix = symengine.Matrix([
 				[ordered_subs(entry,self._lambda_subs) for entry in line]
