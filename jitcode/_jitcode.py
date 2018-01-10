@@ -88,7 +88,7 @@ class jitcode(jitcxde):
 		Length of `f_sym`. While JiTCODE can easily determine this itself (and will, if necessary), this may take some time if `f_sym` is a generator function and `n` is large. Take care that this value is correct – if it isn’t, you will not get a helpful error message.
 	
 	control_pars : iterable of symbols
-		Each symbol corresponds to a control parameter that can be used when defining the equations and set after compilation `scipy.ode`’s `set_f_params` or `set_jac_params` (in the same order as given here). Using this makes sense if you need to do a parameter scan with short integrations for each parameter and you are spending a considerable amount of time compiling.
+		Each symbol corresponds to a control parameter that can be used when defining the equations and set after compilation using `set_parameters` (in the same order as given here). Using this makes sense if you need to do a parameter scan with short integrations for each parameter and you spend a considerable amount of time compiling.
 	
 	verbose : boolean
 		Whether JiTCODE shall give progress reports on the processing steps.
