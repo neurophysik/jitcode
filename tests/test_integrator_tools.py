@@ -12,6 +12,8 @@ from jitcode.integrator_tools import empty_integrator, IVP_wrapper, IVP_wrapper_
 
 from scenarios import y0, y1, vanilla, with_params, params_args, n, n_params
 
+# Generating compiled functions
+
 ODE = jitcode(**vanilla,verbose=False,wants_jacobian=True)
 ODE.compile_C()
 f,jac = ODE.f,ODE.jac
@@ -39,6 +41,10 @@ f_params,jac_params = ODE.f,ODE.jac
 # -----------------------------
 
 class TestSkeleton(object):
+	"""
+	This class exists to be inherited by a test that adds self.initialise to intialise self.integrator.
+	"""
+	
 	def control_result(self):
 		result = self.integrator.integrate(1.0)
 		assert_allclose( result, y1, rtol=1e-4 )
@@ -127,6 +133,7 @@ class TestLSODA(unittest.TestCase,TestSkeleton):
 	def initialise(self,f,jac,**kwargs):
 		self.integrator = IVP_wrapper("LSODA",f,jac,**kwargs)
 	
+	# Because this integrator likes to flood the screen with status reports rather than throwing an error
 	def test_failed_integration(self):
 		pass
 
@@ -145,6 +152,7 @@ class TestLsoda(unittest.TestCase,TestSkeleton):
 		self.integrator = ODE_wrapper(f,jac)
 		self.integrator.set_integrator("lsoda")
 	
+	# Because this integrator likes to flood the screen with status reports rather than throwing an error
 	def test_failed_integration(self):
 		pass
 
@@ -153,6 +161,7 @@ class TestVode(unittest.TestCase,TestSkeleton):
 		self.integrator = ODE_wrapper(f,jac)
 		self.integrator.set_integrator("vode")
 	
+	# Because this integrator likes to flood the screen with status reports rather than throwing an error
 	def test_failed_integration(self):
 		pass
 
