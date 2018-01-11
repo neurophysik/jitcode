@@ -110,12 +110,11 @@ class jitcode(jitcxde):
 		
 		self.f_sym = self._handle_input(f_sym)
 		self._f_C_source = False
-		self.helpers = sort_helpers(sympify_helpers(helpers or []))
-		self.control_pars = control_pars
-		
-		self._wants_jacobian = wants_jacobian
 		self._jac_C_source = False
 		self._helper_C_source = False
+		self.helpers = sort_helpers(sympify_helpers(helpers or []))
+		self.control_pars = control_pars
+		self._wants_jacobian = wants_jacobian
 		
 		self.integrator = empty_integrator()
 		
@@ -129,7 +128,6 @@ class jitcode(jitcxde):
 		
 		self._number_of_jac_helpers = None
 		self._number_of_f_helpers = None
-		self._number_of_general_helpers = len(self.helpers)
 		
 		self.general_subs = {
 				control_par: symengine.Symbol("parameter_"+control_par.name)
@@ -200,8 +198,8 @@ class jitcode(jitcxde):
 	
 	def _default_arguments(self):
 		basics = [
-			("t", "double const"),
-			("Y", "PyArrayObject *__restrict const")
+				("t", "double const"),
+				("Y", "PyArrayObject *__restrict const")
 			]
 		pars = [("parameter_"+par.name, "double const") for par in self.control_pars]
 		return basics + pars
@@ -230,6 +228,7 @@ class jitcode(jitcxde):
 		
 		self._generate_helpers_C()
 		
+		# working copy
 		f_sym_wc = (entry.subs(self.general_subs) for entry in self.f_sym())
 		
 		if simplify is None:
@@ -239,7 +238,7 @@ class jitcode(jitcxde):
 		
 		arguments = self._default_arguments()
 		
-		if self._number_of_general_helpers:
+		if self.helpers:
 			arguments.append(("general_helper","double const *__restrict const"))
 		
 		if do_cse:
@@ -267,10 +266,10 @@ class jitcode(jitcxde):
 		
 		set_dy = symengine.Function("set_dy")
 		self.render_and_write_code(
-			(set_dy(i,entry) for i,entry in enumerate(f_sym_wc)),
-			name = "f",
-			chunk_size = chunk_size,
-			arguments = arguments+[("dY", "PyArrayObject *__restrict const")]
+				(set_dy(i,entry) for i,entry in enumerate(f_sym_wc)),
+				name = "f",
+				chunk_size = chunk_size,
+				arguments = arguments+[("dY", "PyArrayObject *__restrict const")]
 			)
 		
 		self._f_C_source = True
@@ -300,18 +299,22 @@ class jitcode(jitcxde):
 		
 		self._generate_helpers_C()
 		
+		# working copy
 		jac_sym_wc = ( (entry.subs(self.general_subs) for entry in line) for line in self.jac_sym )
 		self.sparse_jac = sparse
 		
 		arguments = self._default_arguments()
-		if self._number_of_general_helpers:
+		if self.helpers:
 			arguments.append(("general_helper","double const *__restrict const"))
 		
 		if do_cse:
 			import sympy
 			get_helper = sympy.Function("get_jac_helper")
 			set_helper = symengine.Function("set_jac_helper")
-			jac_sym_wc = sympy.Matrix([ [sympy.sympify(entry) for entry in line] for line in jac_sym_wc ])
+			jac_sym_wc = sympy.Matrix([
+					[ sympy.sympify(entry) for entry in line ]
+					for line in jac_sym_wc
+				])
 			
 			_cse = sympy.cse(
 					sympy.sympify(jac_sym_wc),
@@ -323,27 +326,27 @@ class jitcode(jitcxde):
 			if more_helpers:
 				arguments.append(("jac_helper","double *__restrict const"))
 				self.render_and_write_code(
-					(set_helper(i, helper[1]) for i,helper in enumerate(more_helpers)),
-					name = "jac_helpers",
-					chunk_size = chunk_size,
-					arguments = arguments,
-					omp = False
+						(set_helper(i, helper[1]) for i,helper in enumerate(more_helpers)),
+						name = "jac_helpers",
+						chunk_size = chunk_size,
+						arguments = arguments,
+						omp = False
 					)
 				self._number_of_jac_helpers = len(more_helpers)
 		
 		set_dfdy = symengine.Function("set_dfdy")
 		
 		self.render_and_write_code(
-			(
-				set_dfdy(i,j,entry)
-				for i,line in enumerate(jac_sym_wc)
-				for j,entry in enumerate(line)
-				if ( (entry != 0) or not self.sparse_jac )
-			),
-			name = "jac",
-			chunk_size = chunk_size,
-			arguments = arguments+[("dfdY", "PyArrayObject *__restrict const")]
-		)
+				(
+					set_dfdy(i,j,entry)
+					for i,line in enumerate(jac_sym_wc)
+					for j,entry in enumerate(line)
+					if ( (entry != 0) or not self.sparse_jac )
+				),
+				name = "jac",
+				chunk_size = chunk_size,
+				arguments = arguments+[("dfdY", "PyArrayObject *__restrict const")]
+			)
 		
 		self._jac_C_source = True
 	
@@ -418,13 +421,13 @@ class jitcode(jitcxde):
 		self._process_modulename(modulename)
 		
 		self._render_template(
-			n = self.n,
-			has_Jacobian = self._jac_C_source,
-			number_of_f_helpers = self._number_of_f_helpers or 0,
-			number_of_jac_helpers = self._number_of_jac_helpers or 0,
-			number_of_general_helpers = len(self.helpers),
-			sparse_jac = self.sparse_jac if self._jac_C_source else None,
-			control_pars = [par.name for par in self.control_pars],
+				n = self.n,
+				has_Jacobian = self._jac_C_source,
+				number_of_f_helpers = self._number_of_f_helpers or 0,
+				number_of_jac_helpers = self._number_of_jac_helpers or 0,
+				number_of_general_helpers = len(self.helpers),
+				sparse_jac = self.sparse_jac if self._jac_C_source else None,
+				control_pars = [par.name for par in self.control_pars],
 			)
 		
 		self._compile_and_load(
@@ -436,11 +439,6 @@ class jitcode(jitcxde):
 		self.f = self.jitced.f
 		if hasattr(self.jitced,"jac"):
 			self.jac = self.jitced.jac
-	
-	def _generate_f_lambda(self):
-		if not _is_lambda(self.f):
-			self.generate_f_lambda()
-			self.report("generated lambdified f")
 	
 	def _prepare_lambdas(self):
 		if not hasattr(self,"_lambda_subs") or not hasattr(self,"_lambda_args"):
@@ -454,6 +452,11 @@ class jitcode(jitcxde):
 				self._lambda_args.append(symbol)
 				self._lambda_subs.append((y(i),symbol))
 			self._lambda_args.extend(self.control_pars)
+	
+	def _generate_f_lambda(self):
+		if not _is_lambda(self.f):
+			self.generate_f_lambda()
+			self.report("generated lambdified f")
 	
 	def generate_f_lambda(self, simplify=None, do_cse=False):
 		"""
@@ -470,6 +473,7 @@ class jitcode(jitcxde):
 		
 		self._prepare_lambdas()
 		
+		# working copy
 		f_sym_wc = (ordered_subs(entry,self._lambda_subs) for entry in self.f_sym())
 		
 		if simplify is None:
@@ -562,21 +566,21 @@ class jitcode(jitcxde):
 	
 	def set_integrator(self,name,nsteps=10**6,interpolate=True,**integrator_params):
 		"""
-		Analogous to the function in SciPy’s ODE with the same name. This automatically generates the derivative and Jacobian, if they do not exist yet and are needed. You can also choose integrators from `scipy.integrate.solve_ivp`.
+		Analogous to the function in SciPy’s ODE with the same name. This automatically generates the derivative and Jacobian if they do not exist yet and are needed. You can also choose integrators from `scipy.integrate.solve_ivp`.
 		
 		Parameters
 		----------
 		name: name of the integrator
 			One of the following (or a new method supported by either backend):
 			
-			* `"BDF"` – Implicit backward-differentiation formula via `solve_ivp`
 			* `"dopri5"` – Dormand’s and Prince’s explicit fifth-order method via `ode`
+			* `"RK45"` – Dormand’s and Prince’s explicit fifth-order method via `solve_ivp`
 			* `"dop853"` – DoP853 (explicit) via `ode`
+			* `"RK23"` – Bogacki’s and Shampine’s explicit third-order method via `solve_ivp`
+			* `"BDF"` – Implicit backward-differentiation formula via `solve_ivp`
 			* `"lsoda"` – LSODA (implicit) via `ode`
 			* `"LSODA"` – LSODA (implicit) via `solve_ivp`
 			* `"Radau"` – The implicit Radau method via `solve_ivp`
-			* `"RK23"` – Bogacki’s and Shampine’s explicit third-order method via `solve_ivp`
-			* `"RK45"` – Dormand’s and Prince’s explicit fifth-order method via `solve_ivp`
 			* `"vode"` – VODE (explicit) via `ode`
 			
 			The `solve_ivp` methods are usually slightly faster for large differential equations, but they come with a massive overhead that makes them considerably slower for small differential equations. Implicit solvers are slower than explicit ones, except for stiff problems. If you don’t know what to choose, start with `"dopri5"`.
@@ -750,6 +754,8 @@ class jitcode_transversal_lyap(jitcode):
 	simplify : boolean
 		Whether the transformed differential equations shall be subjected to SymEngine’s `simplify`. Doing so may speed up the time evolution but may slow down the generation of the code (considerably for large differential equations). If `None`, this will be automatically disabled for `n>10`.
 	"""
+	
+	# Read the accompanying paper to understand the internals of this.
 	
 	def __init__( self, f_sym=(), groups=(), simplify=None, **kwargs ):
 		self.G = GroupHandler(groups)
