@@ -1,6 +1,10 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
 
+"""
+Tests that the code-generation and compilaton or lambdification, respectively, of the derivative and Jacobian works as intended in all kinds of scenarios.
+"""
+
 import unittest
 
 from numpy.random import random

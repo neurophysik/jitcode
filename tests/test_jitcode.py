@@ -17,6 +17,9 @@ from scenarios import (
 	)
 
 class TestOrders(unittest.TestCase):
+	"""
+	tests that the derivative and Jacobian are compiled/generated as intended when calling the several methods of the jitcode object in a certain order.
+	"""
 	def test_standard_order(self):
 		self.ODE = jitcode(**vanilla)
 		self.ODE.set_integrator("dopri5")
@@ -100,6 +103,9 @@ integrators = [
 	]
 
 class TestIntegrators(unittest.TestCase):
+	"""
+		Tests for every known integrator that its properties are identified correctly and the derivative and Jacobian are generated as needed.
+	"""
 	def test_normal_integration(self):
 		for lambdas in (True,False):
 			for integrator in integrators:
@@ -119,6 +125,9 @@ class TestIntegrators(unittest.TestCase):
 					assert_allclose( ODE.integrate(1.0), y1, rtol=1e-3 )
 
 class TestLyapunov(unittest.TestCase):
+	"""
+		Integration test for jitcode_lyap.
+	"""
 	def test_regular(self):
 		self.ODE = jitcode_lyap(**vanilla,n_lyap=n)
 		self.ODE.set_integrator("dopri5")

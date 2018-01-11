@@ -1,6 +1,10 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
 
+"""
+Integration test of jitcode_restricted_lyap and jitcode_transversal_lyap by comparing them to each other.
+"""
+
 from itertools import combinations
 from jitcode import jitcode_restricted_lyap, y, jitcode_transversal_lyap
 import numpy as np
