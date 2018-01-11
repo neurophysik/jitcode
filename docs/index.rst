@@ -68,7 +68,9 @@ The following diagram details which command calls which other command when neede
 
 .. digraph:: foo
 	
-	node [shape=box fontname="Monospace"];
+	bgcolor = "transparent"
+	edge [arrowsize=0.5];
+	node [shape=box fontname="Monospace" fontsize=8 margin=0.1 width=0 height=0 fillcolor=white style="rounded,filled"];
 	{rank = same; "save_compiled"; "set_integrator"}
 	"set_initial_value" -> "set_integrator";
 	"save_compiled" -> "compile_C";
