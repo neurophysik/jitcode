@@ -41,7 +41,7 @@ f_params,jac_params = ODE.f,ODE.jac
 class TestSkeleton(object):
 	def control_result(self):
 		result = self.integrator.integrate(1.0)
-		assert_allclose( result, y1, rtol=1e-3 )
+		assert_allclose( result, y1, rtol=1e-4 )
 	
 	def test_no_params(self):
 		self.initialise(f,jac,rtol=1e-5)

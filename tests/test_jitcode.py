@@ -84,7 +84,7 @@ class TestOrders(unittest.TestCase):
 		assert_allclose( self.ODE.f(0.0,y0), f_of_y0, rtol=1e-5 )
 		if not self.ODE.jac is None:
 			assert_allclose( self.ODE.jac(0.0,y0), jac_of_y0, rtol=1e-5)
-		assert_allclose( self.ODE.integrate(1.0), y1, rtol=1e-3 )
+		assert_allclose( self.ODE.integrate(1.0), y1, rtol=1e-4 )
 
 integrators = [
 		#  name     with_jac
