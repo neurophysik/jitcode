@@ -740,7 +740,7 @@ class jitcode_lyap(jitcode):
 		return self._y[:self.n_basic], lyaps, tangent_vectors
 
 
-class jitcode_transversal_lyap(jitcode):
+class jitcode_transversal_lyap(jitcode,GroupHandler):
 	"""
 	Calculates the largest Lyapunov exponent in orthogonal direction to a predefined synchronisation manifold, i.e. the projection of the tangent vector onto that manifold vanishes. In contrast to `jitcode_restricted_lyap`, this performs some transformations tailored to this specific application that may strongly reduce the number of differential equations and ensure a dynamics on the synchronisation manifold.
 	
@@ -758,10 +758,10 @@ class jitcode_transversal_lyap(jitcode):
 	# Read the accompanying paper to understand the internals of this.
 	
 	def __init__( self, f_sym=(), groups=(), simplify=None, **kwargs ):
-		self.G = GroupHandler(groups)
+		GroupHandler.__init__(self,groups)
 		self.n = kwargs.pop("n",None)
 		
-		f_basic,extracted = self.G.extract_main(self._handle_input(f_sym))
+		f_basic,extracted = self.extract_main(self._handle_input(f_sym))
 		helpers = sort_helpers(sympify_helpers( kwargs.pop("helpers",[]) ))
 		
 		if simplify is None:
@@ -769,7 +769,7 @@ class jitcode_transversal_lyap(jitcode):
 		
 		z = symengine.Function("z")
 		z_vector = [z(i) for i in range(self.n)]
-		tangent_vector = self.G.back_transform(z_vector)
+		tangent_vector = self.back_transform(z_vector)
 		
 		def tangent_vector_f():
 			for line in _jac_from_f_with_helpers(
@@ -785,7 +785,7 @@ class jitcode_transversal_lyap(jitcode):
 					)
 		
 		substitutions = {
-				y(i): z(self.G.map_to_main(i))
+				y(i): z(self.map_to_main(i))
 				for i in range(self.n)
 			}
 		
@@ -796,9 +796,9 @@ class jitcode_transversal_lyap(jitcode):
 			return replace_function(entry,z,y)
 		
 		def f_lyap():
-			for entry in self.G.iterate(tangent_vector_f()):
+			for entry in self.iterate(tangent_vector_f()):
 				if type(entry)==int:
-					yield finalise(extracted[self.G.main_indices[entry]])
+					yield finalise(extracted[self.main_indices[entry]])
 				else:
 					yield finalise(entry[0]-entry[1])
 		
@@ -815,11 +815,11 @@ class jitcode_transversal_lyap(jitcode):
 		"""
 		Like the analogous function of `jitcode`/`scipy.integrate.ode`, except that only one initial value per group of synchronised components has to be provided (in the same order as the `groups` argument of the constructor).
 		"""
-		assert len(y)==len(self.G.groups), "Initial state too long. Provide only one value per synchronisation group"
+		assert len(y)==len(self.groups), "Initial state too long. Provide only one value per synchronisation group"
 		
 		new_y = np.empty(self.n)
-		new_y[self.G.main_indices] = y
-		new_y[self.G.tangent_indices] = random_direction(len(self.G.tangent_indices))
+		new_y[self.main_indices] = y
+		new_y[self.tangent_indices] = random_direction(len(self.tangent_indices))
 		super(jitcode_transversal_lyap, self).set_initial_value(new_y, time)
 	
 	def set_integrator(self,name,interpolate=False,**kwargs):
@@ -829,12 +829,12 @@ class jitcode_transversal_lyap(jitcode):
 		super(jitcode_transversal_lyap,self).set_integrator(name,interpolate,**kwargs)
 	
 	def norm(self):
-		tangent_vector = self._y[self.G.tangent_indices]
+		tangent_vector = self._y[self.tangent_indices]
 		norm = np.linalg.norm(tangent_vector)
 		tangent_vector /= norm
 		if not np.isfinite(norm):
 			warn("Norm of perturbation vector for Lyapunov exponent out of numerical bounds. You probably waited too long before renormalising and should call integrate with smaller intervals between steps (as renormalisations happen once with every call of integrate).")
-		self._y[self.G.tangent_indices] = tangent_vector
+		self._y[self.tangent_indices] = tangent_vector
 		return norm
 	
 	def integrate(self, *args, **kwargs):
@@ -857,7 +857,7 @@ class jitcode_transversal_lyap(jitcode):
 		lyap = log(norm) / delta_t
 		super(jitcode_transversal_lyap, self).set_initial_value(self._y, self.t)
 		
-		return self._y[self.G.main_indices], lyap
+		return self._y[self.main_indices], lyap
 
 class jitcode_restricted_lyap(jitcode_lyap):
 	"""
