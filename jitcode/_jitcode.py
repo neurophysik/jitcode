@@ -581,7 +581,7 @@ class jitcode(jitcxde):
 			* `"lsoda"` – LSODA (implicit) via `ode`
 			* `"LSODA"` – LSODA (implicit) via `solve_ivp`
 			* `"Radau"` – The implicit Radau method via `solve_ivp`
-			* `"vode"` – VODE (explicit) via `ode`
+			* `"vode"` – VODE (implicit) via `ode`
 			
 			The `solve_ivp` methods are usually slightly faster for large differential equations, but they come with a massive overhead that makes them considerably slower for small differential equations. Implicit solvers are slower than explicit ones, except for stiff problems. If you don’t know what to choose, start with `"dopri5"`.
 		
