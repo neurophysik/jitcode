@@ -13,6 +13,8 @@ sys.modules.update((mod_name, Mock()) for mod_name in MOCK_MODULES)
 
 class ode_mock(object): pass
 sys.modules['scipy.integrate'] = Mock(ode=ode_mock)
+class GroupHandler_mock(object): pass
+sys.modules['jitcxde_common.transversal'] = Mock(GroupHandler=GroupHandler_mock)
 
 sys.path.insert(0,os.path.abspath("../examples"))
 sys.path.insert(0,os.path.abspath("../jitcode"))
