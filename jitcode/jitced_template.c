@@ -52,7 +52,7 @@ static PyObject * py_f(PyObject *self, PyObject *args)
 				{% for control_par in control_pars %}
 				, &parameter_{{control_par}}
 				{% endfor %}
-				))
+			))
 	{
 		PyErr_SetString(PyExc_ValueError,"Wrong input.");
 		return NULL;
@@ -115,7 +115,7 @@ static PyObject * py_jac(PyObject *self, PyObject *args)
 				{% for control_par in control_pars %}
 				, &parameter_{{control_par}}
 				{% endfor %}
-				))
+			))
 	{
 		PyErr_SetString(PyExc_ValueError,"Wrong input.");
 		return NULL;
