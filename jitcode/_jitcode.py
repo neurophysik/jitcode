@@ -700,10 +700,14 @@ class jitcode_lyap(jitcode):
 		
 		super(jitcode_lyap, self).set_initial_value(hstack(new_y), time)
 	
-	def set_integrator(self,name,interpolate=False,**kwargs):
+	def set_integrator(self,name,interpolate=None,**kwargs):
 		"""
-		Same as for `jitcode` except that `interpolate` defaults to False. This is to avoid an accumulation error through the nature of the interpolation algorithm.
+		Same as for `jitcode` except that `interpolate` defaults to `False` for RK45 and Radau to avoid an accumulation error through the nature of the interpolation algorithm. Using `LSODA` as an integrator is discouraged.
 		"""
+		if interpolate is None:
+			interpolate = name in ["RK45","Radau"]
+		if name == "LSODA":
+			warn("Using LSODA for Lyapunov exponents is discouraged since interpolation errors may accumulate.")
 		super(jitcode_lyap,self).set_integrator(name,interpolate,**kwargs)
 	
 	def norms(self):
@@ -824,8 +828,12 @@ class jitcode_transversal_lyap(jitcode,GroupHandler):
 	
 	def set_integrator(self,name,interpolate=False,**kwargs):
 		"""
-		Same as for `jitcode` except that `interpolate` defaults to False. This is to avoid an accumulation error through the nature of the interpolation algorithm.
+		Same as for `jitcode` except that `interpolate` defaults to `False` for RK45 and Radau to avoid an accumulation error through the nature of the interpolation algorithm. Using `LSODA` as an integrator is discouraged.
 		"""
+		if interpolate is None:
+			interpolate = name in ["RK45","Radau"]
+		if name == "LSODA":
+			warn("Using LSODA for Lyapunov exponents is discouraged since interpolation errors may accumulate.")
 		super(jitcode_transversal_lyap,self).set_integrator(name,interpolate,**kwargs)
 	
 	def norm(self):
