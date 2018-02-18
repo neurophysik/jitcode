@@ -2,8 +2,8 @@ from setuptools import setup
 from io import open
 
 requirements = [
-	'jitcxde_common',
-	'symengine',
+	'jitcxde_common>=1',
+	'symengine>=0.3.1.dev0',
 	'scipy',
 	'numpy'
 ]
