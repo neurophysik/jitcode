@@ -11,7 +11,7 @@ import numpy as np
 import symengine
 
 from jitcxde_common import jitcxde
-from jitcxde_common.helpers import sympify_helpers, sort_helpers
+from jitcxde_common.helpers import sympify_helpers, sort_helpers, find_dependent_helpers
 from jitcxde_common.numerical import random_direction, orthonormalise
 from jitcxde_common.symbolic import collect_arguments, ordered_subs, replace_function
 from jitcxde_common.transversal import GroupHandler
@@ -31,14 +31,10 @@ def _is_lambda(function):
 	return isinstance(function, FunctionType)
 
 def _jac_from_f_with_helpers(f, helpers, simplify, n):
-	dependent_helpers = [[] for i in range(n)]
-	for i in range(n):
-		for helper in helpers:
-			derivative = helper[1].diff(y(i))
-			for other_helper in dependent_helpers[i]:
-				derivative += helper[1].diff(other_helper[0]) * other_helper[1]
-			if derivative:
-				dependent_helpers[i].append( (helper[0], derivative) )
+	dependent_helpers = [
+			find_dependent_helpers(helpers,y(i))
+			for i in range(n)
+		]
 	
 	def line(f_entry):
 		for j in range(n):
