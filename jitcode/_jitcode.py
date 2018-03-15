@@ -10,7 +10,7 @@ from numpy import hstack, log
 import numpy as np
 import symengine
 
-from jitcxde_common import jitcxde
+from jitcxde_common import jitcxde, check
 from jitcxde_common.helpers import sympify_helpers, sort_helpers, find_dependent_helpers
 from jitcxde_common.numerical import random_direction, orthonormalise
 from jitcxde_common.symbolic import collect_arguments, ordered_subs, replace_function
@@ -130,48 +130,28 @@ class jitcode(jitcxde):
 				for control_par in self.control_pars
 			}
 	
-	def check(self, fail_fast=True):
-		"""
-		Checks for the following mistakes:
-		
-		* negative arguments of `y`
-		* arguments of `y` that are higher than the system’s dimension `n`
-		* unused variables
-		
-		For large systems, this may take some time (which is why it is not run by default).
-		
-		Parameters
-		----------
-		fail_fast : boolean
-			whether to abort on the first failure. If false, an error is raised only after all problems are printed.
-		"""
-		
-		self.failed_check = False
-		
-		def problem(message):
-			self.failed_check = True
-			if fail_fast:
-				raise ValueError(message)
-			else:
-				print(message)
-		
-		valid_symbols = [t] + [helper[0] for helper in self.helpers] + list(self.control_pars)
-		
-		assert self.f_sym(), "f_sym is empty."
-		
+	@check
+	def _check_non_empty(self):
+		if not self.f_sym():
+			self._fail_check("f_sym is empty.")
+	
+	@check
+	def _check_valid_arguments(self):
 		for i,entry in enumerate(self.f_sym()):
 			for argument in collect_arguments(entry,y):
 				if argument[0] < 0:
-					problem("y is called with a negative argument (%i) in equation %i." % (argument[0], i))
+					self._fail_check("y is called with a negative argument (%i) in equation %i." % (argument[0], i))
 				if argument[0] >= self.n:
-					problem("y is called with an argument (%i) higher than the system’s dimension (%i) in equation %i."  % (argument[0], self.n, i))
-			
+					self._fail_check("y is called with an argument (%i) higher than the system’s dimension (%i) in equation %i."  % (argument[0], self.n, i))
+	
+	@check
+	def _check_valid_symbols(self):
+		valid_symbols = [t] + [helper[0] for helper in self.helpers] + list(self.control_pars)
+		
+		for i,entry in enumerate(self.f_sym()):
 			for symbol in entry.atoms(symengine.Symbol):
 				if symbol not in valid_symbols:
-					problem("Invalid symbol (%s) in equation %i."  % (symbol.name, i))
-		
-		if self.failed_check:
-			raise ValueError("Check failed.")
+					self._fail_check("Invalid symbol (%s) in equation %i."  % (symbol.name, i))
 	
 	@property
 	def jac_sym(self):
