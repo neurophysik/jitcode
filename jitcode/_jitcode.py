@@ -10,7 +10,7 @@ from numpy import hstack, log
 import numpy as np
 import symengine
 
-from jitcxde_common import jitcxde, check
+from jitcxde_common import jitcxde, checker
 from jitcxde_common.helpers import sympify_helpers, sort_helpers, find_dependent_helpers
 from jitcxde_common.numerical import random_direction, orthonormalise
 from jitcxde_common.symbolic import collect_arguments, ordered_subs, replace_function
@@ -130,28 +130,33 @@ class jitcode(jitcxde):
 				for control_par in self.control_pars
 			}
 	
-	@check
+	@checker
 	def _check_non_empty(self):
-		if not self.f_sym():
-			self._fail_check("f_sym is empty.")
+		self._check_assert( self.f_sym(), "f_sym is empty." )
 	
-	@check
+	@checker
 	def _check_valid_arguments(self):
 		for i,entry in enumerate(self.f_sym()):
 			for argument in collect_arguments(entry,y):
-				if argument[0] < 0:
-					self._fail_check("y is called with a negative argument (%i) in equation %i." % (argument[0], i))
-				if argument[0] >= self.n:
-					self._fail_check("y is called with an argument (%i) higher than the system’s dimension (%i) in equation %i."  % (argument[0], self.n, i))
+				self._check_assert(
+						argument[0] >= 0,
+						"y is called with a negative argument (%i) in equation %i." % (argument[0],i),
+					)
+				self._check_assert(
+						argument[0] < self.n,
+						"y is called with an argument (%i) higher than the system’s dimension (%i) in equation %i." % (argument[0],self.n,i)
+					)
 	
-	@check
+	@checker
 	def _check_valid_symbols(self):
 		valid_symbols = [t] + [helper[0] for helper in self.helpers] + list(self.control_pars)
 		
 		for i,entry in enumerate(self.f_sym()):
 			for symbol in entry.atoms(symengine.Symbol):
-				if symbol not in valid_symbols:
-					self._fail_check("Invalid symbol (%s) in equation %i."  % (symbol.name, i))
+				self._check_assert(
+						symbol in valid_symbols,
+						"Invalid symbol (%s) in equation %i."  % (symbol.name,i),
+					)
 	
 	@property
 	def jac_sym(self):
