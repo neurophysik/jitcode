@@ -7,7 +7,7 @@ If you want to integrate delay or stochastic differential equations, check out
 
 * `Documentation <http://jitcode.readthedocs.io>`_ – Read this to get started and for reference. Don’t miss that some topics are addressed in the `common JiTC*DE documentation <http://jitcde-common.readthedocs.io>`_.
 
-* `Paper <http://arxiv.org/abs/1711.09886>`_ – Read this for the scientific background. Cite this (`BibTeX <https://raw.githubusercontent.com/neurophysik/jitcxde_common/master/citeme.bib>`_) if you wish to give credit or to shift blame. As soon as this is published in a journal, you will find an update here.
+* `Paper <https://doi.org/10.1063/1.5019320>`_ – Read this for the scientific background. Cite this (`BibTeX <https://raw.githubusercontent.com/neurophysik/jitcxde_common/master/citeme.bib>`_) if you wish to give credit or to shift blame.
 
 * `Issue Tracker <http://github.com/neurophysik/jitcode/issues>`_ – Please report any bugs here. Also feel free to ask for new features.
 
