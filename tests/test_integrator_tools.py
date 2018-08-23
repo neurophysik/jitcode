@@ -85,17 +85,18 @@ class TestSkeleton(object):
 		self.integrator.set_initial_value(initial)
 		assert_allclose(initial,self.integrator.integrate(0))
 	
-	def test_backwards_integration(self):
-		self.initialise(f,jac)
-		self.integrator.set_initial_value([0,1,2,3],0)
-		with self.assertRaises(ValueError):
-			self.integrator.integrate(-1)
-	
 	def test_failed_integration(self):
 		self.initialise(f_back,jac_back,atol=1e-12,rtol=1e-12)
 		self.integrator.set_initial_value([0,1,2,3],0)
 		with self.assertRaises(UnsuccessfulIntegration):
 			self.integrator.integrate(1)
+
+class TestSkeletonWithBackwards(TestSkeleton):
+	def test_backwards_integration(self):
+		self.initialise(f,jac)
+		self.integrator.set_initial_value([0,1,2,3],0)
+		with self.assertRaises(ValueError):
+			self.integrator.integrate(-1)
 
 class TestRK45(unittest.TestCase,TestSkeleton):
 	def initialise(self,f,jac,**kwargs):
@@ -113,19 +114,19 @@ class TestBDF(unittest.TestCase,TestSkeleton):
 	def initialise(self,f,jac,**kwargs):
 		self.integrator = IVP_wrapper("BDF",f,jac,**kwargs)
 
-class TestRK45_no_interpolation(unittest.TestCase,TestSkeleton):
+class TestRK45_no_interpolation(unittest.TestCase,TestSkeletonWithBackwards):
 	def initialise(self,f,jac,**kwargs):
 		self.integrator = IVP_wrapper_no_interpolation("RK45",f,**kwargs)
 
-class TestRK23_no_interpolation(unittest.TestCase,TestSkeleton):
+class TestRK23_no_interpolation(unittest.TestCase,TestSkeletonWithBackwards):
 	def initialise(self,f,jac,**kwargs):
 		self.integrator = IVP_wrapper_no_interpolation("RK45",f,**kwargs)
 
-class TestRadau_no_interpolation(unittest.TestCase,TestSkeleton):
+class TestRadau_no_interpolation(unittest.TestCase,TestSkeletonWithBackwards):
 	def initialise(self,f,jac,**kwargs):
 		self.integrator = IVP_wrapper_no_interpolation("Radau",f,jac,**kwargs)
 
-class TestBDF_no_interpolation(unittest.TestCase,TestSkeleton):
+class TestBDF_no_interpolation(unittest.TestCase,TestSkeletonWithBackwards):
 	def initialise(self,f,jac,**kwargs):
 		self.integrator = IVP_wrapper_no_interpolation("BDF",f,jac,**kwargs)
 
@@ -137,17 +138,17 @@ class TestLSODA(unittest.TestCase,TestSkeleton):
 	def test_failed_integration(self):
 		pass
 
-class TestDopri5(unittest.TestCase,TestSkeleton):
+class TestDopri5(unittest.TestCase,TestSkeletonWithBackwards):
 	def initialise(self,f,jac,**kwargs):
 		self.integrator = ODE_wrapper(f)
 		self.integrator.set_integrator("dopri5")
 
-class TestDop853(unittest.TestCase,TestSkeleton):
+class TestDop853(unittest.TestCase,TestSkeletonWithBackwards):
 	def initialise(self,f,jac,**kwargs):
 		self.integrator = ODE_wrapper(f)
 		self.integrator.set_integrator("dop853")
 
-class TestLsoda(unittest.TestCase,TestSkeleton):
+class TestLsoda(unittest.TestCase,TestSkeletonWithBackwards):
 	def initialise(self,f,jac,**kwargs):
 		self.integrator = ODE_wrapper(f,jac)
 		self.integrator.set_integrator("lsoda")
@@ -156,7 +157,7 @@ class TestLsoda(unittest.TestCase,TestSkeleton):
 	def test_failed_integration(self):
 		pass
 
-class TestVode(unittest.TestCase,TestSkeleton):
+class TestVode(unittest.TestCase,TestSkeletonWithBackwards):
 	def initialise(self,f,jac,**kwargs):
 		self.integrator = ODE_wrapper(f,jac)
 		self.integrator.set_integrator("vode")

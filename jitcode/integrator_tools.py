@@ -99,15 +99,12 @@ class IVP_wrapper(object):
 			self.try_to_initiate()
 	
 	def integrate(self,t):
-		if self.backend.t < t:
-			while self.backend.t < t:
-				self.backend.step()
-				if self.backend.status == "failed":
-					raise UnsuccessfulIntegration
-			self.kwargs["y0"] = self.backend.dense_output()(t)
-			self.kwargs["t0"] = t
-		elif self.backend.t > t:
-			raise ValueError("Target time smaller than current time. Cannot integrate backwards in time")
+		while self.backend.t < t or self.backend.t_old is None:
+			self.backend.step()
+			if self.backend.status == "failed":
+				raise UnsuccessfulIntegration
+		self.kwargs["y0"] = self.backend.dense_output()(t)
+		self.kwargs["t0"] = t
 		return self.kwargs["y0"]
 	
 	def successful(self):
