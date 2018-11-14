@@ -53,7 +53,7 @@ f = [
 vanilla = {"f_sym": f}
 
 # as dictionary
-f_dict = { y(i):entry for i,entry in enumerate(f) }
+f_dict = { y(i):entry for i,entry in reversed(list(enumerate(f))) }
 with_dictionary = {"f_sym": f_dict}
 
 # with generator
