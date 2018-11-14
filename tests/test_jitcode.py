@@ -12,8 +12,7 @@ from jitcode import jitcode, y, jitcode_lyap, UnsuccessfulIntegration
 from jitcode._jitcode import _is_C, _is_lambda
 
 from scenarios import (
-		y0, f_of_y0, jac_of_y0, y1, lyaps,
-		vanilla, with_helpers, n,
+		y0, f_of_y0, jac_of_y0, y1, lyaps, vanilla, n,
 	)
 
 class TestOrders(unittest.TestCase):
