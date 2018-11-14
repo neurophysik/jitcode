@@ -8,7 +8,7 @@ Overview
 --------
 
 JiTCODE (just-in-time compilation for ordinary differential equations) is an extension of SciPy’s `ODE`_ (`scipy.integrate.ode`) or `Solve IVP`_ (`scipy.integrate.solve_ivp`).
-Where the latter take a Python function as an argument, JiTCODE takes an iterable (or generator function) of symbolic expressions, which it translates to C code, compiles on the fly, and uses as the function to feed into SciPy’s ODE or Solve IVP.
+Where the latter take a Python function as an argument, JiTCODE takes an iterable (or generator function or dictionary) of symbolic expressions, which it translates to C code, compiles on the fly, and uses as the function to feed into SciPy’s ODE or Solve IVP.
 Symbolic expressions are mostly handled by `SymEngine`_, `SymPy`_’s compiled-backend-to-be (see `SymPy vs. SymEngine`_ for details).
 
 This design has the following advantages:
@@ -36,7 +36,6 @@ If compilation fails to work for whatever reason, pure Python functions can be e
 For most applications, the only difference to SciPy’s ODE in terms of handling is that you have to supply the derivative in the correct format – JiTCODE automatically takes care of the compilation.
 However, you can also tweak this step by step, if you desire (see `tweak` and the `notes on compilation`_).
 
-This documentation assumes that you have read the documentation of SciPy’s `ODE`_ or are otherwise familiar with it.
 As with SciPy’s ODE, this documentation assumes that the differential equation you want to solve is:
 
 .. math::
@@ -49,6 +48,8 @@ As with SciPy’s ODE, this documentation assumes that the differential equation
 A quick example
 ---------------
 
+*This example is particularly intended for readers familiar with SciPy’s* `ODE`_. *If you aren’t, skip to the next section.*
+
 .. automodule:: double_fhn_example
 
 .. literalinclude:: ../examples/double_fhn_example.py
@@ -56,6 +57,12 @@ A quick example
 	:dedent: 1
 	:start-after: example-start
 
+An explicit example
+-------------------
+
+*This example is particularly intended for readers who are using a numerical integrator for the first time.*
+
+.. automodule:: lotka_volterra
 
 .. _tweak:
 
