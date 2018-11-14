@@ -10,12 +10,12 @@ import unittest
 from numpy.random import random
 from numpy.testing import assert_allclose
 
-from jitcode import jitcode, jitcode_lyap
+from jitcode import jitcode, jitcode_lyap, y
 from jitcode._jitcode import _is_C, _is_lambda
 
 from scenarios import (
 		y0, f_of_y0, jac_of_y0,
-		vanilla, with_params, with_helpers, with_generator,
+		vanilla, with_params, with_helpers, with_generator, with_dictionary,
 		n, params_args
 	)
 
@@ -101,6 +101,10 @@ class FurtherHelpersTests(unittest.TestCase):
 class TestGenerator(TestBasic):
 	def setUp(self):
 		self.ODE = jitcode(**with_generator)
+
+class TestDictionary(TestBasic):
+	def setUp(self):
+		self.ODE = jitcode(**with_dictionary)
 
 class TestParams(TestBasic):
 	params = params_args

@@ -71,8 +71,8 @@ class jitcode(jitcxde):
 	"""
 	Parameters
 	----------
-	f_sym : iterable of symbolic expressions or generator function yielding symbolic expressions
-		The `i`-th element is the `i`-th component of the value of the ODE’s derivative :math:`f(t,y)`.
+	f_sym : iterable of symbolic expressions or generator function yielding symbolic expressions or dictionary
+		If an iterable or generator function, the `i`-th element is the `i`-th component of the value of the ODE’s derivative :math:`f(t,y)`. If a dictionary, it has to map the dynamical variables to its derivatives and the dynamical variables must be `y(0), y(1), …`.
 	
 	helpers : list of length-two iterables, each containing a symbol and a symbolic expression
 		Each helper is a variable that will be calculated before evaluating the derivative and can be used in the latter’s computation. The first component of the tuple is the helper’s symbol as referenced in the derivative or other helpers, the second component describes how to compute it from `t`, `y` and other helpers. This is for example useful to realise a mean-field coupling, where the helper could look like `(mean, sum(y(i) for i in range(100))/100)`. (See `example_2` for an example.)
@@ -92,6 +92,8 @@ class jitcode(jitcxde):
 	module_location : string
 		location of a module file from which functions are to be loaded (see `save_compiled`). If you use this, you need not give `f_sym` as an argument, but in this case you must give `n`. Depending on the arguments you provide, functionalities such as recompiling may not be available; but then the entire point of this option is to avoid these.
 	"""
+	
+	dynvar = y
 	
 	def __init__(self,
 				f_sym = (),
