@@ -541,11 +541,11 @@ class jitcode(jitcxde):
 	def y_dict(self):
 		"""
 		The current state of the system as a dictionary mapping dynamical variables to their current value.
-		Note that if you use this often, you may want to use self.y instead for efficiency.
+		Note that if you use this often, you may want to use `self.y` instead for efficiency.
 		"""
 		
 		return { self.dynvar(i):self.y[i] for i in range(self.n) }
-
+	
 	def set_initial_value(self, initial_value, time=0.0):
 		"""
 		Same as the analogous function in SciPy’s ODE, except that it also accepts the initial_value in form of a dictionary that maps dynamical variables to their initial value.
@@ -693,6 +693,9 @@ class jitcode_lyap(jitcode):
 			)
 	
 	def set_initial_value(self, y, time=0.0):
+		if isinstance(y,dict):
+			y = self._list_from_dynvar_dict(y,"initial value",self.n_basic)
+		
 		new_y = [y]
 		for _ in range(self._n_lyap):
 			new_y.append(random_direction(self.n_basic))
@@ -741,6 +744,10 @@ class jitcode_lyap(jitcode):
 		super(jitcode_lyap, self).set_initial_value(self._y, self.t)
 		
 		return self._y[:self.n_basic], lyaps, tangent_vectors
+	
+	@property
+	def y_dict(self):
+		return { self.dynvar(i):self.y[i] for i in range(self.n_basic) }
 
 
 class jitcode_transversal_lyap(jitcode,GroupHandler):
@@ -818,6 +825,8 @@ class jitcode_transversal_lyap(jitcode,GroupHandler):
 		"""
 		Like the analogous function of `jitcode`/`scipy.integrate.ode`, except that only one initial value per group of synchronised components has to be provided (in the same order as the `groups` argument of the constructor).
 		"""
+		if isinstance(y,dict):
+			raise NotImplementedError("Dictionary input is not supported for transversal Lyapunov exponents")
 		assert len(y)==len(self.groups), "Initial state too long. Provide only one value per synchronisation group"
 		
 		new_y = np.empty(self.n)
@@ -865,6 +874,11 @@ class jitcode_transversal_lyap(jitcode,GroupHandler):
 		super(jitcode_transversal_lyap, self).set_initial_value(self._y, self.t)
 		
 		return self._y[self.main_indices], lyap
+	
+	@property
+	def y_dict(self):
+		raise NotImplementedError("Dictionary output is not supported for transversal Lyapunov exponents")
+
 
 class jitcode_restricted_lyap(jitcode_lyap):
 	"""
