@@ -539,8 +539,15 @@ class jitcode(jitcxde):
 	
 	def set_initial_value(self, initial_value, time=0.0):
 		"""
-		Same as the analogous function in SciPy’s ODE.
+		Same as the analogous function in SciPy’s ODE, except that it also accepts the initial_value in form of a dictionary that maps dynamical variables to their initial value.
 		"""
+		
+		if isinstance(initial_value,dict):
+			initial_value = self._list_from_dynvar_dict(
+					initial_value,
+					"initial value",
+					self.n,
+				)
 		
 		if self.n != len(initial_value):
 			raise ValueError("The dimension of the initial value does not match the dimension of your differential equations.")
