@@ -94,6 +94,8 @@ class TestOrders(unittest.TestCase):
 		if not self.ODE.jac is None:
 			assert_allclose( self.ODE.jac(0.0,y0), jac_of_y0, rtol=1e-5)
 		assert_allclose( self.ODE.integrate(1.0), y1, rtol=1e-4 )
+		for i in reversed(range(n)):
+			assert_allclose( self.ODE.y_dict[y(i)], y1[i], rtol=1e-4 )
 
 integrators = [
 		#  name     with_jac

@@ -537,6 +537,15 @@ class jitcode(jitcxde):
 	def y(self):
 		return self.integrator._y
 	
+	@property
+	def y_dict(self):
+		"""
+		The current state of the system as a dictionary mapping dynamical variables to their current value.
+		Note that if you use this often, you may want to use self.y instead for efficiency.
+		"""
+		
+		return { self.dynvar(i):self.y[i] for i in range(self.n) }
+
 	def set_initial_value(self, initial_value, time=0.0):
 		"""
 		Same as the analogous function in SciPy’s ODE, except that it also accepts the initial_value in form of a dictionary that maps dynamical variables to their initial value.
