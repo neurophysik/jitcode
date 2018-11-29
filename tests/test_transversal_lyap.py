@@ -107,7 +107,7 @@ for scenario in scenarios:
 		# Check that we are still on the synchronisation manifold:
 		for group in scenario["groups"]:
 			for i,j in combinations(group,2):
-				assert ODE1.y[i]==ODE1.y[j]
+				assert ODE1.y[i]==ODE1.y[j], "If this fails, the test is broken, not JiTCODE itself."
 		
 		Lyap1 = np.average(lyaps1[500:])
 		Lyap2 = np.average(lyaps2[500:])
