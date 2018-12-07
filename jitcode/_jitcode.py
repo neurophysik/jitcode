@@ -906,4 +906,24 @@ class jitcode_restricted_lyap(jitcode_lyap):
 			warn("Norm of perturbation vector for Lyapunov exponent out of numerical bounds. You probably waited too long before renormalising and should call integrate with smaller intervals between steps (as renormalisations happen once with every call of integrate).")
 		return norm, tangent_vector
 
+def test(omp=True,sympy=True):
+	"""
+		Runs a quick simulation to test whether:
+		
+		* a compiler is available and can be interfaced by Setuptools,
+		* OMP libraries are available and can be assessed,
+		* SymPy is available.
+		
+		The latter two tests can be deactivated with the respective argument. This is not a full software test but rather a quick sanity check of your installation.
+	"""
+	if sympy:
+		import sympy
+	ODE = jitcode( [y(1),-y(0)], verbose=False )
+	ODE.generate_f_C(chunk_size=1)
+	ODE.compile_C(omp=omp)
+	ODE.set_integrator("dopri5")
+	ODE.set_initial_value([1,2])
+	ODE.integrate(0.1)
+	
+
 

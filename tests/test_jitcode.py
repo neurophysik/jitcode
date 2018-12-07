@@ -8,7 +8,7 @@ from numpy.testing import assert_allclose
 from scipy.stats import sem as standard_error
 from symengine import symbols
 
-from jitcode import jitcode, y, jitcode_lyap, UnsuccessfulIntegration
+from jitcode import jitcode, y, jitcode_lyap, UnsuccessfulIntegration, test
 from jitcode._jitcode import _is_C, _is_lambda
 
 from scenarios import (
@@ -206,6 +206,12 @@ class TestErrors(unittest.TestCase):
 		ODE = jitcode(**vanilla)
 		with self.assertRaises(NotImplementedError):
 			ODE.set_integrator("LSODA",interpolate=False)
+
+class TestTest(unittest.TestCase):
+	def test_test(self):
+		for sympy in [False,True]:
+			for omp in [True,False]:
+				test(omp=omp,sympy=sympy)
 
 if __name__ == "__main__":
 	unittest.main(buffer=True)
