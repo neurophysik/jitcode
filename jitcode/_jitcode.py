@@ -914,7 +914,7 @@ def test(omp=True,sympy=True):
 		* OMP libraries are available and can be assessed,
 		* SymPy is available.
 		
-		The latter two tests can be deactivated with the respective argument. This is not a full software test but rather a quick sanity check of your installation.
+		The latter two tests can be deactivated with the respective argument. This is not a full software test but rather a quick sanity check of your installation. If successful, this function just finishes without any message.
 	"""
 	if sympy:
 		import sympy
