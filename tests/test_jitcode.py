@@ -207,12 +207,6 @@ class TestErrors(unittest.TestCase):
 		with self.assertRaises(NotImplementedError):
 			ODE.set_integrator("LSODA",interpolate=False)
 
-class TestTest(unittest.TestCase):
-	def test_test(self):
-		for sympy in [False,True]:
-			for omp in [True,False]:
-				test(omp=omp,sympy=sympy)
-
 if __name__ == "__main__":
 	unittest.main(buffer=True)
 
