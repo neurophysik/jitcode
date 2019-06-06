@@ -176,7 +176,6 @@ class jitcode(jitcxde):
 		simplify : boolean
 			Whether the resulting Jacobian should be `simplified <http://docs.sympy.org/dev/modules/simplify/simplify.html>`_ (with `ratio=1.0`). This is almost always a good thing.
 		"""
-		
 		self._jac_sym = _jac_from_f_with_helpers(self.f_sym, self.helpers, simplify, self.n)
 	
 	def _default_arguments(self):
@@ -642,6 +641,9 @@ class jitcode(jitcxde):
 	
 	def integrate(self,*args,**kwargs):
 		return self.integrator.integrate(*args,**kwargs)
+	
+	def successful(self):
+		raise NotImplementedError("JiTCODE doesn’t support ODE’s `successful` because it’s a very archaic and tedious way of handling things. Instead the exception `UnsuccessfulIntegration` is raised in case of an unsuccessful integration. If you want your program to do anything other than aborting in case of an unsuccessful integration, catch `UnsuccessfulIntegration` and act upon it as you deem fit.")
 
 class jitcode_lyap(jitcode):
 	"""
