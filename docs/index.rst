@@ -2,7 +2,7 @@ The JiTCODE module
 ==================
 
 **Note and remember** *that some relevant information can be found in the* `common JiTC*DE documentation`_.
-*This includes installation instructions, compiler issues and optimisation, general performance considerations, how to implement network dynamics, and a small FAQ.*
+*This includes installation instructions, compiler issues and optimisation, general performance considerations, how to implement network dynamics and conditional statements, and a small FAQ.*
 
 Overview
 --------
