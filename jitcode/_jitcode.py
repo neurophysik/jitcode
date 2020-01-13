@@ -628,8 +628,17 @@ class jitcode(jitcxde):
 	def set_parameters(self,*args):
 		"""
 		Same as `set_f_params` and `set_jac_params` for SciPy’s ODE (both  sets of parameters are set simultaneuosly, because they should be the same anyway).
+		
+		The parameters can be passed as different arguments or as a list or other sequence.
 		"""
-		self.integrator.set_params(*args)
+		try:
+			self.integrator.set_params(*args[0])
+		except TypeError:
+			self.integrator.set_params(*args)
+		else:
+			if len(args)>1:
+				raise TypeError("Argument must either be a single sequence or multiple numbers.")
+
 
 	def set_f_params(self, *args):
 		warn("This function has been replaced by `set_parameters`")
