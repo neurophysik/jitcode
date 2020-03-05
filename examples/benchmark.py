@@ -30,7 +30,7 @@ def test_scenario(name,fun,initial,times,rtol,atol):
 		I = ode(fun)
 		I.set_integrator(solver_ode,rtol=rtol,atol=atol,nsteps=10**8)
 		I.set_initial_value(initial,0.0)
-		result = np.vstack(I.integrate(time) for time in times)
+		result = np.vstack([I.integrate(time) for time in times])
 	assert I.successful()
 	
 	inv_fun = lambda y,t: fun(t,y)

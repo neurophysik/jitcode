@@ -101,8 +101,8 @@ for scenario in scenarios:
 		ODE2.set_initial_value(np.random.random(2),0.0)
 		
 		times = range(100,100000,100)
-		lyaps1 = np.hstack(ODE1.integrate(time)[1] for time in times)
-		lyaps2 = np.hstack(ODE2.integrate(time)[1] for time in times)
+		lyaps1 = np.hstack([ODE1.integrate(time)[1] for time in times])
+		lyaps2 = np.hstack([ODE2.integrate(time)[1] for time in times])
 		
 		# Check that we are still on the synchronisation manifold:
 		for group in scenario["groups"]:

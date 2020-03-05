@@ -29,6 +29,6 @@ ODE = jitcode_restricted_lyap(f, vectors=vectors)
 ODE.set_integrator("dopri5")
 ODE.set_initial_value(initial_state,0.0)
 
-data = np.hstack(ODE.integrate(T)[1] for T in range(10,100000,10))
+data = np.hstack([ODE.integrate(T)[1] for T in range(10,100000,10)])
 
 print(np.average(data[500:]), sem(data[500:]))

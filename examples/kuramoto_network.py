@@ -29,7 +29,7 @@ initial_state = uniform(0,2*pi,n)
 I.set_initial_value(initial_state,time=0.0)
 
 times = range(0,2001)
-data = vstack ( I.integrate(time) for time in times )
+data = vstack ([ I.integrate(time) for time in times ])
 data %= 2*pi
 savetxt("kuramotos.dat",data)
 
