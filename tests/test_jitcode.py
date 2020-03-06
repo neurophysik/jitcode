@@ -157,7 +157,7 @@ class TestLyapunov(unittest.TestCase):
 			self.ODE.check()
 		self.ODE.set_initial_value(y0,0.0)
 		times = range(10,100000,10)
-		data = np.vstack( self.ODE.integrate(time)[1] for time in times )
+		data = np.vstack([ self.ODE.integrate(time)[1] for time in times ])
 		result = np.average(data[1000:], axis=0)
 		margin = standard_error(data[1000:], axis=0)
 		self.assertLess( np.max(margin), 0.003 )

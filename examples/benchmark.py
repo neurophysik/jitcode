@@ -69,7 +69,7 @@ def test_scenario(name,fun,initial,times,rtol,atol):
 				method=solver_ivp, rtol=rtol, atol=atol,
 				dense_output=True
 			)
-		result = np.vstack(I.sol(time) for time in times)
+		result = np.vstack([I.sol(time) for time in times])
 	assert I.status != -1
 	
 	with timer("%s with dense output"%solver_ivp):
@@ -83,7 +83,7 @@ def test_scenario(name,fun,initial,times,rtol,atol):
 				while I.t < time:
 					I.step()
 				yield I.dense_output()(time)
-		result = np.vstack(solutions())
+		result = np.vstack(list(solutions()))
 	assert I.status != "failed"
 	
 	with timer("%s with manual resetting"%solver_ivp):
@@ -99,7 +99,7 @@ def test_scenario(name,fun,initial,times,rtol,atol):
 				while I.status == "running":
 					I.step()
 				yield I.y
-		result = np.vstack(solutions())
+		result = np.vstack(list(solutions()))
 	assert I.status != "failed"
 	
 	with timer("%s with reinitialising"%solver_ivp):
@@ -118,7 +118,7 @@ def test_scenario(name,fun,initial,times,rtol,atol):
 				current_time = time
 				state = I.y
 				yield state
-		result = np.vstack(solutions())
+		result = np.vstack(list(solutions()))
 
 # Using compiled functions to make things faster
 def get_compiled_function(f):
