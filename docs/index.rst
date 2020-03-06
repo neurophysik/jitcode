@@ -130,6 +130,14 @@ If you are interested in the mathematical details, please read `the accompanying
 
 .. automodule:: double_fhn_transversal_lyap
 
+Other things you may want to do
+-------------------------------
+
+* `JiTCDDE <https://jitcdde.rtfd.io>`_ is like JiTCODE for delay differential equations.
+* `JiTCSDE <https://jitcsde.rtfd.io>`_ is like JiTCODE for stochastics differential equations.
+* If you want to have input that cannot be expressed in a simple function, you can use `jitcdde_input <https://jitcdde.rtfd.io#input>`_.
+* The `zvode` integrator and complex arithmetics in general do not work, as they are not that easily implementable in C.
+
 Command reference
 -----------------
 
@@ -157,13 +165,6 @@ Lyapunov exponents
 
 .. autoclass:: jitcode_restricted_lyap
 	:members:
-
-What doesn’t work (yet)
------------------------
-
-The following feature of SciPy’s ODE or Solve IVP cannot be used through JiTCODE:
-
-*	The `zvode` integrator and complex arithmetics in general, as they are not easy implementable in C.
 
 .. _reference:
 
