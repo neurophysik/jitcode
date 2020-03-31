@@ -10,7 +10,7 @@ from numpy.random import random
 from jitcode import jitcode
 from jitcode.integrator_tools import empty_integrator, IVP_wrapper, IVP_wrapper_no_interpolation, ODE_wrapper, UnsuccessfulIntegration
 
-from scenarios import y0, y1, vanilla, with_params, params_args, n, n_params
+from scenarios import y0, y1, vanilla, n
 
 # Generating compiled functions
 
@@ -27,16 +27,6 @@ ODE = jitcode(
 	)
 ODE.compile_C()
 f_back,jac_back = ODE.f,ODE.jac
-
-# … and once more with parameters
-
-ODE = jitcode(
-		**with_params,
-		wants_jacobian = True,
-		verbose = False,
-	)
-ODE.compile_C()
-f_params,jac_params = ODE.f,ODE.jac
 
 # -----------------------------
 
@@ -58,25 +48,6 @@ class TestSkeleton(object):
 		self.initialise(f,jac,rtol=1e-5)
 		self.integrator.set_initial_value(random(n))
 		self.integrator.set_initial_value(y0)
-		self.control_result()
-	
-	def test_params(self):
-		self.initialise(f_params,jac_params,rtol=1e-5)
-		self.integrator.set_params(*params_args)
-		self.integrator.set_initial_value(y0)
-		self.control_result()
-	
-	def test_params_other_order(self):
-		self.initialise(f_params,jac_params,rtol=1e-5)
-		self.integrator.set_initial_value(y0)
-		self.integrator.set_params(*params_args)
-		self.control_result()
-	
-	def test_params_twice(self):
-		self.initialise(f_params,jac_params,rtol=1e-5)
-		self.integrator.set_params(*random(n_params))
-		self.integrator.set_initial_value(y0)
-		self.integrator.set_params(*params_args)
 		self.control_result()
 	
 	def test_zero_integration(self):
@@ -187,11 +158,6 @@ class TestDummy(unittest.TestCase):
 		self.integrator.set_initial_value(initial,1.2)
 		assert np.all( self.integrator._y == initial )
 		assert self.integrator.t == 1.2
-	
-	def test_set_parameters(self):
-		params = random(5)
-		self.integrator.set_params(params)
-		assert np.all( self.integrator.params == params )
 
 if __name__ == "__main__":
 	unittest.main(buffer=True)

@@ -7,6 +7,10 @@
 
 unsigned int const dimension={{n}};
 
+{% for control_par in control_pars %}
+double parameter_{{control_par}};
+{% endfor %}
+
 # define get_general_helper(i) ((general_helper[i]))
 # define set_general_helper(i,value) (general_helper[i] = value)
 
@@ -40,18 +44,12 @@ static PyObject * py_f(PyObject *self, PyObject *args)
 {
 	double t;
 	PyArrayObject * Y;
-	{% for control_par in control_pars %}
-	double parameter_{{control_par}};
-	{% endfor %}
 	
 	if (!PyArg_ParseTuple(
 				args,
-				"dO!{{'d'*control_pars|length}}",
+				"dO!",
 				&t,
 				&PyArray_Type, &Y
-				{% for control_par in control_pars %}
-				, &parameter_{{control_par}}
-				{% endfor %}
 			))
 	{
 		PyErr_SetString(PyExc_ValueError,"Wrong input.");
@@ -103,18 +101,12 @@ static PyObject * py_jac(PyObject *self, PyObject *args)
 {
 	double t;
 	PyArrayObject * Y;
-	{% for control_par in control_pars %}
-	double parameter_{{control_par}};
-	{% endfor %}
 	
 	if (!PyArg_ParseTuple(
 				args,
-				"dO!{{'d'*control_pars|length}}",
+				"dO!",
 				&t,
 				&PyArray_Type, &Y
-				{% for control_par in control_pars %}
-				, &parameter_{{control_par}}
-				{% endfor %}
 			))
 	{
 		PyErr_SetString(PyExc_ValueError,"Wrong input.");
@@ -165,9 +157,27 @@ static PyObject * py_jac(PyObject *self, PyObject *args)
 }
 {% endif %}
 
-#define SIGNATURE "(t,y,{{'a'*control_pars|length}}/)\n--\n\n"
+static PyObject * py_initialise(PyObject *self, PyObject * args)
+{
+	if (!PyArg_ParseTuple(
+		args,
+		"{{'d'*control_pars|length}}"
+		{% for control_par in control_pars %}
+		, &(parameter_{{control_par}})
+		{% endfor %}
+		))
+	{
+		PyErr_SetString(PyExc_ValueError,"Wrong input.");
+		return NULL;
+	}
+	
+	Py_RETURN_NONE;
+}
+
+#define SIGNATURE "(t,y)\n--\n\n"
 
 static PyMethodDef {{module_name}}_methods[] = {
+	{"initialise", (PyCFunction) py_initialise, METH_VARARGS, NULL},
 	{"f", py_f, METH_VARARGS, "f" SIGNATURE},
 	{% if has_Jacobian: %}
 	{"jac", py_jac, METH_VARARGS, "jac" SIGNATURE},
@@ -177,15 +187,15 @@ static PyMethodDef {{module_name}}_methods[] = {
 
 static struct PyModuleDef moduledef =
 {
-        PyModuleDef_HEAD_INIT,
-        "{{module_name}}",
-        NULL,
-        -1,
-        {{module_name}}_methods,
-        NULL,
-        NULL,
-        NULL,
-        NULL
+	PyModuleDef_HEAD_INIT,
+	"{{module_name}}",
+	NULL,
+	-1,
+	{{module_name}}_methods,
+	NULL,
+	NULL,
+	NULL,
+	NULL
 };
 
 PyMODINIT_FUNC PyInit_{{module_name}}(void)

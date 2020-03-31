@@ -46,7 +46,6 @@ class IVP_wrapper(object):
 		self.f = f
 		self.jac = jac
 		self.wants_jac = info["wants_jac"]
-		self.params = ()
 		
 		# Dictionary to be passed as arguments to the integrator and store stuff
 		self.kwargs = {
@@ -69,18 +68,13 @@ class IVP_wrapper(object):
 	def t(self):
 		return self.kwargs["t0"]
 	
-	@property
-	def with_params(self):
-		return len(signature(self.f).parameters) > 2
-	
 	def try_to_initiate(self):
 		"""
 		initiate the integrator if all required arguments have been set
 		"""
 		if (
-				"t0" in self.kwargs.keys() and
-				"y0" in self.kwargs.keys() and
-				(bool(self.params) or not self.with_params)
+				"t0" in self.kwargs and
+				"y0" in self.kwargs
 			):
 			self.backend = self.ivp_class(**self.kwargs)
 	
@@ -90,13 +84,7 @@ class IVP_wrapper(object):
 		self.try_to_initiate()
 	
 	def set_params(self,*args):
-		self.params = args
-		if self.params:
-			# use wrapper to handle parameters
-			self.kwargs["fun"] = lambda t,y: self.f(t,y,*self.params)
-			if self.wants_jac:
-				self.kwargs["jac"] = lambda t,y: self.jac(t,y,*self.params)
-			self.try_to_initiate()
+		raise NotImplementedError("This method should not be called anymore")
 	
 	def integrate(self,t):
 		while self.backend.t < t or self.backend.t_old is None:
@@ -151,8 +139,7 @@ class ODE_wrapper(ode):
 		return self.f_params
 	
 	def set_params(self,*args):
-		super(ODE_wrapper,self).set_f_params  (*args)
-		super(ODE_wrapper,self).set_jac_params(*args)
+		raise NotImplementedError("This method should not be called anymore")
 
 class empty_integrator(object):
 	"""
@@ -179,7 +166,7 @@ class empty_integrator(object):
 		self._t = time
 	
 	def set_params(self,*args):
-		self.params = args
+		raise NotImplementedError("This method should not be called anymore")
 	
 	def integrate(self,*args,**kwargs):
 		raise RuntimeError("You must call set_integrator first.")

@@ -58,9 +58,10 @@ class TestBasic(unittest.TestCase):
 	
 	def tearDown(self):
 		self.assertIsNotNone(self.ODE.f)
-		assert_allclose( self.ODE.f(0.0,y0,*self.params), f_of_y0, rtol=1e-5 )
+		self.ODE.set_parameters(*self.params)
+		assert_allclose( self.ODE.f(0.0,y0), f_of_y0, rtol=1e-5 )
 		if not self.ODE.jac is None:
-			assert_allclose( self.ODE.jac(0.0,y0,*self.params), jac_of_y0, rtol=1e-5)
+			assert_allclose( self.ODE.jac(0.0,y0), jac_of_y0, rtol=1e-5)
 
 class TestHelpers(TestBasic):
 	def setUp(self):
