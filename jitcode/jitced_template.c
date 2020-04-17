@@ -11,6 +11,30 @@ unsigned int const dimension={{n}};
 double parameter_{{control_par}};
 {% endfor %}
 
+{% if callbacks|length %}
+double inline callback(PyObject * Python_function, PyObject * arglist)
+{
+	PyObject * py_result = PyObject_CallObject(Python_function,arglist);
+	Py_DECREF(arglist);
+	double result = PyFloat_AsDouble(py_result);
+	Py_DECREF(py_result);
+	return result;
+}
+{% endif %}
+
+{% for function,nargs in callbacks %}
+static PyObject * callback_{{function}};
+# define {{function}}(...) callback(\
+		callback_{{function}}, \
+		Py_BuildValue( \
+				{% if nargs -%}
+				"(O{{'d'*nargs}})", Y, __VA_ARGS__ \
+				{% else -%}
+				"(O)", Y \
+				{% endif -%}
+			))
+{% endfor %}
+
 # define get_general_helper(i) ((general_helper[i]))
 # define set_general_helper(i,value) (general_helper[i] = value)
 
@@ -161,15 +185,25 @@ static PyObject * py_initialise(PyObject *self, PyObject * args)
 {
 	if (!PyArg_ParseTuple(
 		args,
-		"{{'d'*control_pars|length}}"
+		"{{'d'*control_pars|length}}{{'O'*callbacks|length}}"
 		{% for control_par in control_pars %}
-		, &(parameter_{{control_par}})
+		, &parameter_{{control_par}}
+		{% endfor %}
+		{% for function,nargs in callbacks %}
+		, &callback_{{function}}
 		{% endfor %}
 		))
 	{
 		PyErr_SetString(PyExc_ValueError,"Wrong input.");
 		return NULL;
 	}
+	{% for function,nargs in callbacks %}
+	if (!PyCallable_Check(callback_{{function}}))
+	{
+		PyErr_SetString(PyExc_TypeError,"Callback must be callable.");
+		return NULL;
+	}
+	{% endfor %}
 	
 	Py_RETURN_NONE;
 }

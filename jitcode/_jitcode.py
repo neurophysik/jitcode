@@ -67,6 +67,13 @@ class jitcode(jitcxde):
 	control_pars : iterable of symbols
 		Each symbol corresponds to a control parameter that can be used when defining the equations and set after compilation using `set_parameters` (in the same order as given here). Using this makes sense if you need to do a parameter scan with short integrations for each parameter and you spend a considerable amount of time compiling.
 	
+	callback_functions : iterable
+		Python functions that should be called at integration time (callback) when evaluating the derivative. Each element of the iterable represents one callback function as a tuple containing (in that order):
+		
+		*	A SymEngine function object used in `f_sym` to represent the function call. If you want to use any JiTCODE features that need the derivative, this must have a properly defined `f_diff` method with the derivative being another callback function (or constant).
+		*	The Python function to be called. This function will receive the state array (`y`) as the first argument. All further arguments are whatever you use as arguments of the SymEngine function in `f_sym`. These must be floats. The return value must also be a float (or something castable to float).
+		*	The number of arguments, **excluding** the state array as mandatory first argument. This means if you have a variadic Python function, you cannot just call it with different numbers of arguments in `f_sym`, but you have to define separate callbacks for each of numer of arguments.
+	
 	verbose : boolean
 		Whether JiTCODE shall give progress reports on the processing steps.
 	
@@ -77,11 +84,12 @@ class jitcode(jitcxde):
 	dynvar = y
 	
 	def __init__(self,
-				f_sym = (),
+				f_sym = (), *,
 				helpers = None,
 				wants_jacobian = False,
 				n = None,
 				control_pars = (),
+				callback_functions = (),
 				verbose = True,
 				module_location = None,
 			):
@@ -94,17 +102,18 @@ class jitcode(jitcxde):
 		self.helpers = sort_helpers(sympify_helpers(helpers or []))
 		self.control_pars = control_pars
 		self.control_par_values = ()
+		self.callback_functions = callback_functions
 		self._wants_jacobian = wants_jacobian
 		
 		self.integrator = empty_integrator()
 		
 		if self.jitced is None:
-			self.initialise = None
+			self._initialise = None
 			self.f = None
 			self.jac = None
 		else:
 			# Load derivative and Jacobian if a compiled module has been provided
-			self.initialise = self.jitced.initialise
+			self._initialise = self.jitced.initialise
 			self.f = self.jitced.f
 			self.jac = self.jitced.jac if hasattr(self.jitced,"jac") else None
 		
@@ -393,6 +402,7 @@ class jitcode(jitcxde):
 				number_of_general_helpers = len(self.helpers),
 				sparse_jac = self.sparse_jac if self._jac_C_source else None,
 				control_pars = [par.name for par in self.control_pars],
+				callbacks = [(fun.name,n_args) for fun,_,n_args in self.callback_functions],
 			)
 		
 		self._compile_and_load(
@@ -404,9 +414,12 @@ class jitcode(jitcxde):
 		self.f = self.jitced.f
 		if hasattr(self.jitced,"jac"):
 			self.jac = self.jitced.jac
-		self.initialise = self.jitced.initialise
+		self._initialise = self.jitced.initialise
 	
 	def _prepare_lambdas(self):
+		if self.callback_functions:
+			raise NotImplementedError("Callbacks do not work with lambdification. You must use the C backend.")
+		
 		if not hasattr(self,"_lambda_subs") or not hasattr(self,"_lambda_args"):
 			if self.helpers:
 				warn("Lambdification handles helpers by plugging them in. This may be very inefficient")
@@ -450,10 +463,6 @@ class jitcode(jitcxde):
 		lambdify = symengine.LambdifyCSE if do_cse else symengine.Lambdify
 		core_f = lambdify(self._lambda_args,list(f_sym_wc))
 		self.f = lambda t,Y: core_f(np.hstack([t,Y,self.control_par_values]))
-		
-		def _initialise(*args):
-			self.control_par_values = args
-		self.initialise = _initialise
 		
 		self.compile_attempt = False
 	
@@ -610,6 +619,17 @@ class jitcode(jitcxde):
 		except (AttributeError,RuntimeError):
 			pass
 	
+	def initialise(self):
+		if self._initialise is not None:
+			self._initialise(
+					*self.control_par_values,
+					*[callback for _,callback,_ in self.callback_functions]
+				)
+			self._initialise(
+					*self.control_par_values,
+					*[callback for _,callback,_ in self.callback_functions]
+				)
+	
 	def set_parameters(self,*args):
 		"""
 		Same as `set_f_params` and `set_jac_params` for SciPy’s ODE (both  sets of parameters are set simultaneuosly, because they should be the same anyway).
@@ -617,12 +637,14 @@ class jitcode(jitcxde):
 		The parameters can be passed as different arguments or as a list or other sequence.
 		"""
 		try:
-			self.initialise(*args[0])
+			self.control_par_values = tuple(args[0])
 		except (TypeError,IndexError):
-			self.initialise(*args)
+			self.control_par_values = args
 		else:
 			if len(args)>1:
 				raise TypeError("Argument must either be a single sequence or multiple numbers.")
+		
+		self.initialise()
 	
 	def set_f_params(self, *args):
 		warn("This function has been replaced by `set_parameters`")
@@ -920,5 +942,3 @@ def test(omp=True,sympy=True):
 	ODE.set_initial_value([1,2])
 	ODE.integrate(0.1)
 	
-
-

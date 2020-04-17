@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import numpy as np
-from symengine import symbols
+from symengine import symbols, Function
 from jitcode import y
 from random import shuffle
 
@@ -107,4 +107,30 @@ with_params = {
 		"helpers": f_params_helpers,
 		"control_pars": [a_par, c_par, k_par]
 	}
+
+# with callbacks
+
+def first_component(Y):
+	return Y[0] * ( a-Y[0] ) * ( Y[0]-1.0 ) - Y[1] + k * (Y[2] - Y[0])
+
+c_times = lambda y,arg: c*arg
+
+call_first_component = Function("call_first_component")
+call_c_times = Function("call_c_times")
+
+f_callback = [
+		call_first_component(),
+		b1*y(0) - call_c_times(y(1)),
+		y(2) * ( a-y(2) ) * ( y(2)-1.0 ) - y(3) + k * (y(0) - y(2)),
+		b2*y(2) - c*y(3),
+	]
+
+callback = {
+		"f_sym": f_callback,
+		"callback_functions": [
+			(call_first_component,first_component,0),
+			(call_c_times,c_times,1)
+		],
+	}
+
 
