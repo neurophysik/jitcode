@@ -135,7 +135,8 @@ Other things you may want to do
 
 * `JiTCDDE <https://jitcdde.rtfd.io>`_ is like JiTCODE for delay differential equations.
 * `JiTCSDE <https://jitcsde.rtfd.io>`_ is like JiTCODE for stochastics differential equations.
-* If you want to have input that cannot be expressed in a simple function, you can use `jitcdde_input <https://jitcdde.rtfd.io#input>`_.
+* If you want to have input that cannot be expressed in a simple function, you can use `jitcdde_input <https://jitcdde.rtfd.io#input>`_ or use a callback (see the next point).
+* If you want to call a Python function within the derivative, use the `callback_functions` argument.
 * The `zvode` integrator and complex arithmetics in general do not work, as they are not that easily implementable in C.
 
 Command reference

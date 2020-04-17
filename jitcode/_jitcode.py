@@ -71,7 +71,7 @@ class jitcode(jitcxde):
 		Python functions that should be called at integration time (callback) when evaluating the derivative. Each element of the iterable represents one callback function as a tuple containing (in that order):
 		
 		*	A SymEngine function object used in `f_sym` to represent the function call. If you want to use any JiTCODE features that need the derivative, this must have a properly defined `f_diff` method with the derivative being another callback function (or constant).
-		*	The Python function to be called. This function will receive the state array (`y`) as the first argument. All further arguments are whatever you use as arguments of the SymEngine function in `f_sym`. These must be floats. The return value must also be a float (or something castable to float).
+		*	The Python function to be called. This function will receive the state array (`y`) as the first argument. All further arguments are whatever you use as arguments of the SymEngine function in `f_sym`. These must be floats. The return value must also be a float (or something castable to float). It is your responsibility to ensure that this function is deterministic and sufficiently smooth with respect to time and state.
 		*	The number of arguments, **excluding** the state array as mandatory first argument. This means if you have a variadic Python function, you cannot just call it with different numbers of arguments in `f_sym`, but you have to define separate callbacks for each of numer of arguments.
 	
 	verbose : boolean
@@ -418,7 +418,7 @@ class jitcode(jitcxde):
 	
 	def _prepare_lambdas(self):
 		if self.callback_functions:
-			raise NotImplementedError("Callbacks do not work with lambdification. You must use the C backend.")
+			raise NotImplementedError("Callbacks do not work with lambdification. You must use the C backend.")
 		
 		if not hasattr(self,"_lambda_subs") or not hasattr(self,"_lambda_args"):
 			if self.helpers:
@@ -621,10 +621,6 @@ class jitcode(jitcxde):
 	
 	def initialise(self):
 		if self._initialise is not None:
-			self._initialise(
-					*self.control_par_values,
-					*[callback for _,callback,_ in self.callback_functions]
-				)
 			self._initialise(
 					*self.control_par_values,
 					*[callback for _,callback,_ in self.callback_functions]
