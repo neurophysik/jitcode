@@ -20,7 +20,7 @@ We start with a few imports:
 	:lines: 1-2
 	:dedent: 1
 
-… and defining the cotrol parameters:
+… and defining the control parameters:
 
 .. literalinclude:: ../examples/lotka_volterra.py
 	:start-after: example-st\u0061rt
