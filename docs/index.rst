@@ -107,6 +107,7 @@ It works just like `jitcode`, except that it generates and integrates additional
 After every call of `integrate`, the tangent vectors are orthonormalised, and the “local” Lyapunov exponents for this integration step are returned alongside with the system’s state.
 These can then be further processed to obtain the Lyapunov exponents.
 The tangent vectors are initialised with random vectors, and you have to take care of the preiterations that the tangent vectors require to align themselves.
+You also have to take care not to `integrate` for too long to avoid a numerical overflow in the tangent vectors.
 
 Estimates for the Lyapunov vectors are returned as well.
 
