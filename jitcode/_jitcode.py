@@ -676,8 +676,8 @@ class jitcode_lyap(jitcode):
 		
 		f_basic = self._handle_input(f_sym,n_basic=True)
 		self._n_lyap = n_lyap if (0<=n_lyap<=self.n_basic) else self.n_basic
-		if self.n_lyap>10:
-			warn("You are about to calculate %i Lyapunov exponents. This is very likely more than you need and may lead to severe difficulties with compilation and integration. Unless you really know what you are doing, consider how many Lyapunov exponents you actually need and set the parameter `n_lyap` accordingly.")
+		if self._n_lyap>10:
+			warn("You are about to calculate %i Lyapunov exponents. This is very likely more than you need and may lead to severe difficulties with compilation and integration. Unless you really know what you are doing, consider how many Lyapunov exponents you actually need and set the parameter `n_lyap` accordingly." % self._n_lyap)
 		
 		if simplify is None:
 			simplify = self.n_basic<=10
