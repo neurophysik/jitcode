@@ -65,61 +65,63 @@ couplings = [
 	]
 
 for scenario in scenarios:
-	n = len(scenario["f"])
-	
-	ODE1 = jitcode_restricted_lyap(
-			scenario["f"],
-			vectors = scenario["vectors"],
-			verbose = False,
-			control_pars = [k]
-		)
-	# Simplification or compiler optimisation would lead to trajectories diverging from the synchronisation manifold due to numerical noise.
-	ODE1.generate_f_C(simplify=False)
-	ODE1.compile_C( extra_compile_args = DEFAULT_COMPILE_ARGS + ["-O2"] )
-	ODE1.set_integrator("dopri5")
-
-	ODE2 = jitcode_transversal_lyap(
-			scenario["f"],
-			groups = scenario["groups"],
-			verbose = False,
-			control_pars = [k]
-		)
-	ODE2.set_integrator("dopri5")
-	
-	for coupling in couplings:
-		ODE1.set_parameters(coupling["k"])
-		ODE2.set_parameters(coupling["k"])
+	for average_dynamics in [False,True]:
+		n = len(scenario["f"])
 		
-		if coupling["sign"]<0:
-			initial_state = np.random.random(n)
-		else:
-			single = np.random.random(2)
-			initial_state = np.empty(n)
-			for j,group in enumerate(scenario["groups"]):
-				for i in group:
-					initial_state[i] = single[j]
-		ODE1.set_initial_value(initial_state,0.0)
+		ODE1 = jitcode_restricted_lyap(
+				scenario["f"],
+				vectors = scenario["vectors"],
+				verbose = False,
+				control_pars = [k]
+			)
+		# Simplification or compiler optimisation would lead to trajectories diverging from the synchronisation manifold due to numerical noise.
+		ODE1.generate_f_C(simplify=False)
+		ODE1.compile_C( extra_compile_args = DEFAULT_COMPILE_ARGS + ["-O2"] )
+		ODE1.set_integrator("dopri5")
 		
-		ODE2.set_initial_value(np.random.random(2),0.0)
+		ODE2 = jitcode_transversal_lyap(
+				scenario["f"],
+				groups = scenario["groups"],
+				average_dynamics = average_dynamics,
+				verbose = False,
+				control_pars = [k],
+			)
+		ODE2.set_integrator("dopri5")
 		
-		times = range(100,100000,100)
-		lyaps1 = np.hstack([ODE1.integrate(time)[1] for time in times])
-		lyaps2 = np.hstack([ODE2.integrate(time)[1] for time in times])
-		
-		# Check that we are still on the synchronisation manifold:
-		for group in scenario["groups"]:
-			for i,j in combinations(group,2):
-				assert ODE1.y[i]==ODE1.y[j], "If this fails, the test is broken, not JiTCODE itself."
-		
-		Lyap1 = np.average(lyaps1[500:])
-		Lyap2 = np.average(lyaps2[500:])
-		margin1 = sem(lyaps1[500:])
-		margin2 = sem(lyaps2[500:])
-		sign1 = np.sign(Lyap1) if abs(Lyap1)>margin1 else 0
-		sign2 = np.sign(Lyap2) if abs(Lyap2)>margin2 else 0
-		assert sign1==coupling["sign"]
-		assert sign2==coupling["sign"]
-		assert abs(Lyap1-Lyap2)<max(margin1,margin2), "%f±%f \t %f±%f"%(Lyap1,margin1,Lyap2,margin2)
-		print( ".", end="", flush=True )
+		for coupling in couplings:
+			ODE1.set_parameters(coupling["k"])
+			ODE2.set_parameters(coupling["k"])
+			
+			if coupling["sign"]<0:
+				initial_state = np.random.random(n)
+			else:
+				single = np.random.random(2)
+				initial_state = np.empty(n)
+				for j,group in enumerate(scenario["groups"]):
+					for i in group:
+						initial_state[i] = single[j]
+			ODE1.set_initial_value(initial_state,0.0)
+			
+			ODE2.set_initial_value(np.random.random(2),0.0)
+			
+			times = range(100,100000,100)
+			lyaps1 = np.hstack([ODE1.integrate(time)[1] for time in times])
+			lyaps2 = np.hstack([ODE2.integrate(time)[1] for time in times])
+			
+			# Check that we are still on the synchronisation manifold:
+			for group in scenario["groups"]:
+				for i,j in combinations(group,2):
+					assert ODE1.y[i]==ODE1.y[j], "If this fails, the test is broken, not JiTCODE itself."
+			
+			Lyap1 = np.average(lyaps1[500:])
+			Lyap2 = np.average(lyaps2[500:])
+			margin1 = sem(lyaps1[500:])
+			margin2 = sem(lyaps2[500:])
+			sign1 = np.sign(Lyap1) if abs(Lyap1)>margin1 else 0
+			sign2 = np.sign(Lyap2) if abs(Lyap2)>margin2 else 0
+			assert sign1==coupling["sign"]
+			assert sign2==coupling["sign"]
+			assert abs(Lyap1-Lyap2)<max(margin1,margin2), "%f±%f \t %f±%f"%(Lyap1,margin1,Lyap2,margin2)
+			print( ".", end="", flush=True )
 
 print("")

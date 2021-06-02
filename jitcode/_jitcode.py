@@ -781,11 +781,14 @@ class jitcode_transversal_lyap(jitcode,GroupHandler):
 	
 	simplify : boolean
 		Whether the transformed differential equations shall be subjected to SymEngine’s `simplify`. Doing so may speed up the time evolution but may slow down the generation of the code (considerably for large differential equations). If `None`, this will be automatically disabled for `n>10`.
+	
+	average_dynamics : boolean
+		Whether the dynamics of synchronised variables shall be averaged over all variables in a synchronisation group. Otherwise, the dynamics of the first variable of a group is taken as representative (the default). Activating this option may be useful if the investigated synchrony is not complete – otherwise it has no effect. Using this voids the advantages of generator functions and may lead to problems with very large dynamics.
 	"""
 	
 	# Read the accompanying paper to understand the internals of this.
 	
-	def __init__( self, f_sym=(), groups=(), simplify=None, **kwargs ):
+	def __init__( self, f_sym=(), groups=(), simplify=None, average_dynamics=False, **kwargs ):
 		GroupHandler.__init__(self,groups)
 		self.n = kwargs.pop("n",None)
 		
@@ -823,10 +826,17 @@ class jitcode_transversal_lyap(jitcode,GroupHandler):
 				entry = entry.simplify(ratio=1)
 			return replace_function(entry,z,y)
 		
+		if average_dynamics:
+			f_list = list(f_basic())
+		
 		def f_lyap():
 			for entry in self.iterate(tangent_vector_f()):
-				if type(entry)==int:
-					yield finalise(extracted[self.main_indices[entry]])
+				if type(entry)==int: # i.e., if main index
+					if average_dynamics:
+						group = groups[entry]
+						yield sum( finalise(f_list[i]) for i in group )/len(group)
+					else:
+						yield finalise(extracted[self.main_indices[entry]])
 				else:
 					yield finalise(entry[0]-entry[1])
 		
