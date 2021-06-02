@@ -7,6 +7,7 @@ Integration test of jitcode_restricted_lyap and jitcode_transversal_lyap by comp
 
 from itertools import combinations
 from jitcode import jitcode_restricted_lyap, y, jitcode_transversal_lyap
+from jitcxde_common import DEFAULT_COMPILE_ARGS
 import numpy as np
 from scipy.stats import sem
 from symengine import Symbol
@@ -72,8 +73,9 @@ for scenario in scenarios:
 			verbose = False,
 			control_pars = [k]
 		)
-	# Simplification would lead to trajectories diverging from the synchronisation manifold due to numerical noise.
+	# Simplification or compiler optimisation would lead to trajectories diverging from the synchronisation manifold due to numerical noise.
 	ODE1.generate_f_C(simplify=False)
+	ODE1.compile_C( extra_compile_args = DEFAULT_COMPILE_ARGS + ["-O2"] )
 	ODE1.set_integrator("dopri5")
 
 	ODE2 = jitcode_transversal_lyap(
