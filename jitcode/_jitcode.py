@@ -571,6 +571,7 @@ class jitcode(jitcxde):
 			* `"dopri5"` – Dormand’s and Prince’s explicit fifth-order method via `ode`
 			* `"RK45"` – Dormand’s and Prince’s explicit fifth-order method via `solve_ivp`
 			* `"dop853"` – DoP853 (explicit) via `ode`
+			* `"DOP853"` – DoP853 (explicit) via `solve_ivp`
 			* `"RK23"` – Bogacki’s and Shampine’s explicit third-order method via `solve_ivp`
 			* `"BDF"` – Implicit backward-differentiation formula via `solve_ivp`
 			* `"lsoda"` – LSODA (implicit) via `ode`
@@ -598,6 +599,7 @@ class jitcode(jitcxde):
 		self.generate_functions()
 		
 		if info["backend"] == "ode":
+			self.initialise()
 			self.integrator = ODE_wrapper(self.f,self.jac)
 			self.integrator.set_integrator(
 					name,
@@ -611,26 +613,33 @@ class jitcode(jitcxde):
 			self.integrator = IVP(
 					name,
 					self.f,
-					self.jac,
+					initialiser = lambda: self.initialise(force=True),
+					jac = self.jac,
 					**integrator_params
 				)
 		
-		# Restore state and params, if applicable:
+		# Restore state and time, if applicable:
 		try:
-			self.set_initial_value(old_integrator._y,old_integrator.t)
+			old_y = old_integrator._y
+			old_t = old_integrator.t
 		except (AttributeError,RuntimeError):
 			pass
+		else:
+			self.set_initial_value(old_y,old_t)
 	
-	def initialise(self):
+	def initialise(self,force=False):
 		if self._initialise is not None:
-			self._initialise(
+			if len(self.control_par_values)==len(self.control_pars):
+				self._initialise(
 					*self.control_par_values,
 					*[callback for _,callback,_ in self.callback_functions]
 				)
+			elif force:
+				raise RuntimeError("Something needs parameters to be set. Try calling `set_parameters` earlier.")
 	
 	def set_parameters(self,*args):
 		"""
-		Same as `set_f_params` and `set_jac_params` for SciPy’s ODE (both  sets of parameters are set simultaneuosly, because they should be the same anyway).
+		Same as `set_f_params` and `set_jac_params` for SciPy’s ODE (both sets of parameters are set simultaneuosly, because they should be the same anyway).
 		
 		The parameters can be passed as different arguments or as a list or other sequence.
 		"""
@@ -641,6 +650,9 @@ class jitcode(jitcxde):
 		else:
 			if len(args)>1:
 				raise TypeError("Argument must either be a single sequence or multiple numbers.")
+		
+		if len(self.control_par_values)!=len(self.control_pars):
+			raise ValueError("Number of values does not match number of control parameters.")
 		
 		self.initialise()
 	

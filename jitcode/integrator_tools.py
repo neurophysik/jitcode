@@ -40,12 +40,19 @@ class IVP_wrapper(object):
 	This is a wrapper around the integrators from scipy.integrate.solve_ivp making them work like scipy.integrate.ode (mostly).
 	"""
 	
-	def __init__(self,name,f,jac=None,**kwargs):
+	def __init__(
+			self,
+			name,
+			f, jac=None,
+			initialiser = lambda:None,
+			**kwargs
+		):
 		info = integrator_info(name)
 		self.ivp_class = info["integrator"]
 		self.f = f
 		self.jac = jac
 		self.wants_jac = info["wants_jac"]
+		self.initialiser = initialiser
 		
 		# Dictionary to be passed as arguments to the integrator and store stuff
 		self.kwargs = {
@@ -76,6 +83,7 @@ class IVP_wrapper(object):
 				"t0" in self.kwargs and
 				"y0" in self.kwargs
 			):
+			self.initialiser()
 			self.backend = self.ivp_class(**self.kwargs)
 	
 	def set_initial_value(self, initial_value, time=0.0):
