@@ -80,7 +80,7 @@ class jitcode(jitcxde):
 		Whether JiTCODE shall give progress reports on the processing steps.
 	
 	module_location : string
-		location of a module file from which functions are to be loaded (see `save_compiled`). If you use this, you need not give `f_sym` as an argument, but in this case you must give `n`. Depending on the arguments you provide, functionalities such as recompiling may not be available; but then the entire point of this option is to avoid these.
+		location of a module file from which functions are to be loaded (see `save_compiled`). If you use this, you need not give `f_sym` as an argument, but in this case you must give `n`. If you used `control_pars` or `callback_functions`, you have to provide them again. Depending on the arguments you provide, functionalities such as recompiling may not be available; but then the entire point of this option is to avoid these.
 	"""
 	
 	dynvar = y
