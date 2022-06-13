@@ -12,7 +12,7 @@ import symengine
 
 from jitcxde_common import jitcxde, checker
 from jitcxde_common.helpers import sympify_helpers, sort_helpers, find_dependent_helpers
-from jitcxde_common.numerical import random_direction, orthonormalise
+from jitcxde_common.numerical import random_direction, orthonormalise_qr
 from jitcxde_common.symbolic import collect_arguments, ordered_subs, replace_function
 from jitcxde_common.transversal import GroupHandler
 
@@ -744,8 +744,8 @@ class jitcode_lyap(jitcode):
 	
 	def norms(self):
 		n = self.n_basic
-		tangent_vectors = [ self._y[(i+1)*n:(i+2)*n] for i in range(self._n_lyap) ]
-		norms = orthonormalise(tangent_vectors)
+		tangent_vectors = self._y[n:].reshape(self.n_lyap,n)
+		tangent_vectors,norms = orthonormalise_qr(tangent_vectors)
 		if not np.all(np.isfinite(norms)):
 			warn("Norms of perturbation vectors for Lyapunov exponents out of numerical bounds. You probably waited too long before renormalising and should call integrate with smaller intervals between steps (as renormalisations happen once with every call of integrate).")
 		return norms, tangent_vectors
