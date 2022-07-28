@@ -744,7 +744,7 @@ class jitcode_lyap(jitcode):
 	
 	def norms(self):
 		n = self.n_basic
-		tangent_vectors = self._y[n:].reshape(self.n_lyap,n)
+		tangent_vectors = self._y[n:].reshape(self._n_lyap,n)
 		tangent_vectors,norms = orthonormalise_qr(tangent_vectors)
 		if not np.all(np.isfinite(norms)):
 			warn("Norms of perturbation vectors for Lyapunov exponents out of numerical bounds. You probably waited too long before renormalising and should call integrate with smaller intervals between steps (as renormalisations happen once with every call of integrate).")
@@ -771,6 +771,7 @@ class jitcode_lyap(jitcode):
 		delta_t = self.t-old_t
 		norms, tangent_vectors = self.norms()
 		lyaps = log(norms) / delta_t
+		self._y[self.n_basic:] = tangent_vectors.flatten()
 		super(jitcode_lyap, self).set_initial_value(self._y, self.t)
 		
 		return self._y[:self.n_basic], lyaps, tangent_vectors
