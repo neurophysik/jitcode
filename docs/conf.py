@@ -53,6 +53,8 @@ autodoc_member_order = 'bysource'
 
 graphviz_output_format = "svg"
 
+toc_object_entries_show_parents = 'hide'
+
 def on_missing_reference(app, env, node, contnode):
 	if node['reftype'] == 'any':
 		return contnode
