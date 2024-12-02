@@ -5,3 +5,4 @@ docs/_build/
 **/*.so
 **/__pycache__
 jitcode/version.py
+*.egg-info/
