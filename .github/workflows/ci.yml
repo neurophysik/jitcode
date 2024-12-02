@@ -1,0 +1,55 @@
+name: CI
+
+on:
+  push:
+    branches: [ 'master' ]
+  pull_request:
+    branches: [ 'master' ]
+  schedule:
+    # at 12:00 (UTC) on the first day of the month
+    - cron: '0 12 1 * *'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: Unittest (${{ matrix.os }}-${{ matrix.compiler }}-py${{ matrix.python-version }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest]
+        compiler: [gcc, clang]
+        python-version: ['3.10', '3.x']
+        include:
+          - os: ubuntu-20.04
+            python-version: '3.6'
+            compiler: gcc
+          - os: ubuntu-20.04
+            python-version: '3.6'
+            compiler: clang
+      fail-fast: false
+
+    steps:
+    - uses: actions/checkout@v4
+    - uses: actions/setup-python@v5
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - name: Install System Dependencies
+      if: matrix.os == 'ubuntu-latest' && matrix.compiler == 'clang'
+      run: |
+        sudo apt-get install libomp5 libomp-dev
+
+    - name: Install Python Dependencies
+      run: |
+        python -m pip install --upgrade pip setuptools setuptools-scm wheel
+        python -m pip install --upgrade numpy scipy jitcxde_common sympy
+
+    - name: Run Tests
+      env:
+        CC: ${{ matrix.compiler }}
+      run: |
+        python -m pip install --verbose --no-build-isolation --editable .
+        python -m unittest discover -b -f -v tests

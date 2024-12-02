@@ -1,0 +1,56 @@
+[build-system]
+build-backend = "setuptools.build_meta"
+requires = [
+    "setuptools>=64",
+    "setuptools-scm>=7",
+]
+
+[project]
+name = "jitcode"
+dynamic = ["version"]
+description = "Just-in-Time Compilation for Ordinary Differential Equations"
+readme = "README.rst"
+license = { text = "BSD-3-Clause" }
+authors = [
+    { name = "Gerrit Ansmann", email = "gansmann@uni-bonn.de" },
+]
+requires-python = ">=3.6"
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "License :: OSI Approved :: BSD License",
+    "Operating System :: POSIX",
+    "Operating System :: MacOS :: MacOS X",
+    "Operating System :: Microsoft :: Windows",
+    "Programming Language :: Python",
+    "Topic :: Scientific/Engineering :: Mathematics",
+]
+dependencies = [
+	"jitcxde_common>=1.5.4",
+    "numpy",
+    "scipy",
+    "symengine>=0.3.1.dev0",
+]
+
+[project.optional-dependencies]
+test = [
+    # NOTE: required for expr.simplify (symengine calls sympy for that)
+    # https://github.com/symengine/symengine.py/issues/405
+    "sympy"
+]
+
+[project.urls]
+Documentation = "https://jitcode.readthedocs.io"
+Homepage = "http://github.com/neurophysik/jitcode"
+
+[tool.setuptools.packages.find]
+include = [
+    "jitcode*",
+]
+
+[tool.setuptools.package-data]
+jitcode = [
+    "jitced_template.c",
+]
+
+[tool.setuptools_scm]
+write_to = "jitcode/version.py"
