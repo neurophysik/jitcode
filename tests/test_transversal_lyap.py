@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 """
-Integration test of jitcode_restricted_lyap and jitcode_transversal_lyap by comparing them to each other.
+Integration test of jitcode_restricted_lyap and jitcode_transversal_lyap by comparing their results to each other for a synchronised scenario.
 """
 
 from itertools import combinations
@@ -19,6 +19,8 @@ k = Symbol("k")
 
 scenarios = [
 	{
+	"name":
+		"grouped by variables",
 	"f":
 		[
 			y(0)*(a-y(0))*(y(0)-1.0) - y(3) + k*(y(1)-y(0)),
@@ -37,6 +39,8 @@ scenarios = [
 		( [0,1,2], [3,4,5] )
 	},
 	{
+	"name":
+		"grouped by oscillators",
 	"f":
 		[
 			y(0)*(a-y(0))*(y(0)-1.0) - y(1) + k*(y(2)-y(0)),
@@ -109,9 +113,10 @@ for scenario in scenarios:
 			lyaps2 = np.hstack([ODE2.integrate(time)[1] for time in times])
 			
 			# Check that we are still on the synchronisation manifold:
+			message = f"The dynamics left the synchronisation manifold when {scenario['name']} with coupling {coupling}. If this fails, this is a problem with the test and not with what is tested or any software involved.\n\nSpecifically, this test only works when the backend (Symengine plus compiler) implents certain computations completely symmetrically. This needs not and cannot be reasonably controlled (and no, turning off compiler optimisation doesn’t necessarily help as it often restores symmetries broken by Symengine). It’s only something exploited by this test to make it work in the first place."
 			for group in scenario["groups"]:
 				for i,j in combinations(group,2):
-					assert ODE1.y[i]==ODE1.y[j], "If this fails, the test is broken, not JiTCODE itself."
+					assert ODE1.y[i]==ODE1.y[j], message
 			
 			Lyap1 = np.average(lyaps1[500:])
 			Lyap2 = np.average(lyaps2[500:])
