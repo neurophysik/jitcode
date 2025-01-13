@@ -7,9 +7,10 @@ For instance, we can calculate and print the Lyapunov exponents for the system f
 
 if __name__ == "__main__":
 	# example-start
-	from jitcode import jitcode_lyap, y
-	from scipy.stats import sem
 	import numpy as np
+	from scipy.stats import sem
+
+	from jitcode import jitcode_lyap, y
 	
 	a  = -0.025794
 	b1 =  0.0065

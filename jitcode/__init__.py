@@ -1,9 +1,14 @@
 from ._jitcode import (
-		t, y,
-		jitcode, jitcode_lyap, jitcode_restricted_lyap, jitcode_transversal_lyap,
-		UnsuccessfulIntegration,
-		test,
-		)
+	UnsuccessfulIntegration,
+	jitcode,
+	jitcode_lyap,
+	jitcode_restricted_lyap,
+	jitcode_transversal_lyap,
+	t,
+	test,
+	y,
+)
+
 
 try:
 	from .version import version as __version__

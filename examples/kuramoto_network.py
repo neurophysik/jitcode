@@ -1,7 +1,9 @@
-from numpy import pi, vstack, savetxt
-from jitcode import jitcode, y
-from symengine import sin
+from numpy import pi, savetxt, vstack
 from numpy.random import choice, uniform
+from symengine import sin
+
+from jitcode import jitcode, y
+
 
 n = 100
 c = 3.0

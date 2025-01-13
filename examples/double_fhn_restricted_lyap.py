@@ -1,9 +1,11 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
 
-from jitcode import jitcode_restricted_lyap, y
 import numpy as np
 from scipy.stats import sem
+
+from jitcode import jitcode_restricted_lyap, y
+
 
 a  = -0.025794
 b1 =  0.01

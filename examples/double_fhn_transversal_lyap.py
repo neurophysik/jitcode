@@ -15,9 +15,10 @@ Note that the initial state (line 17) is reduced in dimensionality and there is
 
 if __name__ == "__main__":
 	# example-start
-	from jitcode import jitcode_transversal_lyap, y
-	from scipy.stats import sem
 	import numpy as np
+	from scipy.stats import sem
+
+	from jitcode import jitcode_transversal_lyap, y
 	
 	a = -0.025794
 	b =  0.01

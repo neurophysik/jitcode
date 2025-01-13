@@ -12,12 +12,8 @@ from numpy.testing import assert_allclose
 
 from jitcode import jitcode, jitcode_lyap, y
 from jitcode._jitcode import _is_C, _is_lambda
+from scenarios import callback, f_of_y0, jac_of_y0, n, params_args, vanilla, with_dictionary, with_generator, with_helpers, with_params, y0
 
-from scenarios import (
-		y0, f_of_y0, jac_of_y0,
-		vanilla, with_params, with_helpers, with_generator, with_dictionary, callback,
-		n, params_args
-	)
 
 class TestBasic(unittest.TestCase):
 	init_params = ()

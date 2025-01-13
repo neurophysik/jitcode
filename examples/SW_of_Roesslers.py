@@ -60,9 +60,10 @@ if __name__ == "__main__":
 		return A
 	
 	# example-start
-	from jitcode import jitcode, y, t
 	import numpy as np
 	import symengine
+
+	from jitcode import jitcode, t, y
 	
 	# parameters
 	# ----------

@@ -1,10 +1,13 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
 
-import numpy as np
-from symengine import symbols, Function
-from jitcode import y
 from random import shuffle
+
+import numpy as np
+from symengine import Function, symbols
+
+from jitcode import y
+
 
 n = 4
 

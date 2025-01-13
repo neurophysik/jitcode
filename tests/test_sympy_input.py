@@ -2,10 +2,12 @@
 Tests whether things works independent of where symbols are imported from.
 """
 
+import symengine
+import sympy
+
 import jitcode
 import jitcode.sympy_symbols
-import sympy
-import symengine
+
 
 symengine_manually = [
 		symengine.Symbol("t",real=True),

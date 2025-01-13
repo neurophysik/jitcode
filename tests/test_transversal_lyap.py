@@ -6,11 +6,15 @@ Integration test of jitcode_restricted_lyap and jitcode_transversal_lyap by comp
 """
 
 from itertools import combinations
-from jitcode import jitcode_restricted_lyap, y, jitcode_transversal_lyap
-from jitcxde_common import DEFAULT_COMPILE_ARGS
+
 import numpy as np
 from scipy.stats import sem
 from symengine import Symbol
+
+from jitcxde_common import DEFAULT_COMPILE_ARGS
+
+from jitcode import jitcode_restricted_lyap, jitcode_transversal_lyap, y
+
 
 a = -0.025794
 b =  0.01

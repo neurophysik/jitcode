@@ -1,9 +1,10 @@
 from inspect import signature
 
-from scipy.integrate import ode
-from scipy.integrate._ode import find_integrator
-from scipy.integrate._ivp.ivp import METHODS as ivp_methods
 from numpy import inf
+from scipy.integrate import ode
+from scipy.integrate._ivp.ivp import METHODS as ivp_methods
+from scipy.integrate._ode import find_integrator
+
 
 class UnsuccessfulIntegration(Exception):
 	"""

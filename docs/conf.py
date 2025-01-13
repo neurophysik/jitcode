@@ -1,7 +1,9 @@
-import sys
 import os
+import sys
 from unittest.mock import MagicMock as Mock
+
 from setuptools_scm import get_version
+
 
 MOCK_MODULES = [
 	'numpy', 'numpy.testing', 'numpy.random',

@@ -1,22 +1,23 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
 
-from warnings import warn
-from types import FunctionType, BuiltinFunctionType
 from inspect import signature
 from itertools import count
+from types import BuiltinFunctionType, FunctionType
+from warnings import warn
 
-from numpy import hstack, log
 import numpy as np
 import symengine
+from numpy import hstack, log
 
-from jitcxde_common import jitcxde, checker
-from jitcxde_common.helpers import sympify_helpers, sort_helpers, find_dependent_helpers
-from jitcxde_common.numerical import random_direction, orthonormalise_qr
+from jitcxde_common import checker, jitcxde
+from jitcxde_common.helpers import find_dependent_helpers, sort_helpers, sympify_helpers
+from jitcxde_common.numerical import orthonormalise_qr, random_direction
 from jitcxde_common.symbolic import collect_arguments, ordered_subs, replace_function
 from jitcxde_common.transversal import GroupHandler
 
-from jitcode.integrator_tools import empty_integrator, IVP_wrapper, IVP_wrapper_no_interpolation, ODE_wrapper, integrator_info, UnsuccessfulIntegration
+from jitcode.integrator_tools import IVP_wrapper, IVP_wrapper_no_interpolation, ODE_wrapper, UnsuccessfulIntegration, empty_integrator, integrator_info
+
 
 #: the symbol for the state that must be used to define the differential equation. It is a function and the integer argument denotes the component. You may just as well define an analogous function directly with SymEngine or SymPy, but using this function is the best way to get the most of future versions of JiTCODE, in particular avoiding incompatibilities. You can import a SymPy variant from the submodule `sympy_symbols` instead (see `SymPy vs. SymEngine`_ for details).
 y = symengine.Function("y")

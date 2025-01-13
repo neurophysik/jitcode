@@ -1,10 +1,13 @@
+from time import process_time
+
 import numpy as np
 from numpy.random import choice, uniform
-from time import process_time
-from scipy.integrate import ode, solve_ivp, odeint
+from scipy.integrate import ode, odeint, solve_ivp
 from scipy.integrate._ivp.ivp import METHODS
-from jitcode import jitcode, y
 from symengine import sin
+
+from jitcode import jitcode, y
+
 
 solver_ode = "dopri5"
 solver_ivp = "RK45"

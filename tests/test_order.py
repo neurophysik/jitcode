@@ -1,6 +1,9 @@
-from jitcode import jitcode
-from symengine import Symbol
 from itertools import permutations
+
+from symengine import Symbol
+
+from jitcode import jitcode
+
 
 p = Symbol('p')
 

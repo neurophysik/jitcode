@@ -4,13 +4,13 @@
 import unittest
 
 import numpy as np
-from numpy.testing import assert_allclose
 from numpy.random import random
+from numpy.testing import assert_allclose
 
 from jitcode import jitcode
-from jitcode.integrator_tools import empty_integrator, IVP_wrapper, IVP_wrapper_no_interpolation, ODE_wrapper, UnsuccessfulIntegration
+from jitcode.integrator_tools import IVP_wrapper, IVP_wrapper_no_interpolation, ODE_wrapper, UnsuccessfulIntegration, empty_integrator
+from scenarios import n, vanilla, y0, y1
 
-from scenarios import y0, y1, vanilla, n
 
 # Generating compiled functions
 
