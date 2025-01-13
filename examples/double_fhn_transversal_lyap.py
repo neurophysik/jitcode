@@ -1,5 +1,4 @@
 #!/usr/bin/python3
-# -*- coding: utf-8 -*-
 
 """
 For instance, let’s interpret the system from `example` as two oscillators (which is what it is), one consisting of the first and second and one of the third and fourth component. Furthermore, let’s change the control parameters a bit to make the two oscillators identical. We can then calculate the transversal Lyapunov exponents to the synchronisation manifold as follows (important changes are highlighted):
@@ -46,5 +45,5 @@ if __name__ == "__main__":
 	
 	lyap = np.average(lyaps[1000:])
 	stderr = sem(lyaps[1000:]) # Note that this only an estimate
-	print("transversal Lyapunov exponent: % .4f ± %.4f" % (lyap,stderr))
+	print(f"transversal Lyapunov exponent: {lyap:.4f} ± {stderr:.4f}")
 

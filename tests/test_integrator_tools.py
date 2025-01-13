@@ -1,5 +1,4 @@
 #!/usr/bin/python3
-# -*- coding: utf-8 -*-
 
 import unittest
 
@@ -30,7 +29,7 @@ f_back,jac_back = ODE.f,ODE.jac
 
 # -----------------------------
 
-class TestSkeleton(object):
+class TestSkeleton:
 	"""
 	This class exists to be inherited by a test that adds self.initialise to intialise self.integrator.
 	"""

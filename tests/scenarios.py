@@ -1,5 +1,4 @@
 #!/usr/bin/python3
-# -*- coding: utf-8 -*-
 
 from random import shuffle
 
@@ -62,8 +61,7 @@ with_dictionary = {"f_sym": f_dict}
 # with generator
 
 def f_generator():
-	for entry in f:
-		yield entry
+	yield from f
 
 with_generator = { "f_sym":f_generator, "n":n }
 

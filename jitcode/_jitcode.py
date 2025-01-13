@@ -1,5 +1,4 @@
 #!/usr/bin/python3
-# -*- coding: utf-8 -*-
 
 from inspect import signature
 from itertools import count
@@ -138,11 +137,11 @@ class jitcode(jitcxde):
 			for argument in collect_arguments(entry,y):
 				self._check_assert(
 						argument[0] >= 0,
-						"y is called with a negative argument (%i) in equation %i." % (argument[0],i),
+						f"y is called with a negative argument ({argument[0]}) in equation {i}.",
 					)
 				self._check_assert(
 						argument[0] < self.n,
-						"y is called with an argument (%i) higher than the system’s dimension (%i) in equation %i." % (argument[0],self.n,i)
+						f"y is called with an argument ({argument[0]}) higher than the system’s dimension ({self.n}) in equation {i}."
 					)
 	
 	@checker
@@ -153,7 +152,7 @@ class jitcode(jitcxde):
 			for symbol in entry.atoms(symengine.Symbol):
 				self._check_assert(
 						symbol in valid_symbols,
-						"Invalid symbol (%s) in equation %i."  % (symbol.name,i),
+						f"Invalid symbol ({symbol.name}) in equation {i}.",
 					)
 	
 	@property
@@ -430,7 +429,7 @@ class jitcode(jitcxde):
 			self._lambda_subs = list(reversed(self.helpers))
 			self._lambda_args = [t]
 			for i in range(self.n):
-				symbol = symengine.Symbol("dummy_argument_%i"%i)
+				symbol = symengine.Symbol(f"dummy_argument_{i}")
 				self._lambda_args.append(symbol)
 				self._lambda_subs.append((y(i),symbol))
 			self._lambda_args.extend(self.control_pars)
@@ -583,7 +582,7 @@ class jitcode(jitcxde):
 			The `solve_ivp` methods are usually slightly faster for large differential equations, but they come with a massive overhead that makes them considerably slower for small differential equations. Implicit solvers are slower than explicit ones, except for stiff problems. If you don’t know what to choose, start with `"dopri5"`.
 		
 		nsteps: integer
- 			Same as the respective parameter of the `ode` solvers, but with a higher default value to avoid annoying errors when getting rid of transients.
+			Same as the respective parameter of the `ode` solvers, but with a higher default value to avoid annoying errors when getting rid of transients.
 		
 		interpolate: boolean
 			Whether the sampled solutions for `solve_ivp` solvers shall be obtained using interpolation. If your sampling step is small, this may make things faster; otherwise it depends. This may also make the results slightly less accurate.
@@ -690,7 +689,7 @@ class jitcode_lyap(jitcode):
 		f_basic = self._handle_input(f_sym,n_basic=True)
 		self._n_lyap = n_lyap if (0<=n_lyap<=self.n_basic) else self.n_basic
 		if self._n_lyap>10:
-			warn("You are about to calculate %i Lyapunov exponents. This is very likely more than you need and may lead to severe difficulties with compilation and integration. Unless you really know what you are doing, consider how many Lyapunov exponents you actually need and set the parameter `n_lyap` accordingly." % self._n_lyap)
+			warn(f"You are about to calculate {self._n_lyap} Lyapunov exponents. This is very likely more than you need and may lead to severe difficulties with compilation and integration. Unless you really know what you are doing, consider how many Lyapunov exponents you actually need and set the parameter `n_lyap` accordingly.")
 		
 		if simplify is None:
 			simplify = self.n_basic<=10
@@ -716,7 +715,7 @@ class jitcode_lyap(jitcode):
 						expression = expression.simplify(ratio=1.0)
 					yield expression
 		
-		super(jitcode_lyap, self).__init__(
+		super().__init__(
 				f_lyap,
 				helpers = helpers,
 				n = self.n_basic*(self._n_lyap+1),
@@ -731,7 +730,7 @@ class jitcode_lyap(jitcode):
 		for _ in range(self._n_lyap):
 			new_y.append(random_direction(self.n_basic))
 		
-		super(jitcode_lyap, self).set_initial_value(hstack(new_y), time)
+		super().set_initial_value(hstack(new_y), time)
 	
 	def set_integrator(self,name,interpolate=None,**kwargs):
 		"""
@@ -741,7 +740,7 @@ class jitcode_lyap(jitcode):
 			interpolate = name in ["RK45","Radau"]
 		if name == "LSODA":
 			warn("Using LSODA for Lyapunov exponents is discouraged since interpolation errors may accumulate.")
-		super(jitcode_lyap,self).set_integrator(name,interpolate,**kwargs)
+		super().set_integrator(name,interpolate,**kwargs)
 	
 	def norms(self):
 		n = self.n_basic
@@ -768,12 +767,12 @@ class jitcode_lyap(jitcode):
 		"""
 		
 		old_t = self.t
-		super(jitcode_lyap, self).integrate(*args, **kwargs)
+		super().integrate(*args, **kwargs)
 		delta_t = self.t-old_t
 		norms, tangent_vectors = self.norms()
 		lyaps = log(norms) / delta_t
 		self._y[self.n_basic:] = tangent_vectors.flatten()
-		super(jitcode_lyap, self).set_initial_value(self._y, self.t)
+		super().set_initial_value(self._y, self.t)
 		
 		return self._y[:self.n_basic], lyaps, tangent_vectors
 	
@@ -856,7 +855,7 @@ class jitcode_transversal_lyap(jitcode,GroupHandler):
 		
 		helpers = ((helper[0],finalise(helper[1])) for helper in helpers)
 		
-		super(jitcode_transversal_lyap, self).__init__(
+		super().__init__(
 				f_lyap,
 				helpers = helpers,
 				n = self.n,
@@ -874,7 +873,7 @@ class jitcode_transversal_lyap(jitcode,GroupHandler):
 		new_y = np.empty(self.n)
 		new_y[self.main_indices] = y
 		new_y[self.tangent_indices] = random_direction(len(self.tangent_indices))
-		super(jitcode_transversal_lyap, self).set_initial_value(new_y, time)
+		super().set_initial_value(new_y, time)
 	
 	def set_integrator(self,name,interpolate=False,**kwargs):
 		"""
@@ -884,7 +883,7 @@ class jitcode_transversal_lyap(jitcode,GroupHandler):
 			interpolate = name in ["RK45","Radau"]
 		if name == "LSODA":
 			warn("Using LSODA for Lyapunov exponents is discouraged since interpolation errors may accumulate.")
-		super(jitcode_transversal_lyap,self).set_integrator(name,interpolate,**kwargs)
+		super().set_integrator(name,interpolate,**kwargs)
 	
 	def norm(self):
 		tangent_vector = self._y[self.tangent_indices]
@@ -909,11 +908,11 @@ class jitcode_transversal_lyap(jitcode,GroupHandler):
 		"""
 		
 		old_t = self.t
-		super(jitcode_transversal_lyap, self).integrate(*args, **kwargs)
+		super().integrate(*args, **kwargs)
 		delta_t = self.t-old_t
 		norm = self.norm()
 		lyap = log(norm) / delta_t
-		super(jitcode_transversal_lyap, self).set_initial_value(self._y, self.t)
+		super().set_initial_value(self._y, self.t)
 		
 		return self._y[self.main_indices], lyap
 	
@@ -934,7 +933,7 @@ class jitcode_restricted_lyap(jitcode_lyap):
 	
 	def __init__(self, f_sym=(), vectors=(), **kwargs):
 		kwargs["n_lyap"] = 1
-		super(jitcode_restricted_lyap,self).__init__(f_sym,**kwargs)
+		super().__init__(f_sym,**kwargs)
 		self.vectors = [ vector/np.linalg.norm(vector) for vector in vectors ]
 	
 	def norms(self):

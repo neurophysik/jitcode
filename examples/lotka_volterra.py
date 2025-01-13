@@ -1,5 +1,4 @@
 #!/usr/bin/python3
-# -*- coding: utf-8 -*-
 
 """
 Suppose, we want to implement the Lotka–Volterra model, which is described by the following equations:

@@ -13,7 +13,7 @@ solver_ode = "dopri5"
 solver_ivp = "RK45"
 
 # Context manager for timing
-class timer(object):
+class timer:
 	def __init__(self,name):
 		self.name = name
 	
@@ -23,13 +23,13 @@ class timer(object):
 	def __exit__(self,*args):
 		end = process_time()
 		duration = end-self.start
-		print("%s took %.5f s" % (self.name,duration))
+		print(f"{self.name} took {duration:.5f}s")
 
 # The actual test
 def test_scenario(name,fun,initial,times,rtol,atol):
 	print(40*"-",name,40*"-",sep="\n")
 	
-	with timer("ode (%s)"%solver_ode):
+	with timer(f"ode ({solver_ode})"):
 		I = ode(fun)
 		I.set_integrator(solver_ode,rtol=rtol,atol=atol,nsteps=10**8)
 		I.set_initial_value(initial,0.0)
@@ -45,7 +45,7 @@ def test_scenario(name,fun,initial,times,rtol,atol):
 				mxstep=10**8
 				)
 	
-	with timer("solve_ivp (%s) without result"%solver_ivp):
+	with timer(f"solve_ivp ({solver_ivp}) without result"):
 		I = solve_ivp(
 				fun,
 				t_span=(0,times[-1]),
@@ -54,7 +54,7 @@ def test_scenario(name,fun,initial,times,rtol,atol):
 			)
 	assert I.status != -1
 	
-	with timer("solve_ivp (%s)"%solver_ivp):
+	with timer(f"solve_ivp ({solver_ivp})"):
 		I = solve_ivp(
 				fun,
 				t_span=(0,times[-1]), t_eval=times,
@@ -64,7 +64,7 @@ def test_scenario(name,fun,initial,times,rtol,atol):
 		result = I.y
 	assert I.status != -1
 	
-	with timer("solve_ivp (%s) with dense_output"%solver_ivp):
+	with timer(f"solve_ivp ({solver_ivp}) with dense_output"):
 		I = solve_ivp(
 				fun,
 				t_span=(0,times[-1]),
@@ -75,7 +75,7 @@ def test_scenario(name,fun,initial,times,rtol,atol):
 		result = np.vstack([I.sol(time) for time in times])
 	assert I.status != -1
 	
-	with timer("%s with dense output"%solver_ivp):
+	with timer(f"{solver_ivp} with dense output"):
 		I = METHODS[solver_ivp](
 				fun=fun,
 				y0=initial, t0=0.0, t_bound=times[-1],
@@ -89,7 +89,7 @@ def test_scenario(name,fun,initial,times,rtol,atol):
 		result = np.vstack(list(solutions()))
 	assert I.status != "failed"
 	
-	with timer("%s with manual resetting"%solver_ivp):
+	with timer(f"{solver_ivp} with manual resetting"):
 		I = METHODS[solver_ivp](
 				fun=fun,
 				y0=initial, t0=0.0, t_bound=times[-1],
@@ -105,7 +105,7 @@ def test_scenario(name,fun,initial,times,rtol,atol):
 		result = np.vstack(list(solutions()))
 	assert I.status != "failed"
 	
-	with timer("%s with reinitialising"%solver_ivp):
+	with timer(f"{solver_ivp} with reinitialising"):
 		def solutions():
 			current_time = 0.0
 			state = initial

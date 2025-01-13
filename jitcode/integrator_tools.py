@@ -36,7 +36,7 @@ def integrator_info(name):
 				"integrator": integrator
 			}
 
-class IVP_wrapper(object):
+class IVP_wrapper:
 	"""
 	This is a wrapper around the integrators from scipy.integrate.solve_ivp making them work like scipy.integrate.ode (mostly).
 	"""
@@ -133,7 +133,7 @@ class ODE_wrapper(ode):
 	"""
 	def integrate(self,t,step=False,relax=False):
 		if t>self.t or step or relax:
-			result = super(ODE_wrapper,self).integrate(t,step,relax)
+			result = super().integrate(t,step,relax)
 			if self.successful():
 				return result
 			else:
@@ -150,7 +150,7 @@ class ODE_wrapper(ode):
 	def set_params(self,*args):
 		raise NotImplementedError("This method should not be called anymore")
 
-class empty_integrator(object):
+class empty_integrator:
 	"""
 	This is a dummy class that mimicks some basic properties of scipy.integrate.ode or the above wrappers, respectively. It exists to store states and parameters and to raise exceptions in the same interface.
 	"""

@@ -1,7 +1,6 @@
 #!/usr/bin/python3
-# -*- coding: utf-8 -*-
 
-"""
+r"""
 Suppose our differential equation is :math:`\dot{y} = f(y)` with :math:`y∈ℝ^4`,
 
 .. math::

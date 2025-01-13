@@ -1,5 +1,4 @@
 #!/usr/bin/python3
-# -*- coding: utf-8 -*-
 
 """
 This example showcases several advanced features of JiTCODE that are relevant for an efficient integration of more complex systems as well as how to deal with some special situations. Therefore it is pretty bizarre from a dynamical perspective.

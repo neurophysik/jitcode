@@ -1,5 +1,4 @@
 #!/usr/bin/python3
-# -*- coding: utf-8 -*-
 
 """
 For instance, we can calculate and print the Lyapunov exponents for the system from `example` as follows (changes highlighted):
@@ -43,4 +42,4 @@ if __name__ == "__main__":
 	for i in range(n):
 		lyap = np.average(lyaps[1000:,i])
 		stderr = sem(lyaps[1000:,i]) # Note that this only an estimate
-		print("%i. Lyapunov exponent: % .4f ± %.4f" % (i+1,lyap,stderr))
+		print(f"{i+1}. Lyapunov exponent: {lyap:.4f} ± {stderr:.4f}")
