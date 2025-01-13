@@ -964,4 +964,3 @@ def test(omp=True,sympy=True):
 	ODE.set_integrator("dopri5")
 	ODE.set_initial_value([1,2])
 	ODE.integrate(0.1)
-	

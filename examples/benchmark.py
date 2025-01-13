@@ -1,7 +1,6 @@
 from time import process_time
 
 import numpy as np
-from numpy.random import choice, uniform
 from scipy.integrate import ode, odeint, solve_ivp
 from scipy.integrate._ivp.ivp import METHODS
 from symengine import sin
@@ -145,9 +144,12 @@ test_scenario(
 )
 
 
+rng = np.random.default_rng()
+
 n, c, q = 100, 3.0, 0.2
-A = choice( [1,0], size=(n,n), p=[q,1-q] )
-omega = uniform(-0.5,0.5,n)
+A = rng.choice( [1,0], size=(n,n), p=[q,1-q] )
+omega = rng.uniform(-0.5,0.5,n)
+
 def kuramotos_f():
 	for i in range(n):
 		coupling_sum = sum(
@@ -160,10 +162,8 @@ def kuramotos_f():
 test_scenario(
 	name = "random network of Kuramoto oscillators",
 	fun = get_compiled_function(kuramotos_f),
-	initial = uniform(0,2*np.pi,n),
+	initial = rng.uniform(0,2*np.pi,n),
 	times = range(1,10001,10),
 	rtol = 1e-13,
 	atol = 1e-6,
 )
-
-

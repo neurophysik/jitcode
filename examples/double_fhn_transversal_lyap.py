@@ -46,4 +46,3 @@ if __name__ == "__main__":
 	lyap = np.average(lyaps[1000:])
 	stderr = sem(lyaps[1000:]) # Note that this only an estimate
 	print(f"transversal Lyapunov exponent: {lyap:.4f} ± {stderr:.4f}")
-

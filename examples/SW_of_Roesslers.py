@@ -46,10 +46,10 @@ if __name__ == "__main__":
 		# rewiring
 		for i in range(n):
 			for j in range(i):
-				if A[i,j] and (np.random.random() < rewiring_probability):
+				if A[i,j] and (rng.random() < rewiring_probability):
 					A[j,i] = A[i,j] = False
 					while True:
-						i_new,j_new = np.random.randint(0,n,2)
+						i_new,j_new = rng.integers(0,n,2)
 						if A[i_new,j_new] or i_new==j_new:
 							continue
 						else:
@@ -67,8 +67,9 @@ if __name__ == "__main__":
 	# parameters
 	# ----------
 	
+	rng = np.random.default_rng()
 	N = 500
-	ω = np.random.uniform(0.8,1.0,N)
+	ω = rng.uniform(0.8,1.0,N)
 	a = 0.165
 	b = 0.2
 	c = 10.0
@@ -99,7 +100,7 @@ if __name__ == "__main__":
 	# integrate
 	# ---------
 	
-	initial_state = np.random.random(3*N)
+	initial_state = rng.random(3*N)
 	
 	ODE = jitcode(f, helpers=helpers, n=3*N)
 	ODE.generate_f_C(simplify=False, do_cse=False, chunk_size=150)

@@ -133,5 +133,3 @@ callback = {
 			(call_c_times,c_times,1)
 		],
 	}
-
-

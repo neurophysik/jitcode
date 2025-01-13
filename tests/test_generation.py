@@ -6,7 +6,7 @@ Tests that the code-generation and compilaton or lambdification, respectively, o
 
 import unittest
 
-from numpy.random import random
+import numpy as np
 from numpy.testing import assert_allclose
 
 from jitcode import jitcode, jitcode_lyap
@@ -64,7 +64,8 @@ class TestHelpers(TestBasic):
 
 class FurtherHelpersTests(unittest.TestCase):
 	def test_identity_of_jacs(self):
-		x = random(n)
+		rng = np.random.default_rng()
+		x = rng.random(n)
 		
 		def evaluate(scenario):
 			ODE = jitcode(**scenario)
@@ -82,7 +83,8 @@ class FurtherHelpersTests(unittest.TestCase):
 			)
 	
 	def test_identity_of_lyaps(self):
-		x = random((n+1)*n)
+		rng = np.random.default_rng()
+		x = rng.random((n+1)*n)
 		
 		def evaluate(scenario):
 			ODE = jitcode_lyap(**scenario,n_lyap=n)
@@ -125,4 +127,3 @@ class TestCallBack(unittest.TestCase):
 
 if __name__ == "__main__":
 	unittest.main(buffer=True)
-

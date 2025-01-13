@@ -182,4 +182,3 @@ class empty_integrator:
 	
 	def successful(self):
 		raise RuntimeError("You must call set_integrator first.")
-	

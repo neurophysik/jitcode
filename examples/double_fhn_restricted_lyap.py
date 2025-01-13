@@ -6,6 +6,8 @@ from scipy.stats import sem
 from jitcode import jitcode_restricted_lyap, y
 
 
+rng = np.random.default_rng()
+
 a  = -0.025794
 b1 =  0.01
 b2 =  0.01
@@ -19,7 +21,7 @@ f = [
 	b2*y(2) - c*y(3)
 	]
 
-initial_state = np.random.random(4)
+initial_state = rng.random(4)
 
 vectors = [
 	np.array([1.,0.,1.,0.]),

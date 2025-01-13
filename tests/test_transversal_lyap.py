@@ -15,6 +15,8 @@ from jitcxde_common import DEFAULT_COMPILE_ARGS
 from jitcode import jitcode_restricted_lyap, jitcode_transversal_lyap, y
 
 
+rng = np.random.default_rng()
+
 a = -0.025794
 b =  0.01
 c =  0.02
@@ -83,7 +85,7 @@ for scenario in scenarios:
 			)
 		# Simplification or compiler optimisation would lead to trajectories diverging from the synchronisation manifold due to numerical noise.
 		ODE1.generate_f_C(simplify=False)
-		ODE1.compile_C( extra_compile_args = DEFAULT_COMPILE_ARGS + ["-O2"] )
+		ODE1.compile_C( extra_compile_args = [*DEFAULT_COMPILE_ARGS, "-O2"] )
 		ODE1.set_integrator("dopri5")
 		
 		ODE2 = jitcode_transversal_lyap(
@@ -100,16 +102,16 @@ for scenario in scenarios:
 			ODE2.set_parameters(coupling["k"])
 			
 			if coupling["sign"]<0:
-				initial_state = np.random.random(n)
+				initial_state = rng.random(n)
 			else:
-				single = np.random.random(2)
+				single = rng.random(2)
 				initial_state = np.empty(n)
 				for j,group in enumerate(scenario["groups"]):
 					for i in group:
 						initial_state[i] = single[j]
 			ODE1.set_initial_value(initial_state,0.0)
 			
-			ODE2.set_initial_value(np.random.random(2),0.0)
+			ODE2.set_initial_value(rng.random(2),0.0)
 			
 			times = range(100,100000,100)
 			lyaps1 = np.hstack([ODE1.integrate(time)[1] for time in times])
