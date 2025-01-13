@@ -36,7 +36,7 @@ class TestOrders(unittest.TestCase):
 		self.ODE.set_integrator("dop853")
 		self.assertTrue(_is_C(self.ODE.f))
 	
-	def test_initalise_with_dict(self):
+	def test_initialise_with_dict(self):
 		self.ODE = jitcode(**vanilla)
 		initial_value = {y(i):y0[i] for i in range(n)}
 		self.ODE.set_initial_value(initial_value)

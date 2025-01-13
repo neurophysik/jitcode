@@ -118,7 +118,7 @@ for scenario in scenarios:
 			lyaps2 = np.hstack([ODE2.integrate(time)[1] for time in times])
 			
 			# Check that we are still on the synchronisation manifold:
-			message = f"The dynamics left the synchronisation manifold when {scenario['name']} with coupling {coupling}. If this fails, this is a problem with the test and not with what is tested or any software involved.\n\nSpecifically, this test only works when the backend (Symengine plus compiler) implents certain computations completely symmetrically. This needs not and cannot be reasonably controlled (and no, turning off compiler optimisation doesn’t necessarily help as it often restores symmetries broken by Symengine). It’s only something exploited by this test to make it work in the first place."
+			message = f"The dynamics left the synchronisation manifold when {scenario['name']} with coupling {coupling}. If this fails, this is a problem with the test and not with what is tested or any software involved.\n\nSpecifically, this test only works when the backend (Symengine plus compiler) implements certain computations completely symmetrically. This needs not and cannot be reasonably controlled (and no, turning off compiler optimisation doesn’t necessarily help as it often restores symmetries broken by Symengine). It’s only something exploited by this test to make it work in the first place."
 			for group in scenario["groups"]:
 				for i,j in combinations(group,2):
 					assert ODE1.y[i]==ODE1.y[j], message

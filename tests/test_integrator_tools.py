@@ -32,7 +32,7 @@ f_back,jac_back = ODE.f,ODE.jac
 
 class TestSkeleton:
 	"""
-	This class exists to be inherited by a test that adds self.initialise to intialise self.integrator.
+	This class exists to be inherited by a test that adds self.initialise to initialise self.integrator.
 	"""
 	
 	def control_result(self):

@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 
 """
-Tests that the code-generation and compilaton or lambdification, respectively, of the derivative and Jacobian works as intended in all kinds of scenarios.
+Tests that the code-generation and compilation or lambdification, respectively, of the derivative and Jacobian works as intended in all kinds of scenarios.
 """
 
 import unittest

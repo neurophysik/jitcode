@@ -152,7 +152,7 @@ class ODE_wrapper(ode):
 
 class empty_integrator:
 	"""
-	This is a dummy class that mimicks some basic properties of scipy.integrate.ode or the above wrappers, respectively. It exists to store states and parameters and to raise exceptions in the same interface.
+	This is a dummy class that mimics some basic properties of scipy.integrate.ode or the above wrappers, respectively. It exists to store states and parameters and to raise exceptions in the same interface.
 	"""
 
 	def __init__(self):
