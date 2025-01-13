@@ -30,98 +30,98 @@ def test_scenario(name,fun,initial,times,rtol,atol):
 	print(40*"-",name,40*"-",sep="\n")
 	
 	with timer(f"ode ({solver_ode})"):
-		I = ode(fun)
-		I.set_integrator(solver_ode,rtol=rtol,atol=atol,nsteps=10**8)
-		I.set_initial_value(initial,0.0)
-		result = np.vstack([I.integrate(time) for time in times])
-	assert I.successful()
+		solver = ode(fun)
+		solver.set_integrator(solver_ode,rtol=rtol,atol=atol,nsteps=10**8)
+		solver.set_initial_value(initial,0.0)
+		_result = np.vstack([solver.integrate(time) for time in times])
+	assert solver.successful()
 	
 	inv_fun = lambda y,t: fun(t,y)
 	with timer("odeint with suboptimal function (LSODA)"):
-		result = odeint(
+		_result = odeint(
 				func=inv_fun,
-				y0=initial, t=[0.0]+list(times),
+				y0=initial, t=[0.0, *times],
 				rtol=rtol, atol=atol,
 				mxstep=10**8
 				)
 	
 	with timer(f"solve_ivp ({solver_ivp}) without result"):
-		I = solve_ivp(
+		solver = solve_ivp(
 				fun,
 				t_span=(0,times[-1]),
 				y0=initial,
 				method=solver_ivp, rtol=rtol, atol=atol
 			)
-	assert I.status != -1
+	assert solver.status != -1
 	
 	with timer(f"solve_ivp ({solver_ivp})"):
-		I = solve_ivp(
+		solver = solve_ivp(
 				fun,
 				t_span=(0,times[-1]), t_eval=times,
 				y0=initial,
 				method=solver_ivp, rtol=rtol, atol=atol
 			)
-		result = I.y
-	assert I.status != -1
+		_result = solver.y
+	assert solver.status != -1
 	
 	with timer(f"solve_ivp ({solver_ivp}) with dense_output"):
-		I = solve_ivp(
+		solver = solve_ivp(
 				fun,
 				t_span=(0,times[-1]),
 				y0=initial,
 				method=solver_ivp, rtol=rtol, atol=atol,
 				dense_output=True
 			)
-		result = np.vstack([I.sol(time) for time in times])
-	assert I.status != -1
+		_result = np.vstack([solver.sol(time) for time in times])
+	assert solver.status != -1
 	
 	with timer(f"{solver_ivp} with dense output"):
-		I = METHODS[solver_ivp](
+		solver = METHODS[solver_ivp](
 				fun=fun,
 				y0=initial, t0=0.0, t_bound=times[-1],
 				rtol=rtol, atol=atol
 			)
 		def solutions():
 			for time in times:
-				while I.t < time:
-					I.step()
-				yield I.dense_output()(time)
-		result = np.vstack(list(solutions()))
-	assert I.status != "failed"
+				while solver.t < time:
+					solver.step()
+				yield solver.dense_output()(time)
+		_result = np.vstack(list(solutions()))
+	assert solver.status != "failed"
 	
 	with timer(f"{solver_ivp} with manual resetting"):
-		I = METHODS[solver_ivp](
+		solver = METHODS[solver_ivp](
 				fun=fun,
 				y0=initial, t0=0.0, t_bound=times[-1],
 				rtol=rtol, atol=atol
 			)
 		def solutions():
 			for time in times:
-				I.t_bound = time
-				I.status = "running"
-				while I.status == "running":
-					I.step()
-				yield I.y
-		result = np.vstack(list(solutions()))
-	assert I.status != "failed"
+				solver.t_bound = time
+				solver.status = "running"
+				while solver.status == "running":
+					solver.step()
+				yield solver.y
+		_result = np.vstack(list(solutions()))
+	assert solver.status != "failed"
 	
 	with timer(f"{solver_ivp} with reinitialising"):
 		def solutions():
 			current_time = 0.0
 			state = initial
 			for time in times:
-				I = METHODS[solver_ivp](
+				solver = METHODS[solver_ivp](
 						fun=fun,
 						y0=state, t0=current_time, t_bound=time,
 						rtol=rtol, atol=atol
 					)
-				while I.status == "running":
-					I.step()
-				assert I.status != "failed"
+				while solver.status == "running":
+					solver.step()
+				assert solver.status != "failed"
 				current_time = time
-				state = I.y
+				state = solver.y
 				yield state
-		result = np.vstack(list(solutions()))
+		_result = np.vstack(list(solutions()))
 
 # Using compiled functions to make things faster
 def get_compiled_function(f):

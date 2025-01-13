@@ -7,7 +7,7 @@ from numpy.testing import assert_allclose
 from scipy.stats import sem as standard_error
 from symengine import symbols
 
-from jitcode import UnsuccessfulIntegration, jitcode, jitcode_lyap, test, y
+from jitcode import jitcode, jitcode_lyap, y
 from jitcode._jitcode import _is_C, _is_lambda
 from scenarios import f_of_y0, jac_of_y0, lyaps, n, vanilla, y0, y1
 
@@ -88,7 +88,7 @@ class TestOrders(unittest.TestCase):
 			self.ODE.check()
 		self.assertIsNotNone(self.ODE.f)
 		assert_allclose( self.ODE.f(0.0,y0), f_of_y0, rtol=1e-5 )
-		if not self.ODE.jac is None:
+		if self.ODE.jac is not None:
 			assert_allclose( self.ODE.jac(0.0,y0), jac_of_y0, rtol=1e-5)
 		assert_allclose( self.ODE.integrate(1.0), y1, rtol=1e-4 )
 		for i in reversed(range(n)):
@@ -171,7 +171,7 @@ class TestErrors(unittest.TestCase):
 	
 	def test_wrong_n(self):
 		with self.assertRaises(ValueError):
-			ODE = jitcode(**vanilla,n=2*n)
+			_ODE = jitcode(**vanilla,n=2*n)
 	
 	def test_dimension_mismatch(self):
 		ODE = jitcode(**vanilla)

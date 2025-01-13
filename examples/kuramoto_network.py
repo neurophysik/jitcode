@@ -24,14 +24,14 @@ def kuramotos_f():
 			)
 		yield omega[i] + c/(n-1)*coupling_sum
 
-I = jitcode(kuramotos_f,n=n)
-I.set_integrator("dop853",atol=1e-6,rtol=0)
+solver = jitcode(kuramotos_f,n=n)
+solver.set_integrator("dop853",atol=1e-6,rtol=0)
 
 initial_state = uniform(0,2*pi,n)
-I.set_initial_value(initial_state,time=0.0)
+solver.set_initial_value(initial_state,time=0.0)
 
 times = range(0,2001)
-data = vstack ([ I.integrate(time) for time in times ])
+data = vstack ([ solver.integrate(time) for time in times ])
 data %= 2*pi
 savetxt("kuramotos.dat",data)
 

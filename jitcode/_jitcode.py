@@ -1,6 +1,5 @@
 #!/usr/bin/python3
 
-from inspect import signature
 from itertools import count
 from types import BuiltinFunctionType, FunctionType
 from warnings import warn
@@ -15,7 +14,7 @@ from jitcxde_common.numerical import orthonormalise_qr, random_direction
 from jitcxde_common.symbolic import collect_arguments, ordered_subs, replace_function
 from jitcxde_common.transversal import GroupHandler
 
-from jitcode.integrator_tools import IVP_wrapper, IVP_wrapper_no_interpolation, ODE_wrapper, UnsuccessfulIntegration, empty_integrator, integrator_info
+from jitcode.integrator_tools import IVP_wrapper, IVP_wrapper_no_interpolation, ODE_wrapper, empty_integrator, integrator_info
 
 
 #: the symbol for the state that must be used to define the differential equation. It is a function and the integer argument denotes the component. You may just as well define an analogous function directly with SymEngine or SymPy, but using this function is the best way to get the most of future versions of JiTCODE, in particular avoiding incompatibilities. You can import a SymPy variant from the submodule `sympy_symbols` instead (see `SymPy vs. SymEngine`_ for details).
@@ -245,7 +244,7 @@ class jitcode(jitcxde):
 				(set_dy(i,entry) for i,entry in enumerate(f_sym_wc)),
 				name = "f",
 				chunk_size = chunk_size,
-				arguments = arguments+[("dY", "PyArrayObject *__restrict const")]
+				arguments = [*arguments, ("dY", "PyArrayObject *__restrict const")]
 			)
 		
 		self._f_C_source = True
@@ -321,7 +320,7 @@ class jitcode(jitcxde):
 				),
 				name = "jac",
 				chunk_size = chunk_size,
-				arguments = arguments+[("dfdY", "PyArrayObject *__restrict const")]
+				arguments = [*arguments, ("dfdY", "PyArrayObject *__restrict const")]
 			)
 		
 		self._jac_C_source = True
@@ -355,7 +354,7 @@ class jitcode(jitcxde):
 					(set_helper(i, helper[1].subs(self.general_subs)) for i,helper in enumerate(self.helpers)),
 					name = "general_helpers",
 					chunk_size = chunk_size,
-					arguments = self._default_arguments() + [("general_helper","double *__restrict const")],
+					arguments = [*self._default_arguments(), ("general_helper","double *__restrict const")],
 					omp = False,
 				)
 		
@@ -844,7 +843,7 @@ class jitcode_transversal_lyap(jitcode,GroupHandler):
 		
 		def f_lyap():
 			for entry in self.iterate(tangent_vector_f()):
-				if type(entry)==int: # i.e., if main index
+				if type(entry) is int: # i.e., if main index
 					if average_dynamics:
 						group = groups[entry]
 						yield sum( finalise(f_list[i]) for i in group )/len(group)
