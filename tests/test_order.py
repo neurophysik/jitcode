@@ -5,7 +5,7 @@ from symengine import Symbol
 from jitcode import jitcode
 
 
-p = Symbol('p')
+p = Symbol("p")
 
 f = [1/p]
 

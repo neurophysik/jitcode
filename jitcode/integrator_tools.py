@@ -16,7 +16,7 @@ def integrator_info(name):
 	"""
 	Finds out the integrator from a given name, what backend it uses, and whether it can use a Jacobian.
 	"""
-	if name == 'zvode':
+	if name == "zvode":
 		raise NotImplementedError("JiTCODE does not natively support complex numbers yet.")
 	
 	if name in ivp_methods.keys():

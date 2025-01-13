@@ -103,7 +103,7 @@ if __name__ == "__main__":
 	
 	ODE = jitcode(f, helpers=helpers, n=3*N)
 	ODE.generate_f_C(simplify=False, do_cse=False, chunk_size=150)
-	ODE.set_integrator('dopri5')
+	ODE.set_integrator("dopri5")
 	ODE.set_initial_value(initial_state,0.0)
 	
 	# data structure: x[0], v[0], z[0], x[1], …, x[N], v[N], z[N]
