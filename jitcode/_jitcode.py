@@ -423,7 +423,7 @@ class jitcode(jitcxde):
 		
 		if not hasattr(self,"_lambda_subs") or not hasattr(self,"_lambda_args"):
 			if self.helpers:
-				warn("Lambdification handles helpers by plugging them in. This may be very inefficient")
+				warn("Lambdification handles helpers by plugging them in. This may be very inefficient", stacklevel=3)
 			
 			self._lambda_subs = list(reversed(self.helpers))
 			self._lambda_args = [t]
@@ -656,11 +656,11 @@ class jitcode(jitcxde):
 		self.initialise()
 	
 	def set_f_params(self, *args):
-		warn("This function has been replaced by `set_parameters`")
+		warn("This function has been replaced by `set_parameters`", stacklevel=2)
 		self.set_parameters(*args)
 	
 	def set_jac_params(self, *args):
-		warn("This function has been replaced by `set_parameters`")
+		warn("This function has been replaced by `set_parameters`", stacklevel=2)
 		self.set_parameters(*args)
 	
 	def integrate(self,*args,**kwargs):
@@ -688,7 +688,7 @@ class jitcode_lyap(jitcode):
 		f_basic = self._handle_input(f_sym,n_basic=True)
 		self._n_lyap = n_lyap if (0<=n_lyap<=self.n_basic) else self.n_basic
 		if self._n_lyap>10:
-			warn(f"You are about to calculate {self._n_lyap} Lyapunov exponents. This is very likely more than you need and may lead to severe difficulties with compilation and integration. Unless you really know what you are doing, consider how many Lyapunov exponents you actually need and set the parameter `n_lyap` accordingly.")
+			warn(f"You are about to calculate {self._n_lyap} Lyapunov exponents. This is very likely more than you need and may lead to severe difficulties with compilation and integration. Unless you really know what you are doing, consider how many Lyapunov exponents you actually need and set the parameter `n_lyap` accordingly.", stacklevel=2)
 		
 		if simplify is None:
 			simplify = self.n_basic<=10
@@ -738,7 +738,7 @@ class jitcode_lyap(jitcode):
 		if interpolate is None:
 			interpolate = name in ["RK45","Radau"]
 		if name == "LSODA":
-			warn("Using LSODA for Lyapunov exponents is discouraged since interpolation errors may accumulate.")
+			warn("Using LSODA for Lyapunov exponents is discouraged since interpolation errors may accumulate.", stacklevel=2)
 		super().set_integrator(name,interpolate,**kwargs)
 	
 	def norms(self):
@@ -746,7 +746,7 @@ class jitcode_lyap(jitcode):
 		tangent_vectors = self._y[n:].reshape(self._n_lyap,n)
 		tangent_vectors,norms = orthonormalise_qr(tangent_vectors)
 		if not np.all(np.isfinite(norms)):
-			warn("Norms of perturbation vectors for Lyapunov exponents out of numerical bounds. You probably waited too long before renormalising and should call integrate with smaller intervals between steps (as renormalisations happen once with every call of integrate).")
+			warn("Norms of perturbation vectors for Lyapunov exponents out of numerical bounds. You probably waited too long before renormalising and should call integrate with smaller intervals between steps (as renormalisations happen once with every call of integrate).", stacklevel=2)
 		return norms, tangent_vectors
 	
 	def integrate(self, *args, **kwargs):
@@ -881,7 +881,7 @@ class jitcode_transversal_lyap(jitcode,GroupHandler):
 		if interpolate is None:
 			interpolate = name in ["RK45","Radau"]
 		if name == "LSODA":
-			warn("Using LSODA for Lyapunov exponents is discouraged since interpolation errors may accumulate.")
+			warn("Using LSODA for Lyapunov exponents is discouraged since interpolation errors may accumulate.", stacklevel=2)
 		super().set_integrator(name,interpolate,**kwargs)
 	
 	def norm(self):
@@ -889,7 +889,7 @@ class jitcode_transversal_lyap(jitcode,GroupHandler):
 		norm = np.linalg.norm(tangent_vector)
 		tangent_vector /= norm
 		if not np.isfinite(norm):
-			warn("Norm of perturbation vector for Lyapunov exponent out of numerical bounds. You probably waited too long before renormalising and should call integrate with smaller intervals between steps (as renormalisations happen once with every call of integrate).")
+			warn("Norm of perturbation vector for Lyapunov exponent out of numerical bounds. You probably waited too long before renormalising and should call integrate with smaller intervals between steps (as renormalisations happen once with every call of integrate).", stacklevel=2)
 		self._y[self.tangent_indices] = tangent_vector
 		return norm
 	
@@ -943,7 +943,7 @@ class jitcode_restricted_lyap(jitcode_lyap):
 		norm = np.linalg.norm(tangent_vector)
 		tangent_vector /= norm
 		if not np.isfinite(norm):
-			warn("Norm of perturbation vector for Lyapunov exponent out of numerical bounds. You probably waited too long before renormalising and should call integrate with smaller intervals between steps (as renormalisations happen once with every call of integrate).")
+			warn("Norm of perturbation vector for Lyapunov exponent out of numerical bounds. You probably waited too long before renormalising and should call integrate with smaller intervals between steps (as renormalisations happen once with every call of integrate).", stacklevel=2)
 		return norm, tangent_vector
 
 def test(omp=True,sympy=True):

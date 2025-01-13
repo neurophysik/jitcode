@@ -10,7 +10,7 @@ p = Symbol("p")
 f = [1/p]
 
 for integrator in ["dopri5","RK45"]:
-	def set_integrator(ODE):
+	def set_integrator(ODE, integrator=integrator):
 		ODE.set_integrator(integrator)
 	
 	def set_parameters(ODE):
@@ -37,7 +37,7 @@ for integrator in ["dopri5","RK45"]:
 f_2 = [1]
 
 for integrator in ["dopri5","RK45"]:
-	def set_integrator(ODE):
+	def set_integrator(ODE, integrator=integrator):
 		ODE.set_integrator(integrator)
 	
 	def set_initial_value(ODE):
