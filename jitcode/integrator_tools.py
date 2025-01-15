@@ -1,6 +1,6 @@
 from inspect import signature
 
-from numpy import inf
+import numpy as np
 from scipy.integrate import ode
 from scipy.integrate._ivp.ivp import METHODS as ivp_methods
 from scipy.integrate._ode import find_integrator
@@ -57,7 +57,7 @@ class IVP_wrapper:
 		
 		# Dictionary to be passed as arguments to the integrator and store stuff
 		self.kwargs = {
-				"t_bound": inf,
+				"t_bound": np.inf,
 				"vectorized": False,
 				"fun": self.f
 			}

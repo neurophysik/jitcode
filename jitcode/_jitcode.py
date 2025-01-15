@@ -6,7 +6,6 @@ from warnings import warn
 
 import numpy as np
 import symengine
-from numpy import hstack, log
 
 from jitcxde_common import checker, jitcxde
 from jitcxde_common.helpers import find_dependent_helpers, sort_helpers, sympify_helpers
@@ -729,7 +728,7 @@ class jitcode_lyap(jitcode):
 		for _ in range(self._n_lyap):
 			new_y.append(random_direction(self.n_basic))
 		
-		super().set_initial_value(hstack(new_y), time)
+		super().set_initial_value(np.hstack(new_y), time)
 	
 	def set_integrator(self,name,interpolate=None,**kwargs):
 		"""
@@ -769,7 +768,7 @@ class jitcode_lyap(jitcode):
 		super().integrate(*args, **kwargs)
 		delta_t = self.t-old_t
 		norms, tangent_vectors = self.norms()
-		lyaps = log(norms) / delta_t
+		lyaps = np.log(norms) / delta_t
 		self._y[self.n_basic:] = tangent_vectors.flatten()
 		super().set_initial_value(self._y, self.t)
 		
@@ -910,7 +909,7 @@ class jitcode_transversal_lyap(jitcode,GroupHandler):
 		super().integrate(*args, **kwargs)
 		delta_t = self.t-old_t
 		norm = self.norm()
-		lyap = log(norm) / delta_t
+		lyap = np.log(norm) / delta_t
 		super().set_initial_value(self._y, self.t)
 		
 		return self._y[self.main_indices], lyap
