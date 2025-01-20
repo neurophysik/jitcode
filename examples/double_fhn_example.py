@@ -1,7 +1,6 @@
 #!/usr/bin/python3
-# -*- coding: utf-8 -*-
 
-"""
+r"""
 Suppose our differential equation is :math:`\dot{y} = f(y)` with :math:`y∈ℝ^4`,
 
 .. math::
@@ -20,8 +19,9 @@ Then the following code integrates the above for 100000 time units (after discar
 
 if __name__ == "__main__":
 	# example-start
-	from jitcode import jitcode, y
 	import numpy as np
+
+	from jitcode import jitcode, y
 	
 	a  = -0.025794
 	b1 =  0.0065

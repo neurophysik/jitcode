@@ -1,22 +1,20 @@
 #!/usr/bin/python3
-# -*- coding: utf-8 -*-
 
-from warnings import warn
-from types import FunctionType, BuiltinFunctionType
-from inspect import signature
 from itertools import count
+from types import BuiltinFunctionType, FunctionType
+from warnings import warn
 
-from numpy import hstack, log
 import numpy as np
 import symengine
 
-from jitcxde_common import jitcxde, checker
-from jitcxde_common.helpers import sympify_helpers, sort_helpers, find_dependent_helpers
-from jitcxde_common.numerical import random_direction, orthonormalise_qr
+from jitcxde_common import checker, jitcxde
+from jitcxde_common.helpers import find_dependent_helpers, sort_helpers, sympify_helpers
+from jitcxde_common.numerical import orthonormalise_qr, random_direction
 from jitcxde_common.symbolic import collect_arguments, ordered_subs, replace_function
 from jitcxde_common.transversal import GroupHandler
 
-from jitcode.integrator_tools import empty_integrator, IVP_wrapper, IVP_wrapper_no_interpolation, ODE_wrapper, integrator_info, UnsuccessfulIntegration
+from jitcode.integrator_tools import IVP_wrapper, IVP_wrapper_no_interpolation, ODE_wrapper, empty_integrator, integrator_info
+
 
 #: the symbol for the state that must be used to define the differential equation. It is a function and the integer argument denotes the component. You may just as well define an analogous function directly with SymEngine or SymPy, but using this function is the best way to get the most of future versions of JiTCODE, in particular avoiding incompatibilities. You can import a SymPy variant from the submodule `sympy_symbols` instead (see `SymPy vs. SymEngine`_ for details).
 y = symengine.Function("y")
@@ -72,7 +70,7 @@ class jitcode(jitcxde):
 		
 		*	A SymEngine function object used in `f_sym` to represent the function call. If you want to use any JiTCODE features that need the derivative, this must have a properly defined `f_diff` method with the derivative being another callback function (or constant).
 		*	The Python function to be called. This function will receive the state array (`y`) as the first argument. All further arguments are whatever you use as arguments of the SymEngine function in `f_sym`. These can be any expression that you might use in the definition of the derivative and contain, e.g., dynamical variables, time, control parameters, and helpers. The only restriction is that the arguments are floats (and not vectors or similar). The return value must also be a float (or something castable to float). It is your responsibility to ensure that this function adheres to these criteria, is deterministic and sufficiently smooth with respect its arguments; expect nasty errors otherwise.
-		*	The number of arguments, **excluding** the state array as mandatory first argument. This means if you have a variadic Python function, you cannot just call it with different numbers of arguments in `f_sym`, but you have to define separate callbacks for each of numer of arguments.
+		*	The number of arguments, **excluding** the state array as mandatory first argument. This means if you have a variadic Python function, you cannot just call it with different numbers of arguments in `f_sym`, but you have to define separate callbacks for each of number of arguments.
 		
 		See `this example <https://github.com/neurophysik/jitcdde/blob/master/examples/sunflower_callback.py>`_ (for JiTCDDE) for how to use this.
 	
@@ -137,11 +135,11 @@ class jitcode(jitcxde):
 			for argument in collect_arguments(entry,y):
 				self._check_assert(
 						argument[0] >= 0,
-						"y is called with a negative argument (%i) in equation %i." % (argument[0],i),
+						f"y is called with a negative argument ({argument[0]}) in equation {i}.",
 					)
 				self._check_assert(
 						argument[0] < self.n,
-						"y is called with an argument (%i) higher than the system’s dimension (%i) in equation %i." % (argument[0],self.n,i)
+						f"y is called with an argument ({argument[0]}) higher than the system’s dimension ({self.n}) in equation {i}."
 					)
 	
 	@checker
@@ -152,7 +150,7 @@ class jitcode(jitcxde):
 			for symbol in entry.atoms(symengine.Symbol):
 				self._check_assert(
 						symbol in valid_symbols,
-						"Invalid symbol (%s) in equation %i."  % (symbol.name,i),
+						f"Invalid symbol ({symbol.name}) in equation {i}.",
 					)
 	
 	@property
@@ -245,7 +243,7 @@ class jitcode(jitcxde):
 				(set_dy(i,entry) for i,entry in enumerate(f_sym_wc)),
 				name = "f",
 				chunk_size = chunk_size,
-				arguments = arguments+[("dY", "PyArrayObject *__restrict const")]
+				arguments = [*arguments, ("dY", "PyArrayObject *__restrict const")]
 			)
 		
 		self._f_C_source = True
@@ -321,7 +319,7 @@ class jitcode(jitcxde):
 				),
 				name = "jac",
 				chunk_size = chunk_size,
-				arguments = arguments+[("dfdY", "PyArrayObject *__restrict const")]
+				arguments = [*arguments, ("dfdY", "PyArrayObject *__restrict const")]
 			)
 		
 		self._jac_C_source = True
@@ -355,7 +353,7 @@ class jitcode(jitcxde):
 					(set_helper(i, helper[1].subs(self.general_subs)) for i,helper in enumerate(self.helpers)),
 					name = "general_helpers",
 					chunk_size = chunk_size,
-					arguments = self._default_arguments() + [("general_helper","double *__restrict const")],
+					arguments = [*self._default_arguments(), ("general_helper","double *__restrict const")],
 					omp = False,
 				)
 		
@@ -424,12 +422,12 @@ class jitcode(jitcxde):
 		
 		if not hasattr(self,"_lambda_subs") or not hasattr(self,"_lambda_args"):
 			if self.helpers:
-				warn("Lambdification handles helpers by plugging them in. This may be very inefficient")
+				warn("Lambdification handles helpers by plugging them in. This may be very inefficient", stacklevel=3)
 			
 			self._lambda_subs = list(reversed(self.helpers))
 			self._lambda_args = [t]
 			for i in range(self.n):
-				symbol = symengine.Symbol("dummy_argument_%i"%i)
+				symbol = symengine.Symbol(f"dummy_argument_{i}")
 				self._lambda_args.append(symbol)
 				self._lambda_subs.append((y(i),symbol))
 			self._lambda_args.extend(self.control_pars)
@@ -582,7 +580,7 @@ class jitcode(jitcxde):
 			The `solve_ivp` methods are usually slightly faster for large differential equations, but they come with a massive overhead that makes them considerably slower for small differential equations. Implicit solvers are slower than explicit ones, except for stiff problems. If you don’t know what to choose, start with `"dopri5"`.
 		
 		nsteps: integer
- 			Same as the respective parameter of the `ode` solvers, but with a higher default value to avoid annoying errors when getting rid of transients.
+			Same as the respective parameter of the `ode` solvers, but with a higher default value to avoid annoying errors when getting rid of transients.
 		
 		interpolate: boolean
 			Whether the sampled solutions for `solve_ivp` solvers shall be obtained using interpolation. If your sampling step is small, this may make things faster; otherwise it depends. This may also make the results slightly less accurate.
@@ -657,11 +655,11 @@ class jitcode(jitcxde):
 		self.initialise()
 	
 	def set_f_params(self, *args):
-		warn("This function has been replaced by `set_parameters`")
+		warn("This function has been replaced by `set_parameters`", stacklevel=2)
 		self.set_parameters(*args)
 	
 	def set_jac_params(self, *args):
-		warn("This function has been replaced by `set_parameters`")
+		warn("This function has been replaced by `set_parameters`", stacklevel=2)
 		self.set_parameters(*args)
 	
 	def integrate(self,*args,**kwargs):
@@ -689,7 +687,7 @@ class jitcode_lyap(jitcode):
 		f_basic = self._handle_input(f_sym,n_basic=True)
 		self._n_lyap = n_lyap if (0<=n_lyap<=self.n_basic) else self.n_basic
 		if self._n_lyap>10:
-			warn("You are about to calculate %i Lyapunov exponents. This is very likely more than you need and may lead to severe difficulties with compilation and integration. Unless you really know what you are doing, consider how many Lyapunov exponents you actually need and set the parameter `n_lyap` accordingly." % self._n_lyap)
+			warn(f"You are about to calculate {self._n_lyap} Lyapunov exponents. This is very likely more than you need and may lead to severe difficulties with compilation and integration. Unless you really know what you are doing, consider how many Lyapunov exponents you actually need and set the parameter `n_lyap` accordingly.", stacklevel=2)
 		
 		if simplify is None:
 			simplify = self.n_basic<=10
@@ -715,7 +713,7 @@ class jitcode_lyap(jitcode):
 						expression = expression.simplify(ratio=1.0)
 					yield expression
 		
-		super(jitcode_lyap, self).__init__(
+		super().__init__(
 				f_lyap,
 				helpers = helpers,
 				n = self.n_basic*(self._n_lyap+1),
@@ -730,7 +728,7 @@ class jitcode_lyap(jitcode):
 		for _ in range(self._n_lyap):
 			new_y.append(random_direction(self.n_basic))
 		
-		super(jitcode_lyap, self).set_initial_value(hstack(new_y), time)
+		super().set_initial_value(np.hstack(new_y), time)
 	
 	def set_integrator(self,name,interpolate=None,**kwargs):
 		"""
@@ -739,15 +737,15 @@ class jitcode_lyap(jitcode):
 		if interpolate is None:
 			interpolate = name in ["RK45","Radau"]
 		if name == "LSODA":
-			warn("Using LSODA for Lyapunov exponents is discouraged since interpolation errors may accumulate.")
-		super(jitcode_lyap,self).set_integrator(name,interpolate,**kwargs)
+			warn("Using LSODA for Lyapunov exponents is discouraged since interpolation errors may accumulate.", stacklevel=2)
+		super().set_integrator(name,interpolate,**kwargs)
 	
 	def norms(self):
 		n = self.n_basic
 		tangent_vectors = self._y[n:].reshape(self._n_lyap,n)
 		tangent_vectors,norms = orthonormalise_qr(tangent_vectors)
 		if not np.all(np.isfinite(norms)):
-			warn("Norms of perturbation vectors for Lyapunov exponents out of numerical bounds. You probably waited too long before renormalising and should call integrate with smaller intervals between steps (as renormalisations happen once with every call of integrate).")
+			warn("Norms of perturbation vectors for Lyapunov exponents out of numerical bounds. You probably waited too long before renormalising and should call integrate with smaller intervals between steps (as renormalisations happen once with every call of integrate).", stacklevel=2)
 		return norms, tangent_vectors
 	
 	def integrate(self, *args, **kwargs):
@@ -767,12 +765,12 @@ class jitcode_lyap(jitcode):
 		"""
 		
 		old_t = self.t
-		super(jitcode_lyap, self).integrate(*args, **kwargs)
+		super().integrate(*args, **kwargs)
 		delta_t = self.t-old_t
 		norms, tangent_vectors = self.norms()
-		lyaps = log(norms) / delta_t
+		lyaps = np.log(norms) / delta_t
 		self._y[self.n_basic:] = tangent_vectors.flatten()
-		super(jitcode_lyap, self).set_initial_value(self._y, self.t)
+		super().set_initial_value(self._y, self.t)
 		
 		return self._y[:self.n_basic], lyaps, tangent_vectors
 	
@@ -844,7 +842,7 @@ class jitcode_transversal_lyap(jitcode,GroupHandler):
 		
 		def f_lyap():
 			for entry in self.iterate(tangent_vector_f()):
-				if type(entry)==int: # i.e., if main index
+				if type(entry) is int: # i.e., if main index
 					if average_dynamics:
 						group = groups[entry]
 						yield sum( finalise(f_list[i]) for i in group )/len(group)
@@ -855,7 +853,7 @@ class jitcode_transversal_lyap(jitcode,GroupHandler):
 		
 		helpers = ((helper[0],finalise(helper[1])) for helper in helpers)
 		
-		super(jitcode_transversal_lyap, self).__init__(
+		super().__init__(
 				f_lyap,
 				helpers = helpers,
 				n = self.n,
@@ -873,7 +871,7 @@ class jitcode_transversal_lyap(jitcode,GroupHandler):
 		new_y = np.empty(self.n)
 		new_y[self.main_indices] = y
 		new_y[self.tangent_indices] = random_direction(len(self.tangent_indices))
-		super(jitcode_transversal_lyap, self).set_initial_value(new_y, time)
+		super().set_initial_value(new_y, time)
 	
 	def set_integrator(self,name,interpolate=False,**kwargs):
 		"""
@@ -882,15 +880,15 @@ class jitcode_transversal_lyap(jitcode,GroupHandler):
 		if interpolate is None:
 			interpolate = name in ["RK45","Radau"]
 		if name == "LSODA":
-			warn("Using LSODA for Lyapunov exponents is discouraged since interpolation errors may accumulate.")
-		super(jitcode_transversal_lyap,self).set_integrator(name,interpolate,**kwargs)
+			warn("Using LSODA for Lyapunov exponents is discouraged since interpolation errors may accumulate.", stacklevel=2)
+		super().set_integrator(name,interpolate,**kwargs)
 	
 	def norm(self):
 		tangent_vector = self._y[self.tangent_indices]
 		norm = np.linalg.norm(tangent_vector)
 		tangent_vector /= norm
 		if not np.isfinite(norm):
-			warn("Norm of perturbation vector for Lyapunov exponent out of numerical bounds. You probably waited too long before renormalising and should call integrate with smaller intervals between steps (as renormalisations happen once with every call of integrate).")
+			warn("Norm of perturbation vector for Lyapunov exponent out of numerical bounds. You probably waited too long before renormalising and should call integrate with smaller intervals between steps (as renormalisations happen once with every call of integrate).", stacklevel=2)
 		self._y[self.tangent_indices] = tangent_vector
 		return norm
 	
@@ -908,11 +906,11 @@ class jitcode_transversal_lyap(jitcode,GroupHandler):
 		"""
 		
 		old_t = self.t
-		super(jitcode_transversal_lyap, self).integrate(*args, **kwargs)
+		super().integrate(*args, **kwargs)
 		delta_t = self.t-old_t
 		norm = self.norm()
-		lyap = log(norm) / delta_t
-		super(jitcode_transversal_lyap, self).set_initial_value(self._y, self.t)
+		lyap = np.log(norm) / delta_t
+		super().set_initial_value(self._y, self.t)
 		
 		return self._y[self.main_indices], lyap
 	
@@ -933,7 +931,7 @@ class jitcode_restricted_lyap(jitcode_lyap):
 	
 	def __init__(self, f_sym=(), vectors=(), **kwargs):
 		kwargs["n_lyap"] = 1
-		super(jitcode_restricted_lyap,self).__init__(f_sym,**kwargs)
+		super().__init__(f_sym,**kwargs)
 		self.vectors = [ vector/np.linalg.norm(vector) for vector in vectors ]
 	
 	def norms(self):
@@ -944,7 +942,7 @@ class jitcode_restricted_lyap(jitcode_lyap):
 		norm = np.linalg.norm(tangent_vector)
 		tangent_vector /= norm
 		if not np.isfinite(norm):
-			warn("Norm of perturbation vector for Lyapunov exponent out of numerical bounds. You probably waited too long before renormalising and should call integrate with smaller intervals between steps (as renormalisations happen once with every call of integrate).")
+			warn("Norm of perturbation vector for Lyapunov exponent out of numerical bounds. You probably waited too long before renormalising and should call integrate with smaller intervals between steps (as renormalisations happen once with every call of integrate).", stacklevel=2)
 		return norm, tangent_vector
 
 def test(omp=True,sympy=True):
@@ -965,4 +963,3 @@ def test(omp=True,sympy=True):
 	ODE.set_integrator("dopri5")
 	ODE.set_initial_value([1,2])
 	ODE.integrate(0.1)
-	

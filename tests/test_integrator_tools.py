@@ -1,16 +1,16 @@
 #!/usr/bin/python3
-# -*- coding: utf-8 -*-
 
 import unittest
 
 import numpy as np
 from numpy.testing import assert_allclose
-from numpy.random import random
 
 from jitcode import jitcode
-from jitcode.integrator_tools import empty_integrator, IVP_wrapper, IVP_wrapper_no_interpolation, ODE_wrapper, UnsuccessfulIntegration
+from jitcode.integrator_tools import IVP_wrapper, IVP_wrapper_no_interpolation, ODE_wrapper, UnsuccessfulIntegration, empty_integrator
+from scenarios import n, vanilla, y0, y1
 
-from scenarios import y0, y1, vanilla, n
+
+rng = np.random.default_rng()
 
 # Generating compiled functions
 
@@ -30,9 +30,9 @@ f_back,jac_back = ODE.f,ODE.jac
 
 # -----------------------------
 
-class TestSkeleton(object):
+class TestSkeleton:
 	"""
-	This class exists to be inherited by a test that adds self.initialise to intialise self.integrator.
+	This class exists to be inherited by a test that adds self.initialise to initialise self.integrator.
 	"""
 	
 	def control_result(self):
@@ -46,13 +46,13 @@ class TestSkeleton(object):
 	
 	def test_initial_twice(self):
 		self.initialise(f,jac,rtol=1e-5)
-		self.integrator.set_initial_value(random(n))
+		self.integrator.set_initial_value(rng.random(n))
 		self.integrator.set_initial_value(y0)
 		self.control_result()
 	
 	def test_zero_integration(self):
 		self.initialise(f,jac)
-		initial = random(n)
+		initial = rng.random(n)
 		self.integrator.set_initial_value(initial)
 		assert_allclose(initial,self.integrator.integrate(0))
 	
@@ -143,7 +143,7 @@ class TestDummy(unittest.TestCase):
 	
 	def test_t(self):
 		with self.assertRaises(RuntimeError):
-			self.integrator.t
+			_ = self.integrator.t
 	
 	def test_set_integrator(self):
 		with self.assertRaises(RuntimeError):
@@ -154,11 +154,10 @@ class TestDummy(unittest.TestCase):
 			self.integrator.integrate(2.3)
 	
 	def test_set_initial(self):
-		initial = random(5)
+		initial = rng.random(5)
 		self.integrator.set_initial_value(initial,1.2)
 		assert np.all( self.integrator._y == initial )
 		assert self.integrator.t == 1.2
 
 if __name__ == "__main__":
 	unittest.main(buffer=True)
-

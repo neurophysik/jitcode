@@ -1,10 +1,12 @@
 #!/usr/bin/python3
-# -*- coding: utf-8 -*-
+
+from random import shuffle
 
 import numpy as np
-from symengine import symbols, Function
+from symengine import Function, symbols
+
 from jitcode import y
-from random import shuffle
+
 
 n = 4
 
@@ -27,9 +29,9 @@ jac_of_y0 = np.array([
 	])
 
 y1 = np.array([
-		 0.0011789485114731,
+		0.0011789485114731,
 		-0.0021947158873226,
-		 0.0195744683782066,
+		0.0195744683782066,
 		-0.0057801623466600,
 	])
 
@@ -59,8 +61,7 @@ with_dictionary = {"f_sym": f_dict}
 # with generator
 
 def f_generator():
-	for entry in f:
-		yield entry
+	yield from f
 
 with_generator = { "f_sym":f_generator, "n":n }
 
@@ -132,5 +133,3 @@ callback = {
 			(call_c_times,c_times,1)
 		],
 	}
-
-

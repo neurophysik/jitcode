@@ -1,23 +1,18 @@
 #!/usr/bin/python3
-# -*- coding: utf-8 -*-
 
 """
-Tests that the code-generation and compilaton or lambdification, respectively, of the derivative and Jacobian works as intended in all kinds of scenarios.
+Tests that the code-generation and compilation or lambdification, respectively, of the derivative and Jacobian works as intended in all kinds of scenarios.
 """
 
 import unittest
 
-from numpy.random import random
+import numpy as np
 from numpy.testing import assert_allclose
 
-from jitcode import jitcode, jitcode_lyap, y
+from jitcode import jitcode, jitcode_lyap
 from jitcode._jitcode import _is_C, _is_lambda
+from scenarios import callback, f_of_y0, jac_of_y0, n, params_args, vanilla, with_dictionary, with_generator, with_helpers, with_params, y0
 
-from scenarios import (
-		y0, f_of_y0, jac_of_y0,
-		vanilla, with_params, with_helpers, with_generator, with_dictionary, callback,
-		n, params_args
-	)
 
 class TestBasic(unittest.TestCase):
 	init_params = ()
@@ -60,7 +55,7 @@ class TestBasic(unittest.TestCase):
 		self.assertIsNotNone(self.ODE.f)
 		self.ODE.set_parameters(*self.init_params)
 		assert_allclose( self.ODE.f(0.0,y0), f_of_y0, rtol=1e-5 )
-		if not self.ODE.jac is None:
+		if self.ODE.jac is not None:
 			assert_allclose( self.ODE.jac(0.0,y0), jac_of_y0, rtol=1e-5)
 
 class TestHelpers(TestBasic):
@@ -69,7 +64,8 @@ class TestHelpers(TestBasic):
 
 class FurtherHelpersTests(unittest.TestCase):
 	def test_identity_of_jacs(self):
-		x = random(n)
+		rng = np.random.default_rng()
+		x = rng.random(n)
 		
 		def evaluate(scenario):
 			ODE = jitcode(**scenario)
@@ -87,7 +83,8 @@ class FurtherHelpersTests(unittest.TestCase):
 			)
 	
 	def test_identity_of_lyaps(self):
-		x = random((n+1)*n)
+		rng = np.random.default_rng()
+		x = rng.random((n+1)*n)
 		
 		def evaluate(scenario):
 			ODE = jitcode_lyap(**scenario,n_lyap=n)
@@ -130,4 +127,3 @@ class TestCallBack(unittest.TestCase):
 
 if __name__ == "__main__":
 	unittest.main(buffer=True)
-

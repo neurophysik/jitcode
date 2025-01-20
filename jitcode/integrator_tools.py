@@ -1,9 +1,10 @@
 from inspect import signature
 
+import numpy as np
 from scipy.integrate import ode
-from scipy.integrate._ode import find_integrator
 from scipy.integrate._ivp.ivp import METHODS as ivp_methods
-from numpy import inf
+from scipy.integrate._ode import find_integrator
+
 
 class UnsuccessfulIntegration(Exception):
 	"""
@@ -15,7 +16,7 @@ def integrator_info(name):
 	"""
 	Finds out the integrator from a given name, what backend it uses, and whether it can use a Jacobian.
 	"""
-	if name == 'zvode':
+	if name == "zvode":
 		raise NotImplementedError("JiTCODE does not natively support complex numbers yet.")
 	
 	if name in ivp_methods.keys():
@@ -35,7 +36,7 @@ def integrator_info(name):
 				"integrator": integrator
 			}
 
-class IVP_wrapper(object):
+class IVP_wrapper:
 	"""
 	This is a wrapper around the integrators from scipy.integrate.solve_ivp making them work like scipy.integrate.ode (mostly).
 	"""
@@ -56,7 +57,7 @@ class IVP_wrapper(object):
 		
 		# Dictionary to be passed as arguments to the integrator and store stuff
 		self.kwargs = {
-				"t_bound": inf,
+				"t_bound": np.inf,
 				"vectorized": False,
 				"fun": self.f
 			}
@@ -132,7 +133,7 @@ class ODE_wrapper(ode):
 	"""
 	def integrate(self,t,step=False,relax=False):
 		if t>self.t or step or relax:
-			result = super(ODE_wrapper,self).integrate(t,step,relax)
+			result = super().integrate(t,step,relax)
 			if self.successful():
 				return result
 			else:
@@ -149,9 +150,9 @@ class ODE_wrapper(ode):
 	def set_params(self,*args):
 		raise NotImplementedError("This method should not be called anymore")
 
-class empty_integrator(object):
+class empty_integrator:
 	"""
-	This is a dummy class that mimicks some basic properties of scipy.integrate.ode or the above wrappers, respectively. It exists to store states and parameters and to raise exceptions in the same interface.
+	This is a dummy class that mimics some basic properties of scipy.integrate.ode or the above wrappers, respectively. It exists to store states and parameters and to raise exceptions in the same interface.
 	"""
 
 	def __init__(self):
@@ -181,4 +182,3 @@ class empty_integrator(object):
 	
 	def successful(self):
 		raise RuntimeError("You must call set_integrator first.")
-	

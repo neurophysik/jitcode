@@ -1,5 +1,4 @@
 #!/usr/bin/python3
-# -*- coding: utf-8 -*-
 
 """
 This example showcases several advanced features of JiTCODE that are relevant for an efficient integration of more complex systems as well as how to deal with some special situations. Therefore it is pretty bizarre from a dynamical perspective.
@@ -13,7 +12,7 @@ Suppose we want to integrate a system of :math:`N=500` Rössler oscillators, wit
 	\\dot{z}_i &= b + z_i (x_i -c) + k \\sum_{j=0}^N (z_j-z_i)
 	\\end{alignedat}
 
-The control parameters shall be :math:`a = 0.165`, :math:`b = 0.2`, :math:`c = 10.0`, and :math:`k = 0.01`. The (frequency) parameter :math:`ω_i` shall be picked randomly from the uniform distribution on :math:`[0.8,1.0]` for each :math:`i`. :math:`A∈ℝ^{N×N}` shall be the adjacency matrix of a one-dimensional small-world network (which shall be provided by a function `small_world_network` in the following example code). So, the :math:`x` compenents are coupled diffusively with a small-world coupling topology, while the :math:`z` components are coupled diffusively to their mean field, with the coupling term being modulated with :math:`\\sin(t)`.
+The control parameters shall be :math:`a = 0.165`, :math:`b = 0.2`, :math:`c = 10.0`, and :math:`k = 0.01`. The (frequency) parameter :math:`ω_i` shall be picked randomly from the uniform distribution on :math:`[0.8,1.0]` for each :math:`i`. :math:`A∈ℝ^{N×N}` shall be the adjacency matrix of a one-dimensional small-world network (which shall be provided by a function `small_world_network` in the following example code). So, the :math:`x` components are coupled diffusively with a small-world coupling topology, while the :math:`z` components are coupled diffusively to their mean field, with the coupling term being modulated with :math:`\\sin(t)`.
 
 Without further ado, here is the example code (`complete running example <https://raw.githubusercontent.com/neurophysik/jitcode/master/examples/SW_of_Roesslers.py>`_); highlighted lines will be commented upon below:
 
@@ -47,10 +46,10 @@ if __name__ == "__main__":
 		# rewiring
 		for i in range(n):
 			for j in range(i):
-				if A[i,j] and (np.random.random() < rewiring_probability):
+				if A[i,j] and (rng.random() < rewiring_probability):
 					A[j,i] = A[i,j] = False
 					while True:
-						i_new,j_new = np.random.randint(0,n,2)
+						i_new,j_new = rng.integers(0,n,2)
 						if A[i_new,j_new] or i_new==j_new:
 							continue
 						else:
@@ -60,15 +59,17 @@ if __name__ == "__main__":
 		return A
 	
 	# example-start
-	from jitcode import jitcode, y, t
 	import numpy as np
 	import symengine
+
+	from jitcode import jitcode, t, y
 	
 	# parameters
 	# ----------
 	
+	rng = np.random.default_rng()
 	N = 500
-	ω = np.random.uniform(0.8,1.0,N)
+	ω = rng.uniform(0.8,1.0,N)
 	a = 0.165
 	b = 0.2
 	c = 10.0
@@ -99,11 +100,11 @@ if __name__ == "__main__":
 	# integrate
 	# ---------
 	
-	initial_state = np.random.random(3*N)
+	initial_state = rng.random(3*N)
 	
 	ODE = jitcode(f, helpers=helpers, n=3*N)
 	ODE.generate_f_C(simplify=False, do_cse=False, chunk_size=150)
-	ODE.set_integrator('dopri5')
+	ODE.set_integrator("dopri5")
 	ODE.set_initial_value(initial_state,0.0)
 	
 	# data structure: x[0], v[0], z[0], x[1], …, x[N], v[N], z[N]

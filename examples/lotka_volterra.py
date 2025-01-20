@@ -1,5 +1,4 @@
 #!/usr/bin/python3
-# -*- coding: utf-8 -*-
 
 """
 Suppose, we want to implement the Lotka–Volterra model, which is described by the following equations:
@@ -90,8 +89,9 @@ Taking everything together, our code is:
 
 if __name__ == "__main__":
 	# example-start
-	from jitcode import y, jitcode
 	import numpy as np
+
+	from jitcode import jitcode, y
 	
 	γ = 0.6
 	φ = 1.0

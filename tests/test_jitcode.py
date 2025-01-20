@@ -1,5 +1,4 @@
 #!/usr/bin/python3
-# -*- coding: utf-8 -*-
 
 import unittest
 
@@ -8,12 +7,10 @@ from numpy.testing import assert_allclose
 from scipy.stats import sem as standard_error
 from symengine import symbols
 
-from jitcode import jitcode, y, jitcode_lyap, UnsuccessfulIntegration, test
+from jitcode import jitcode, jitcode_lyap, y
 from jitcode._jitcode import _is_C, _is_lambda
+from scenarios import f_of_y0, jac_of_y0, lyaps, n, vanilla, y0, y1
 
-from scenarios import (
-		y0, f_of_y0, jac_of_y0, y1, lyaps, vanilla, n,
-	)
 
 class TestOrders(unittest.TestCase):
 	"""
@@ -39,7 +36,7 @@ class TestOrders(unittest.TestCase):
 		self.ODE.set_integrator("dop853")
 		self.assertTrue(_is_C(self.ODE.f))
 	
-	def test_initalise_with_dict(self):
+	def test_initialise_with_dict(self):
 		self.ODE = jitcode(**vanilla)
 		initial_value = {y(i):y0[i] for i in range(n)}
 		self.ODE.set_initial_value(initial_value)
@@ -91,7 +88,7 @@ class TestOrders(unittest.TestCase):
 			self.ODE.check()
 		self.assertIsNotNone(self.ODE.f)
 		assert_allclose( self.ODE.f(0.0,y0), f_of_y0, rtol=1e-5 )
-		if not self.ODE.jac is None:
+		if self.ODE.jac is not None:
 			assert_allclose( self.ODE.jac(0.0,y0), jac_of_y0, rtol=1e-5)
 		assert_allclose( self.ODE.integrate(1.0), y1, rtol=1e-4 )
 		for i in reversed(range(n)):
@@ -174,7 +171,7 @@ class TestErrors(unittest.TestCase):
 	
 	def test_wrong_n(self):
 		with self.assertRaises(ValueError):
-			ODE = jitcode(**vanilla,n=2*n)
+			_ODE = jitcode(**vanilla,n=2*n)
 	
 	def test_dimension_mismatch(self):
 		ODE = jitcode(**vanilla)
@@ -209,4 +206,3 @@ class TestErrors(unittest.TestCase):
 
 if __name__ == "__main__":
 	unittest.main(buffer=True)
-
