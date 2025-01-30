@@ -64,7 +64,7 @@ class TestHelpers(TestBasic):
 
 class FurtherHelpersTests(unittest.TestCase):
 	def test_identity_of_jacs(self):
-		rng = np.random.default_rng()
+		rng = np.random.default_rng(seed=42)
 		x = rng.random(n)
 		
 		def evaluate(scenario):
@@ -83,7 +83,7 @@ class FurtherHelpersTests(unittest.TestCase):
 			)
 	
 	def test_identity_of_lyaps(self):
-		rng = np.random.default_rng()
+		rng = np.random.default_rng(seed=42)
 		x = rng.random((n+1)*n)
 		
 		def evaluate(scenario):

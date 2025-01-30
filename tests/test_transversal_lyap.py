@@ -15,7 +15,7 @@ from jitcxde_common import DEFAULT_COMPILE_ARGS
 from jitcode import jitcode_restricted_lyap, jitcode_transversal_lyap, y
 
 
-rng = np.random.default_rng()
+rng = np.random.default_rng(seed=42)
 
 a = -0.025794
 b =  0.01

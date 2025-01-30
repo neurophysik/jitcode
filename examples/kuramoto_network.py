@@ -4,7 +4,7 @@ from symengine import sin
 from jitcode import jitcode, y
 
 
-rng = np.random.default_rng()
+rng = np.random.default_rng(seed=42)
 
 n = 100
 c = 3.0

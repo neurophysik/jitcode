@@ -10,7 +10,7 @@ from jitcode.integrator_tools import IVP_wrapper, IVP_wrapper_no_interpolation, 
 from scenarios import n, vanilla, y0, y1
 
 
-rng = np.random.default_rng()
+rng = np.random.default_rng(seed=42)
 
 # Generating compiled functions
 
