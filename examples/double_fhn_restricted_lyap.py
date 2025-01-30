@@ -6,7 +6,7 @@ from scipy.stats import sem
 from jitcode import jitcode_restricted_lyap, y
 
 
-rng = np.random.default_rng()
+rng = np.random.default_rng(seed=42)
 
 a  = -0.025794
 b1 =  0.01
