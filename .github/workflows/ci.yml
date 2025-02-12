@@ -36,13 +36,6 @@ jobs:
         os: [ubuntu-latest]
         compiler: [gcc, clang]
         python-version: ['3.10', '3.x']
-        include:
-          - os: ubuntu-20.04
-            python-version: '3.6'
-            compiler: gcc
-          - os: ubuntu-20.04
-            python-version: '3.6'
-            compiler: clang
       fail-fast: false
 
     steps:
