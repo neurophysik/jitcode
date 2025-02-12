@@ -67,7 +67,7 @@ if __name__ == "__main__":
 	# parameters
 	# ----------
 	
-	rng = np.random.default_rng()
+	rng = np.random.default_rng(seed=42)
 	N = 500
 	ω = rng.uniform(0.8,1.0,N)
 	a = 0.165

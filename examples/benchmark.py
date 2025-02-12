@@ -144,7 +144,7 @@ test_scenario(
 )
 
 
-rng = np.random.default_rng()
+rng = np.random.default_rng(seed=42)
 
 n, c, q = 100, 3.0, 0.2
 A = rng.choice( [1,0], size=(n,n), p=[q,1-q] )
