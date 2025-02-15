@@ -54,6 +54,7 @@ jitcode = [
 
 [tool.setuptools_scm]
 write_to = "jitcode/version.py"
+local_scheme = "no-local-version"
 
 [tool.ruff]
 target-version = "py37"
