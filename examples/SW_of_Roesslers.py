@@ -12,7 +12,7 @@ Suppose we want to integrate a system of :math:`N=500` Rössler oscillators, wit
 	\\dot{z}_i &= b + z_i (x_i -c) + k \\sum_{j=0}^N (z_j-z_i)
 	\\end{alignedat}
 
-The control parameters shall be :math:`a = 0.165`, :math:`b = 0.2`, :math:`c = 10.0`, and :math:`k = 0.01`. The (frequency) parameter :math:`ω_i` shall be picked randomly from the uniform distribution on :math:`[0.8,1.0]` for each :math:`i`. :math:`A∈ℝ^{N×N}` shall be the adjacency matrix of a one-dimensional small-world network (which shall be provided by a function `small_world_network` in the following example code). So, the :math:`x` components are coupled diffusively with a small-world coupling topology, while the :math:`z` components are coupled diffusively to their mean field, with the coupling term being modulated with :math:`\\sin(t)`.
+The control parameters shall be :math:`a = 0.165`, :math:`b = 0.2`, :math:`c = 10.0`, and :math:`k = 0.01`. The (frequency) parameter :math:`ω_i` shall be picked randomly from the uniform distribution on :math:`[0.8,1.0]` for each :math:`i`. :math:`A∈ℝ^{N×N}` shall be the adjacency matrix of a one-dimensional small-world network (which shall be provided by a function :any:`small_world_network` in the following example code). So, the :math:`x` components are coupled diffusively with a small-world coupling topology, while the :math:`z` components are coupled diffusively to their mean field, with the coupling term being modulated with :math:`\\sin(t)`.
 
 Without further ado, here is the example code (`complete running example <https://raw.githubusercontent.com/neurophysik/jitcode/master/examples/SW_of_Roesslers.py>`_); highlighted lines will be commented upon below:
 
@@ -20,17 +20,17 @@ Without further ado, here is the example code (`complete running example <https:
 	:linenos:
 	:dedent: 1
 	:lines: 63-
-	:emphasize-lines: 9, 25-26, 34, 31, 43
+	:emphasize-lines: 10, 26-27, 35, 32, 44
 
 Explanation of selected features and choices:
 
-* The values of :math:`ω` are initialised globally (line 9). We cannot just define a function here, because the parameter is used twice for each oscillator. Moreover, if we were trying to calculate Lyapunov exponents or the Jacobian, the generator function would be called multiple times, and thus the value of the parameter would not be consistent (which would be desastrous).
+* The values of :math:`ω` are initialised globally (line 10). We cannot just define a function here, because the parameter is used twice for each oscillator. Moreover, if we were trying to calculate Lyapunov exponents or the Jacobian, the generator function would be called multiple times, and thus the value of the parameter would not be consistent (which would be desastrous).
 
-* Since we need :math:`\\sum_{j=0}^N x_j` to calculate the derivative of :math:`z` for every oscillator, it is prudent to only calculate this once. Therefore we define a helper symbol for this in lines 25 and 26, which we employ in line 34. (See the arguments of `jitcode` for details.)
+* Since we need :math:`\\sum_{j=0}^N x_j` to calculate the derivative of :math:`z` for every oscillator, it is prudent to only calculate this once. Therefore we define a helper symbol for this in lines 26 and 27, which we employ in line 35. (See the arguments of `jitcode` for details.)
 
-* In line 31, we implement :math:`\\sin(t)`. For this purpose we had to import `t` in line 1. Also, we need to use `symengine.sin` – in contrast to `math.sin` or `numpy.sin`.
+* In line 32, we implement :math:`\\sin(t)`. For this purpose we had to import `t` in line 3. Also, we need to use `symengine.sin` – in contrast to :func:`math.sin` or :data:`numpy.sin`.
 
-* As this is a large system, we use a generator function instead of a list to define :math:`f` (lines 28-35) and have the code automatically be split into chunks of 150 lines, corresponding to the equations of fifty oscillators, in line 43. (For this system, any reasonably sized multiple of 3 is a good choice for `chunk_size`; for other systems, the precise choice of the value may be more relevant.) See `large_systems` for the rationale.
+* As this is a large system, we use a generator function instead of a list to define :math:`f` (lines 29-36) and have the code automatically be split into chunks of 150 lines, corresponding to the equations of fifty oscillators, in line 44. (For this system, any reasonably sized multiple of 3 is a good choice for `chunk_size`; for other systems, the precise choice of the value may be more relevant.) See `large_systems` for the rationale.
 """
 
 if __name__ == "__main__":

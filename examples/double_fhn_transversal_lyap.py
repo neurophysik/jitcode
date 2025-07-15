@@ -4,12 +4,12 @@
 For instance, let’s interpret the system from `example` as two oscillators (which is what it is), one consisting of the first and second and one of the third and fourth component. Furthermore, let’s change the control parameters a bit to make the two oscillators identical. We can then calculate the transversal Lyapunov exponents to the synchronisation manifold as follows (important changes are highlighted):
 
 .. literalinclude:: ../examples/double_fhn_transversal_lyap.py
-	:emphasize-lines: 6, 12, 14, 17, 19-20
+	:emphasize-lines: 7, 13, 15, 18, 20-22
 	:start-after: example-st\u0061rt
 	:dedent: 1
 	:linenos:
 
-Note that the initial state (line 17) is reduced in dimensionality and there is only one component for each synchronisation group.
+Note that the initial state (line 18) is reduced in dimensionality and there is only one component for each synchronisation group.
 """
 
 if __name__ == "__main__":

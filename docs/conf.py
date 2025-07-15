@@ -28,6 +28,7 @@ sys.path.insert(0,os.path.abspath("../jitcode"))
 needs_sphinx = "1.3"
 
 extensions = [
+    "sphinx.ext.intersphinx",
     "sphinx.ext.autodoc",
     "sphinx.ext.autosummary",
     "sphinx.ext.mathjax",
@@ -60,6 +61,12 @@ autodoc_member_order = "bysource"
 graphviz_output_format = "svg"
 
 toc_object_entries_show_parents = "hide"
+
+intersphinx_mapping = {
+    "numpy": ("https://numpy.org/doc/stable", None),
+    "python": ("https://docs.python.org/3", None),
+    "scipy": ("https://docs.scipy.org/doc/scipy", None),
+}
 
 def on_missing_reference(app, env, node, contnode):
 	if node["reftype"] == "any":
