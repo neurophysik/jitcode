@@ -5,6 +5,7 @@ Integration test of jitcode_restricted_lyap and jitcode_transversal_lyap by comp
 """
 
 from itertools import combinations
+from warnings import warn
 
 import numpy as np
 from scipy.stats import sem
@@ -73,6 +74,9 @@ couplings = [
 		{"k": 0  , "sign": 0},
 	]
 
+class TestPrerequisiteBroken(AssertionError):
+	pass
+
 for scenario in scenarios:
 	for average_dynamics in [False,True]:
 		n = len(scenario["f"])
@@ -119,9 +123,15 @@ for scenario in scenarios:
 			
 			# Check that we are still on the synchronisation manifold:
 			message = f"The dynamics left the synchronisation manifold when {scenario['name']} with coupling {coupling}. If this fails, this is a problem with the test and not with what is tested or any software involved.\n\nSpecifically, this test only works when the backend (Symengine plus compiler) implements certain computations completely symmetrically. This needs not and cannot be reasonably controlled (and no, turning off compiler optimisation doesn’t necessarily help as it often restores symmetries broken by Symengine). It’s only something exploited by this test to make it work in the first place."
-			for group in scenario["groups"]:
-				for i,j in combinations(group,2):
-					assert ODE1.y[i]==ODE1.y[j], message
+			try:
+				for group in scenario["groups"]:
+					for i,j in combinations(group,2):
+						if ODE1.y[i]!=ODE1.y[j]:
+							raise TestPrerequisiteBroken(message)
+			except TestPrerequisiteBroken as err:
+				warn(str(err),stacklevel=2)
+				print( "X", end="", flush=True )
+				continue
 			
 			Lyap1 = np.average(lyaps1[500:])
 			Lyap2 = np.average(lyaps2[500:])
