@@ -40,7 +40,7 @@ As with SciPy’s ODE, this documentation assumes that the differential equation
 
 .. math::
 
-	\dot{y} = f(t,y)
+	\dot{y} = f(t,y).
 
 
 .. _example:

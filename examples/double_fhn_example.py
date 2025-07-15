@@ -5,13 +5,13 @@ Suppose our differential equation is :math:`\dot{y} = f(y)` with :math:`y∈ℝ^
 
 .. math::
 
-	f(y) = \\left(
-	\\begin{matrix}
-	y_0 ( a-y_0 ) ( y_0-1) - y_1 + k (y_2 - y_0) \\\\
-	b_1 y_0 - c y_1 \\\\
-	y_2 ( a-y_2 ) ( y_2-1 ) - y_3 + k (y_0 - y_2)\\\\
+	f(y) =
+	\begin{bmatrix}
+	y_0 ( a-y_0 ) ( y_0-1) - y_1 + k (y_2 - y_0) \\
+	b_1 y_0 - c y_1 \\
+	y_2 ( a-y_2 ) ( y_2-1 ) - y_3 + k (y_0 - y_2)\\
 	b_2 y_2 - c y_3
-	\\end{matrix} \\right),
+	\end{bmatrix},
 
 and :math:`a = -0.025794`, :math:`b_1 = 0.0065`, :math:`b_2 = 0.0135`, :math:`c = 0.02`, and :math:`k = 0.128`.
 Then the following code integrates the above for 100000 time units (after discarding 2000 time units of transients), with :math:`y(t=0) = (1,2,3,4)`, and writes the results to :code:`timeseries.dat`:
