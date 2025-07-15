@@ -7,7 +7,7 @@ The JiTCODE module
 Overview
 --------
 
-JiTCODE (just-in-time compilation for ordinary differential equations) is an extension of SciPy’s `ODE`_ (`scipy.integrate.ode`) or `Solve IVP`_ (`scipy.integrate.solve_ivp`).
+JiTCODE (just-in-time compilation for ordinary differential equations) is an extension of SciPy’s `ODE`_ (:class:`scipy.integrate.ode`) or `Solve IVP`_ (:func:`scipy.integrate.solve_ivp`).
 Where the latter take a Python function as an argument, JiTCODE takes an iterable (or generator function or dictionary) of symbolic expressions, which it translates to C code, compiles on the fly, and uses as the function to feed into SciPy’s ODE or Solve IVP.
 Symbolic expressions are mostly handled by `SymEngine`_, `SymPy`_’s compiled-backend-to-be (see `SymPy vs. SymEngine`_ for details).
 
@@ -69,9 +69,11 @@ An explicit example
 Details of the building process
 -------------------------------
 
+.. currentmodule:: jitcode
+
 To generate the functions needed by SciPy’s ODE or Solve IVP, JiTCODE executes a series of distinct processing steps, each of which can be invoked through a command and tweaked as needed.
 These commands execute previous steps as needed, i.e., if they have not been performed yet.
-If you are happy with the default options, however, you do not need to bother with this and can just use the commands at the very end of the chain, namely `set_integrator`, `set_initial_value`, or `save_compiled`.
+If you are happy with the default options, however, you do not need to bother with this and can just use the commands at the very end of the chain, namely :meth:`~_jitcode.jitcode.set_integrator`, :meth:`~_jitcode.jitcode.set_initial_value`, or :meth:`~_jitcode.jitcode.save_compiled`.
 
 The following diagram details which command calls which other command when needed:
 
@@ -102,12 +104,12 @@ A more complicated example
 Calculating Lyapunov exponents with `jitcode_lyap`
 --------------------------------------------------
 
-`jitcode_lyap` is a simple extension of `jitcode` that almost automatically handles calculating Lyapunov exponents by evolving tangent vectors [BGGS80]_.
-It works just like `jitcode`, except that it generates and integrates additional differential equations for the tangent vectors.
-After every call of `integrate`, the tangent vectors are orthonormalised, and the “local” Lyapunov exponents for this integration step are returned alongside with the system’s state.
+:class:`~_jitcode.jitcode_lyap` is a simple extension of :class:`~_jitcode.jitcode` that almost automatically handles calculating Lyapunov exponents by evolving tangent vectors [BGGS80]_.
+It works just like :class:`~_jitcode.jitcode`, except that it generates and integrates additional differential equations for the tangent vectors.
+After every call of :meth:`~_jitcode.jitcode_lyap.integrate`, the tangent vectors are orthonormalised, and the “local” Lyapunov exponents for this integration step are returned alongside with the system’s state.
 These can then be further processed to obtain the Lyapunov exponents.
 The tangent vectors are initialised with random vectors, and you have to take care of the preiterations that the tangent vectors require to align themselves.
-You also have to take care not to `integrate` for too long to avoid a numerical overflow in the tangent vectors.
+You also have to take care not to :meth:`~_jitcode.jitcode_lyap.integrate` for too long to avoid a numerical overflow in the tangent vectors.
 
 Estimates for the Lyapunov vectors are returned as well.
 
@@ -124,7 +126,7 @@ Estimates for the Lyapunov vectors are returned as well.
 Calculating transversal Lyapunov exponents with `jitcode_transversal_lyap`
 --------------------------------------------------------------------------
 
-`jitcode_transversal_lyap` is a variant of `jitcode_lyap` that calculates Lyapunov exponents transversal to a user-defined synchronisation manifold.
+:class:`~_jitcode.jitcode_transversal_lyap` is a variant of :class:`~_jitcode.jitcode_lyap` that calculates Lyapunov exponents transversal to a user-defined synchronisation manifold.
 It automatically conflates the differential equations of a group of synchronised components into one equation on the synchronisation manifold.
 Moreover, it transforms the equations for the tangent vectors such that the tangent vector is automatically orthogonal to the synchronisation manifold.
 If you are interested in the mathematical details, please read `the accompanying paper`_.
