@@ -114,7 +114,7 @@ Estimates for the Lyapunov vectors are returned as well.
 .. automodule:: double_fhn_lyapunov
 
 .. literalinclude:: ../examples/double_fhn_lyapunov.py
-	:emphasize-lines: 20-21,26,28-36
+	:emphasize-lines: 22-23,27,29-37
 	:start-after: example-start
 	:dedent: 1
 	:linenos:
