@@ -145,7 +145,7 @@ class TestLyapunov(unittest.TestCase):
 		self.ODE = jitcode_lyap(**vanilla,n_lyap=n,wants_jacobian=True)
 		filename = self.ODE.save_compiled(overwrite=True)
 		self.ODE = jitcode_lyap((),n=n,n_lyap=n,module_location=filename)
-		self.ODE.set_integrator("vode")
+		self.ODE.set_integrator("dop853")
 		self.assertTrue(_is_C(self.ODE.f))
 		self.assertTrue(_is_C(self.ODE.jac))
 	
