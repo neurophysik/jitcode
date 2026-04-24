@@ -4,11 +4,11 @@
 Suppose, we want to implement the Lotka–Volterra model, which is described by the following equations:
 
 .. math::
-	
-	\\begin{alignat*}{3}
-	\\dot{B} &=&    γ · B &- φ · R · B\\\\
+
+	\\begin{alignedat}{3}
+	\\dot{B} &=&    γ · B &- φ · R · B \\\\ 
 	\\dot{R} &=&\\, -ω · R &+ ν · R · B
-	\\end{alignat*}
+	\\end{alignedat}
 
 with :math:`γ = 0.6`, :math:`φ = 1.0`, :math:`ω = 0.5`, and :math:`ν = 0.5`.
 
