@@ -6,7 +6,7 @@ Suppose, we want to implement the Lotka–Volterra model, which is described by 
 .. math::
 
 	\\begin{alignedat}{3}
-	\\dot{B} &=&    γ · B &- φ · R · B \\\\ 
+	\\dot{B} &=&    γ · B &- φ · R · B \\\\
 	\\dot{R} &=&\\, -ω · R &+ ν · R · B
 	\\end{alignedat}
 
