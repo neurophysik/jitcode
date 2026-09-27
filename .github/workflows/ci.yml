@@ -19,7 +19,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v6
-    - uses: crate-ci/typos@master
+    - uses: crate-ci/typos@main
 
   ruff:
     name: Linting (ruff)
